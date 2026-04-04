@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apache Kafka Masterclass — The Distributed Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Exo+2:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:     #020912;
+  --void2:    #060f1e;
+  --void3:    #0a1628;
+  --void4:    #0f1f38;
+  --void5:    #162844;
+  --signal:   #00ff88;
+  --signal2:  #00cc6a;
+  --sig-dim:  #002a1a;
+  --amber:    #ffaa00;
+  --amber2:   #ff8800;
+  --amb-dim:  #2a1a00;
+  --plasma:   #00d4ff;
+  --plas-dim: #001f2a;
+  --coral:    #ff4455;
+  --cor-dim:  #2a0a0f;
+  --violet:   #aa55ff;
+  --vio-dim:  #1a0a2a;
+  --border:   rgba(0,255,136,0.15);
+  --border2:  rgba(0,255,136,0.08);
+  --glow:     0 0 20px rgba(0,255,136,0.12);
+  --text:     #c8ddf0;
+  --text2:    #6a8aaa;
+  --text3:    #2a3d55;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Exo 2', sans-serif;
+  --display:  'Rajdhani', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── CIRCUIT TRACE BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -10%, rgba(0,255,136,0.04) 0%, transparent 60%),
+    linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px),
+    linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 60px 60px, 60px 60px, 12px 12px, 12px 12px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(2,9,18,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 1500px; margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex; align-items: center; gap: 1.5rem; height: 56px;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  padding-right: 1.5rem;
+  border-right: 1px solid var(--border);
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  border: 1.5px solid var(--signal);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.logo-icon::before {
+  content: 'K';
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--signal);
+}
+.logo-streams {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: space-around;
+  padding: 3px 0 3px 14px;
+  pointer-events: none;
+}
+.logo-stream {
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--signal));
+  animation: stream-flow 1.5s linear infinite;
+}
+.logo-stream:nth-child(2) { animation-delay: 0.5s; }
+.logo-stream:nth-child(3) { animation-delay: 1.0s; }
+@keyframes stream-flow {
+  0%   { transform: translateX(-100%); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+.logo-text {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--signal);
+  line-height: 1;
+}
+.logo-sub {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+nav { display: flex; gap: 1px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  background: none; border: none;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  padding: 0 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 56px;
+  transition: all 0.12s;
+  text-transform: uppercase;
+  border-bottom: 2px solid transparent;
+  position: relative;
+}
+.nav-btn:hover { color: var(--signal); border-bottom-color: rgba(0,255,136,0.3); }
+.nav-btn.active { color: var(--signal); border-bottom-color: var(--signal); background: rgba(0,255,136,0.04); }
+.header-right {
+  flex-shrink: 0;
+  display: flex; gap: 8px; align-items: center;
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--border);
+}
+.status-pill {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  padding: 3px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+  display: flex; align-items: center; gap: 5px;
+}
+.sp-online { background: var(--sig-dim); color: var(--signal); border: 1px solid var(--signal2); }
+.sp-online::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--signal); animation: pulse-dot 1.5s ease-in-out infinite; }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ── LAYOUT ── */
+.wrapper { max-width: 1500px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+section { display: none; animation: fadeIn 0.25s ease; }
+section.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── SECTION HEADER ── */
+.section-header { margin-bottom: 2rem; position: relative; padding-bottom: 1.25rem; }
+.section-header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--signal), rgba(0,255,136,0.1), transparent);
+}
+.section-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 0.4rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.section-eyebrow::before {
+  content: '';
+  width: 24px; height: 1px;
+  background: var(--signal);
+}
+.section-title {
+  font-family: var(--display);
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+}
+.section-title em { color: var(--signal); font-style: normal; }
+.section-sub { color: var(--text2); font-size: 0.88rem; max-width: 760px; line-height: 1.7; font-weight: 300; }
+
+/* ── GRIDS ── */
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+.g12 { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+@media (max-width: 960px) { .g2,.g3,.g12,.g21 { grid-template-columns: 1fr; } }
+
+/* ── CARDS ── */
+.card {
+  background: var(--void2);
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+  position: relative;
+}
+.card:hover { border-color: rgba(0,255,136,0.25); }
+.card-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.card-label::before { content: '>>'; opacity: 0.5; }
+
+/* ── CODE BLOCKS ── */
+.code-wrap { background: var(--void); border: 1px solid var(--border); margin: 1rem 0; overflow: hidden; }
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--void3);
+  border-bottom: 1px solid var(--border);
+  padding: 0.4rem 1rem;
+}
+.code-fname { font-family: var(--mono); font-size: 0.67rem; color: var(--text2); letter-spacing: 0.03em; }
+.code-lang {
+  font-family: var(--mono); font-size: 0.6rem;
+  color: var(--signal); letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--sig-dim); border: 1px solid rgba(0,255,136,0.2);
+  padding: 1px 7px; border-radius: 2px;
+}
+pre {
+  padding: 1.1rem 1.25rem; overflow-x: auto;
+  font-family: var(--mono); font-size: 0.79rem; line-height: 1.8;
+  color: #a8c0d8; tab-size: 2;
+  scrollbar-width: thin; scrollbar-color: var(--void4) transparent;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--void4); }
+.kw  { color: #ff6b8a; }
+.fn  { color: #5bc8e8; }
+.st  { color: #a8e060; }
+.cm  { color: #2a3d55; font-style: italic; }
+.jj  { color: var(--amber); }
+.nm  { color: #b088e8; }
+.op  { color: var(--signal); }
+.nu  { color: #f0a060; }
+.dc  { color: var(--signal); }
+.py  { color: var(--amber); font-weight: 500; }
+.ty  { color: #60e8a0; }
+.re  { color: var(--coral); }
+.ch  { color: var(--plasma); }
+
+/* ── CALLOUTS ── */
+.callout { border-left: 2px solid; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.87rem; line-height: 1.6; }
+.callout strong { display: block; font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.3rem; }
+.c-sig    { border-color: var(--signal);  background: rgba(0,255,136,0.05);  color: var(--signal);  }
+.c-amber  { border-color: var(--amber);   background: rgba(255,170,0,0.05);  color: var(--amber);   }
+.c-plasma { border-color: var(--plasma);  background: rgba(0,212,255,0.05);  color: var(--plasma);  }
+.c-coral  { border-color: var(--coral);   background: rgba(255,68,85,0.05);  color: var(--coral);   }
+.c-violet { border-color: var(--violet);  background: rgba(170,85,255,0.05); color: var(--violet);  }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 0.6rem;
+  padding: 2px 7px; letter-spacing: 0.06em; font-weight: 500;
+  border-radius: 2px; border: 1px solid;
+}
+.b-sig    { background: var(--sig-dim);  color: var(--signal); border-color: rgba(0,255,136,0.3); }
+.b-amber  { background: var(--amb-dim);  color: var(--amber);  border-color: rgba(255,170,0,0.3); }
+.b-plasma { background: var(--plas-dim); color: var(--plasma); border-color: rgba(0,212,255,0.3); }
+.b-coral  { background: var(--cor-dim);  color: var(--coral);  border-color: rgba(255,68,85,0.3); }
+.b-violet { background: var(--vio-dim);  color: var(--violet); border-color: rgba(170,85,255,0.3); }
+
+/* ── TABLES ── */
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+th {
+  font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--signal);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.85rem; text-align: left;
+  background: var(--void3);
+}
+td { padding: 0.55rem 0.85rem; border-bottom: 1px solid var(--border2); vertical-align: top; color: var(--text2); }
+tr:last-child td { border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(0,255,136,0.03); }
+td:first-child { color: var(--text); font-family: var(--mono); font-size: 0.78rem; }
+td code, p code, li code, span code {
+  font-family: var(--mono); font-size: 0.8em;
+  background: var(--void3); border: 1px solid var(--border);
+  padding: 0 4px; border-radius: 2px; color: var(--signal);
+}
+
+/* ── PILLS / TABS ── */
+.pills { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.pill {
+  font-family: var(--mono); font-size: 0.67rem;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer; border: 1px solid var(--border);
+  background: none; color: var(--text3);
+  transition: all 0.12s; letter-spacing: 0.05em; text-transform: uppercase;
+  border-radius: 2px;
+}
+.pill:hover { border-color: var(--signal); color: var(--signal); }
+.pill.active { background: var(--sig-dim); border-color: var(--signal); color: var(--signal); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── STAT STRIP ── */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+  background: var(--void2);
+}
+.stat { padding: 1.1rem 1rem; text-align: center; border-right: 1px solid var(--border); transition: background 0.15s; }
+.stat:last-child { border-right: none; }
+.stat:hover { background: var(--void3); }
+.stat-num { font-family: var(--display); font-size: 2.1rem; font-weight: 700; line-height: 1; margin-bottom: 0.2rem; }
+.stat-label { font-family: var(--mono); font-size: 0.6rem; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── PARTITION DIAGRAM ── */
+.partition-vis {
+  background: var(--void);
+  border: 1px solid var(--border);
+  padding: 1.25rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  overflow-x: auto;
+}
+.part-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.part-label { color: var(--text3); width: 100px; flex-shrink: 0; font-size: 0.68rem; letter-spacing: 0.06em; }
+.part-seg {
+  height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 500;
+  border: 1px solid;
+  flex-shrink: 0;
+  min-width: 44px;
+  position: relative;
+  transition: all 0.15s;
+}
+.part-seg:hover { transform: translateY(-2px); }
+.ps-a { background: var(--sig-dim); border-color: var(--signal2); color: var(--signal); }
+.ps-b { background: var(--amb-dim); border-color: var(--amber2); color: var(--amber); }
+.ps-c { background: var(--plas-dim); border-color: var(--plasma); color: var(--plasma); }
+.ps-r { background: rgba(170,85,255,0.1); border-color: var(--violet); color: var(--violet); font-size: 0.55rem; }
+.ps-ho { background: rgba(255,68,85,0.08); border-color: var(--coral); color: var(--coral); }
+.part-arrow { color: var(--text3); font-size: 0.9rem; }
+.part-end { padding: 6px 10px; border: 1px solid var(--border); color: var(--text3); font-size: 0.65rem; background: var(--void3); white-space: nowrap; }
+.part-offset { position: absolute; top: 1px; right: 2px; font-size: 0.5rem; opacity: 0.6; color: var(--text3); }
+
+/* ── FLOW DIAGRAM ── */
+.flow { display: flex; flex-direction: column; gap: 2px; }
+.flow-row { display: flex; align-items: center; gap: 6px; }
+.flow-box {
+  padding: 7px 14px;
+  border: 1px solid;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s; cursor: default;
+  white-space: nowrap;
+}
+.flow-box:hover { transform: translateY(-1px); }
+.fb-sig    { background: var(--sig-dim);  border-color: var(--signal2); color: var(--signal); }
+.fb-amber  { background: var(--amb-dim);  border-color: var(--amber2);  color: var(--amber); }
+.fb-plasma { background: var(--plas-dim); border-color: var(--plasma);  color: var(--plasma); }
+.fb-violet { background: var(--vio-dim);  border-color: var(--violet);  color: var(--violet); }
+.fb-coral  { background: var(--cor-dim);  border-color: var(--coral);   color: var(--coral); }
+.fb-dim    { background: var(--void3);    border-color: var(--border);  color: var(--text2); }
+.flow-arr { color: var(--text3); font-size: 0.9rem; flex-shrink: 0; }
+.flow-note { font-family: var(--mono); font-size: 0.62rem; color: var(--text3); padding-left: 4px; }
+
+/* ── PERF METER ── */
+.perf-row { display: grid; grid-template-columns: 180px 1fr 100px; gap: 1rem; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid var(--border2); }
+.perf-label { font-family: var(--mono); font-size: 0.73rem; color: var(--text2); }
+.perf-track { height: 6px; background: var(--void3); border: 1px solid var(--border); overflow: hidden; }
+.perf-fill { height: 100%; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+.perf-val { font-family: var(--mono); font-size: 0.7rem; color: var(--text3); text-align: right; }
+
+/* ── SEVERITY ROW ── */
+.sev-row { display: grid; grid-template-columns: 120px 1fr auto; gap: 1rem; align-items: center; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border2); border-left: 2px solid; }
+.sev-row:hover { background: var(--void3); }
+.sev-name { font-family: var(--mono); font-size: 0.75rem; }
+.sev-desc { font-size: 0.83rem; color: var(--text2); }
+.sev-row.s-sig    { border-left-color: var(--signal); }
+.sev-row.s-amber  { border-left-color: var(--amber); }
+.sev-row.s-coral  { border-left-color: var(--coral); }
+.sev-row.s-violet { border-left-color: var(--violet); }
+.sev-row.s-plasma { border-left-color: var(--plasma); }
+
+/* ── SEPARATOR ── */
+.sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+.sep-glow { border-top-color: rgba(0,255,136,0.2); }
+
+/* ── TEXT ── */
+p { margin-bottom: 0.9rem; color: var(--text2); font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+h3 { font-family: var(--display); font-size: 1.5rem; font-weight: 600; letter-spacing: 0.05em; color: var(--text); margin: 1.75rem 0 0.6rem; }
+h3:first-child { margin-top: 0; }
+h4 { font-family: var(--mono); font-size: 0.72rem; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin: 1.2rem 0 0.5rem; }
+ul, ol { padding-left: 1.5rem; color: var(--text2); font-weight: 300; }
+ul li, ol li { margin-bottom: 0.35rem; }
+strong { color: var(--text); font-weight: 600; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--void2); }
+::-webkit-scrollbar-thumb { background: var(--void4); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">
+        <div class="logo-streams">
+          <div class="logo-stream"></div>
+          <div class="logo-stream"></div>
+          <div class="logo-stream"></div>
+        </div>
+      </div>
+      <div>
+        <div class="logo-text">KAFKA</div>
+        <div class="logo-sub">Distributed Event Stream</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="show('signal',this)">SIGNAL</button>
+      <button class="nav-btn" onclick="show('producers',this)">PRODUCERS</button>
+      <button class="nav-btn" onclick="show('consumers',this)">CONSUMERS</button>
+      <button class="nav-btn" onclick="show('streams',this)">STREAMS</button>
+      <button class="nav-btn" onclick="show('connect',this)">CONNECT</button>
+      <button class="nav-btn" onclick="show('schema',this)">SCHEMA REG</button>
+      <button class="nav-btn" onclick="show('eos',this)">EXACTLY-ONCE</button>
+      <button class="nav-btn" onclick="show('ops',this)">OPS</button>
+    </nav>
+    <div class="header-right">
+      <div class="status-pill sp-online">LIVE STREAM</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 1 — SIGNAL: ARCHITECTURE
+══════════════════════════════════════════════ -->
+<section id="signal" class="active">
+  <div class="section-header">
+    <div class="section-eyebrow">Architecture</div>
+    <div class="section-title">THE <em>DISTRIBUTED LOG</em></div>
+    <div class="section-sub">Kafka is not a message queue. It is an immutable, append-only, distributed commit log. Every event ever written is retained, replayable, and reprocessable by any number of consumers independently. This one design decision makes it fundamentally different from RabbitMQ, SQS, and every traditional broker.</div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat"><div class="stat-num" style="color:var(--signal)">10M+</div><div class="stat-label">Msgs/sec/broker</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--amber)">∞</div><div class="stat-label">Consumer Replay</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--plasma)">O(1)</div><div class="stat-label">Read Complexity</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--violet)">RPF</div><div class="stat-label">Replicated Partitioned Log</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--signal)">KRaft</div><div class="stat-label">No ZooKeeper (3.x+)</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--coral)">EOS</div><div class="stat-label">Exactly-Once</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Anatomy of a Topic</h3>
+      <div class="partition-vis">
+        <div style="font-family:var(--mono);font-size:0.65rem;color:var(--signal);margin-bottom:1rem;letter-spacing:0.1em">TOPIC: orders — 3 partitions, RF=2, retention=7d</div>
+
+        <div class="part-row">
+          <div class="part-label">Partition 0</div>
+          <div class="part-seg ps-a" style="width:44px">0<div class="part-offset">off</div></div>
+          <div class="part-seg ps-a" style="width:44px">1</div>
+          <div class="part-seg ps-a" style="width:44px">2</div>
+          <div class="part-seg ps-a" style="width:44px">3</div>
+          <div class="part-seg ps-a" style="width:44px">4</div>
+          <div class="part-seg ps-a" style="width:44px">5 ←</div>
+          <div class="part-arrow">→</div>
+          <div class="part-end">LEO:6 | Broker 1 (Leader)</div>
+        </div>
+        <div class="part-row">
+          <div class="part-label" style="color:var(--text3)">  ↳ replica</div>
+          <div class="part-seg ps-r" style="width:44px">0</div>
+          <div class="part-seg ps-r" style="width:44px">1</div>
+          <div class="part-seg ps-r" style="width:44px">2</div>
+          <div class="part-seg ps-r" style="width:44px">3</div>
+          <div class="part-seg ps-r" style="width:44px">4</div>
+          <div class="part-seg ps-r" style="width:44px">5</div>
+          <div class="part-arrow"> </div>
+          <div class="part-end">ISR | Broker 2</div>
+        </div>
+
+        <div class="part-row" style="margin-top:6px">
+          <div class="part-label">Partition 1</div>
+          <div class="part-seg ps-b" style="width:44px">0</div>
+          <div class="part-seg ps-b" style="width:44px">1</div>
+          <div class="part-seg ps-b" style="width:44px">2</div>
+          <div class="part-seg ps-b" style="width:44px">3 ←</div>
+          <div class="part-arrow">→</div>
+          <div class="part-end">LEO:4 | Broker 2 (Leader)</div>
+        </div>
+        <div class="part-row">
+          <div class="part-label" style="color:var(--text3)">  ↳ replica</div>
+          <div class="part-seg ps-r" style="width:44px">0</div>
+          <div class="part-seg ps-r" style="width:44px">1</div>
+          <div class="part-seg ps-r" style="width:44px">2</div>
+          <div class="part-seg ps-r" style="width:44px">3</div>
+          <div class="part-arrow"> </div>
+          <div class="part-end">ISR | Broker 3</div>
+        </div>
+
+        <div class="part-row" style="margin-top:6px">
+          <div class="part-label">Partition 2</div>
+          <div class="part-seg ps-c" style="width:44px">0</div>
+          <div class="part-seg ps-c" style="width:44px">1</div>
+          <div class="part-seg ps-c" style="width:44px">2</div>
+          <div class="part-seg ps-c" style="width:44px">3</div>
+          <div class="part-seg ps-c" style="width:44px">4</div>
+          <div class="part-seg ps-c" style="width:44px">5</div>
+          <div class="part-seg ps-c" style="width:44px">6 ←</div>
+          <div class="part-arrow">→</div>
+          <div class="part-end">LEO:7 | Broker 3 (Leader)</div>
+        </div>
+
+        <div style="margin-top:1rem;font-size:0.62rem;color:var(--text3);display:flex;gap:1.5rem">
+          <span><span style="color:var(--signal)">■</span> Leader</span>
+          <span><span style="color:var(--violet)">■</span> ISR Replica</span>
+          <span><span style="color:var(--amber)">←</span> HW (High Watermark)</span>
+          <span>LEO = Log End Offset</span>
+        </div>
+      </div>
+
+      <div class="callout c-amber">
+        <strong>High Watermark — The Visibility Contract</strong>
+        Consumers can only read up to the <strong>High Watermark</strong> (HW) — the last offset replicated to ALL in-sync replicas (ISR). A message written to the leader but not yet replicated is invisible to consumers. This is not a bug — it's the consistency guarantee that prevents reading data that might be lost on leader failover.
+      </div>
+    </div>
+
+    <div>
+      <h3>The Full Cluster Topology</h3>
+      <div class="card" style="padding:1rem;margin-bottom:1rem">
+        <div class="flow">
+          <div class="flow-row">
+            <div class="flow-box fb-amber">⚡ Producer App</div>
+            <div class="flow-arr">──────────────────→</div>
+            <div class="flow-box fb-sig">BROKER 1 (Controller)</div>
+          </div>
+          <div class="flow-row" style="margin-left:180px">
+            <div class="flow-arr">↕ KRaft Replication</div>
+          </div>
+          <div class="flow-row" style="justify-content:center;gap:8px">
+            <div class="flow-box fb-dim">BROKER 2</div>
+            <div class="flow-box fb-dim">BROKER 3</div>
+            <div class="flow-box fb-dim">BROKER N</div>
+          </div>
+          <div class="flow-row" style="justify-content:center">
+            <div class="flow-arr">↓ Poll</div>
+          </div>
+          <div class="flow-row" style="justify-content:center;gap:8px">
+            <div class="flow-box fb-plasma">Consumer A</div>
+            <div class="flow-box fb-plasma">Consumer B</div>
+            <div class="flow-box fb-plasma">Consumer C</div>
+          </div>
+          <div class="flow-note" style="text-align:center;margin-top:6px">↑ Same group = partitions split between them</div>
+        </div>
+      </div>
+
+      <h3>Message Anatomy</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">ProducerRecord fields</span><span class="code-lang">java/python</span></div>
+        <pre><span class="cm"># Every Kafka message has exactly this structure:</span>
+ProducerRecord(
+  topic     <span class="op">=</span> <span class="st">'orders'</span>,         <span class="cm"># destination topic</span>
+  partition <span class="op">=</span> <span class="kw">None</span>,              <span class="cm"># None = hash(key) % num_partitions</span>
+  key       <span class="op">=</span> b<span class="st">'customer-uuid'</span>,  <span class="cm"># bytes — routing + ordering unit</span>
+  value     <span class="op">=</span> b<span class="st">'{"id":...}'</span>,     <span class="cm"># bytes — your payload</span>
+  headers   <span class="op">=</span> [                   <span class="cm"># metadata KV pairs</span>
+    (<span class="st">'X-Source'</span>,    b<span class="st">'checkout-svc'</span>),
+    (<span class="st">'X-Trace-ID'</span>,  b<span class="st">'abc-123-def'</span>),
+    (<span class="st">'Content-Type'</span>,b<span class="st">'application/json'</span>),
+  ],
+  timestamp <span class="op">=</span> <span class="kw">None</span>               <span class="cm"># None = broker-assigned (CreateTime)</span>
+)
+
+<span class="cm"># KEY INSIGHT: Key determines partition assignment.
+# Same key → same partition → guaranteed ordering for that key.
+# No key → round-robin across all partitions.
+# Null key after sticky partitioning (batching) completes.</span></pre>
+      </div>
+
+      <h3>KRaft — Kafka Without ZooKeeper</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">KRaft mode (Kafka 3.3+ production-ready)</span><span class="code-lang">properties</span></div>
+        <pre><span class="cm"># server.properties — combined broker+controller node</span>
+process.roles=broker,controller         <span class="cm"># this node does both</span>
+node.id=1
+controller.quorum.voters=1@host1:9093,2@host2:9093,3@host3:9093
+listeners=PLAINTEXT://:9092,CONTROLLER://:9093
+inter.broker.listener.name=PLAINTEXT
+controller.listener.names=CONTROLLER
+
+<span class="cm"># Generate cluster UUID (once, before first start):</span>
+<span class="cm"># kafka-storage.sh format --config server.properties \</span>
+<span class="cm">#   --cluster-id $(kafka-storage.sh random-uuid)</span>
+
+<span class="cm"># What KRaft eliminates:
+# ✓ ZooKeeper cluster (3-5 extra VMs)
+# ✓ ZK latency on metadata changes
+# ✓ Split-brain between ZK and Kafka state
+# ✓ 2-phase shutdown/startup coordination
+# New limit: 1M+ partitions (ZK limit was ~200K)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2 — PRODUCERS
+══════════════════════════════════════════════ -->
+<section id="producers">
+  <div class="section-header">
+    <div class="section-eyebrow">Write Path</div>
+    <div class="section-title"><em>PRODUCERS</em> — WRITE GUARANTEE MATRIX</div>
+    <div class="section-sub">The producer is deceptively complex. Every config choice is a tradeoff between throughput, latency, durability, and ordering. Most production outages trace back to misunderstood producer settings.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>The Three Delivery Guarantees</h3>
+      <div class="sev-row s-coral">
+        <div class="sev-name" style="color:var(--coral)">acks=0</div>
+        <div class="sev-desc"><strong>Fire and forget.</strong> Producer sends, doesn't wait for acknowledgement. Fastest throughput, zero durability. Data loss is guaranteed on any broker failure. Use only for: metrics, telemetry, logs where loss is acceptable.</div>
+        <div><span class="badge b-coral">AT-MOST-ONCE</span></div>
+      </div>
+      <div class="sev-row s-amber">
+        <div class="sev-name" style="color:var(--amber)">acks=1</div>
+        <div class="sev-desc"><strong>Leader acknowledges.</strong> Message written to leader log, ack sent. If leader dies before replication, message is lost. Default in many libraries — a dangerous default for financial data.</div>
+        <div><span class="badge b-amber">RISKY</span></div>
+      </div>
+      <div class="sev-row s-sig">
+        <div class="sev-name" style="color:var(--signal)">acks=all</div>
+        <div class="sev-desc"><strong>All ISR replicas acknowledge.</strong> Zero data loss assuming <code>min.insync.replicas ≥ 2</code>. Combined with idempotent producer: exactly-once within a partition. Use for everything that matters.</div>
+        <div><span class="badge b-sig">DURABLE</span></div>
+      </div>
+
+      <div class="callout c-amber">
+        <strong>min.insync.replicas — The Hidden Config That Matters</strong>
+        <code>acks=all</code> is meaningless without <code>min.insync.replicas=2</code> on the topic. With RF=3 and min.insync.replicas=1 (the default), one broker = full ISR and <code>acks=all</code> behaves like <code>acks=1</code>. Set this at the broker AND topic level.
+      </div>
+
+      <h3>Batching & Throughput Tuning</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">High-throughput producer config</span><span class="code-lang">python</span></div>
+        <pre><span class="py">from</span> confluent_kafka <span class="py">import</span> Producer
+
+p <span class="op">=</span> Producer({
+  <span class="cm"># Durability</span>
+  <span class="st">'acks'</span>:                    <span class="st">'all'</span>,
+  <span class="st">'enable.idempotence'</span>:      <span class="kw">True</span>,    <span class="cm"># requires acks=all + retries>0</span>
+
+  <span class="cm"># Throughput vs Latency tradeoff</span>
+  <span class="st">'linger.ms'</span>:              <span class="nu">20</span>,      <span class="cm"># wait 20ms to batch more msgs</span>
+  <span class="st">'batch.size'</span>:             <span class="nu">1048576</span>, <span class="cm"># 1MB batch (default 16KB)</span>
+  <span class="st">'buffer.memory'</span>:          <span class="nu">67108864</span>,<span class="cm"># 64MB producer buffer</span>
+
+  <span class="cm"># Compression (huge throughput win)</span>
+  <span class="st">'compression.type'</span>:       <span class="st">'zstd'</span>,  <span class="cm"># best ratio; lz4 for low latency</span>
+
+  <span class="cm"># Retry behavior</span>
+  <span class="st">'retries'</span>:                <span class="nu">2147483647</span>, <span class="cm"># max retries (idempotent = safe)</span>
+  <span class="st">'retry.backoff.ms'</span>:       <span class="nu">100</span>,
+  <span class="st">'delivery.timeout.ms'</span>:    <span class="nu">120000</span>, <span class="cm"># 2min max for any one message</span>
+  <span class="st">'request.timeout.ms'</span>:     <span class="nu">30000</span>,
+
+  <span class="cm"># Ordering guarantee within partition</span>
+  <span class="st">'max.in.flight.requests.per.connection'</span>: <span class="nu">5</span>,
+  <span class="cm"># With idempotence: safe up to 5 in-flight.
+  # Without idempotence: must be 1 to prevent reordering on retry.</span>
+
+  <span class="st">'bootstrap.servers'</span>: <span class="st">'broker1:9092,broker2:9092,broker3:9092'</span>,
+})
+
+<span class="cm"># Async produce with delivery callback</span>
+<span class="py">def</span> <span class="fn">on_delivery</span>(err, msg):
+  <span class="py">if</span> err: <span class="fn">log_error</span>(err)
+  <span class="py">else</span>: <span class="fn">metrics.increment</span>(<span class="st">'produced'</span>)
+
+p.produce(
+  topic    <span class="op">=</span> <span class="st">'orders'</span>,
+  key      <span class="op">=</span> order.customer_id.encode(),
+  value    <span class="op">=</span> order.to_json().encode(),
+  headers  <span class="op">=</span> {<span class="st">'source'</span>: b<span class="st">'checkout'</span>},
+  callback <span class="op">=</span> on_delivery
+)
+p.poll(<span class="nu">0</span>)   <span class="cm"># trigger callbacks without blocking</span>
+
+<span class="cm"># Flush before shutdown — critical!</span>
+p.flush(timeout<span class="op">=</span><span class="nu">30</span>)  <span class="cm"># wait up to 30s for all outstanding messages</span></pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Partitioning Strategy</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Key selection — the most important decision</span><span class="code-lang">python</span></div>
+        <pre><span class="cm">"""
+KEY SELECTION RULES:
+  1. Same key → same partition → ordering guaranteed
+  2. No key → round-robin (or sticky batch)
+  3. High-cardinality keys = even distribution
+  4. Low-cardinality keys = hot partition risk
+"""</span>
+
+<span class="cm"># ✅ GOOD: customer_id as key
+#    Orders per customer are ordered
+#    Millions of customers → even distribution</span>
+p.produce(topic<span class="op">=</span><span class="st">'orders'</span>, key<span class="op">=</span>order.customer_id.encode(), value<span class="op">=</span>v)
+
+<span class="cm"># ✅ GOOD: composite key for finer ordering</span>
+key <span class="op">=</span> f<span class="st">"{customer_id}:{order_id}"</span>.encode()
+
+<span class="cm"># ❌ BAD: country_code as key
+#    Only ~200 unique values → 200 partitions max
+#    "US" gets 40% of traffic → hot partition</span>
+
+<span class="cm"># ❌ BAD: timestamp as key
+#    New partition every millisecond if hash collides
+#    No ordering guarantee you actually need</span>
+
+<span class="cm"># ❌ BAD: null key for ordered events
+#    Round-robin destroys per-entity ordering</span>
+
+<span class="cm">─────────────────────────────────────────────────</span>
+<span class="cm"># Custom partitioner (Python)</span>
+<span class="cm"># Useful for: geographic routing, tenant isolation</span>
+
+<span class="py">def</span> <span class="fn">geography_partitioner</span>(key_bytes, all_partitions, available):
+    region_map <span class="op">=</span> {b<span class="st">'us'</span>: <span class="nu">0</span>, b<span class="st">'eu'</span>: <span class="nu">1</span>, b<span class="st">'ap'</span>: <span class="nu">2</span>}
+    region <span class="op">=</span> key_bytes[:2]
+    <span class="py">if</span> region <span class="py">in</span> region_map:
+        idx <span class="op">=</span> region_map[region] <span class="op">%</span> len(all_partitions)
+        <span class="py">return</span> all_partitions[idx]
+    <span class="cm"># default: hash</span>
+    <span class="py">return</span> all_partitions[hash(key_bytes) <span class="op">%</span> len(all_partitions)]</pre>
+      </div>
+
+      <h3>Transactional Producer</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Atomic multi-topic writes</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Transactional API: write to multiple topics atomically.
+# Either ALL messages commit or NONE do.
+# Essential for: read-process-write pipelines (stream processing).</span>
+
+p <span class="op">=</span> Producer({
+    <span class="st">'bootstrap.servers'</span>:    <span class="st">'broker:9092'</span>,
+    <span class="st">'transactional.id'</span>:     <span class="st">'checkout-producer-1'</span>,  <span class="cm"># unique per instance</span>
+    <span class="st">'enable.idempotence'</span>:   <span class="kw">True</span>,
+})
+p.init_transactions()
+
+<span class="py">try</span>:
+    p.begin_transaction()
+
+    <span class="cm"># Write to multiple topics in one atomic batch:</span>
+    p.produce(<span class="st">'orders'</span>,         key<span class="op">=</span>k, value<span class="op">=</span>order_msg)
+    p.produce(<span class="st">'inventory'</span>,      key<span class="op">=</span>k, value<span class="op">=</span>reserve_msg)
+    p.produce(<span class="st">'notifications'</span>,   key<span class="op">=</span>k, value<span class="op">=</span>email_msg)
+
+    <span class="cm"># Atomically commit consumer offsets WITH the transaction:</span>
+    p.send_offsets_to_transaction(
+        consumer.position(partitions),
+        consumer.consumer_group_metadata()
+    )
+
+    p.commit_transaction()
+
+<span class="py">except</span> KafkaException <span class="py">as</span> e:
+    p.abort_transaction()   <span class="cm"># all three writes rolled back</span>
+    <span class="py">raise</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 3 — CONSUMERS
+══════════════════════════════════════════════ -->
+<section id="consumers">
+  <div class="section-header">
+    <div class="section-eyebrow">Read Path</div>
+    <div class="section-title"><em>CONSUMERS</em> — THE POLL LOOP</div>
+    <div class="section-sub">The consumer poll loop is the most misunderstood piece of the Kafka API. Get it wrong and you get rebalance storms, offset commit races, and ghost consumers that hold partitions without processing them.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>The Correct Poll Loop</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Production consumer — full pattern</span><span class="code-lang">python</span></div>
+        <pre><span class="py">from</span> confluent_kafka <span class="py">import</span> Consumer, KafkaError
+<span class="py">import</span> signal, sys
+
+c <span class="op">=</span> Consumer({
+    <span class="st">'bootstrap.servers'</span>:       <span class="st">'broker1:9092'</span>,
+    <span class="st">'group.id'</span>:                <span class="st">'order-processor-v3'</span>,
+    <span class="st">'auto.offset.reset'</span>:       <span class="st">'earliest'</span>,   <span class="cm"># 'latest' for new groups</span>
+
+    <span class="cm"># CRITICAL: disable auto-commit</span>
+    <span class="st">'enable.auto.commit'</span>:      <span class="kw">False</span>,
+    <span class="cm"># Auto-commit commits on a timer, NOT after processing.
+    # You can commit before processing → message loss on crash.
+    # Always commit manually after confirmed processing.</span>
+
+    <span class="cm"># Session & heartbeat</span>
+    <span class="st">'session.timeout.ms'</span>:      <span class="nu">45000</span>,   <span class="cm"># 45s — time before assumed dead</span>
+    <span class="st">'heartbeat.interval.ms'</span>:   <span class="nu">3000</span>,    <span class="cm"># 1/3 of session.timeout</span>
+    <span class="st">'max.poll.interval.ms'</span>:    <span class="nu">300000</span>,  <span class="cm"># 5min — max time between polls</span>
+
+    <span class="cm"># Fetch tuning</span>
+    <span class="st">'fetch.min.bytes'</span>:         <span class="nu">1024</span>,    <span class="cm"># wait for 1KB before returning</span>
+    <span class="st">'fetch.max.wait.ms'</span>:       <span class="nu">500</span>,     <span class="cm"># max wait for fetch.min.bytes</span>
+    <span class="st">'max.partition.fetch.bytes'</span>:<span class="nu">1048576</span>, <span class="cm"># 1MB per partition per fetch</span>
+    <span class="st">'max.poll.records'</span>:        <span class="nu">500</span>,     <span class="cm"># max messages per poll()</span>
+})
+
+running <span class="op">=</span> <span class="kw">True</span>
+signal.signal(signal.SIGTERM, <span class="py">lambda</span> *_: globals().update(running<span class="op">=False</span>))
+
+c.subscribe([<span class="st">'orders'</span>], on_assign<span class="op">=</span>on_assign, on_revoke<span class="op">=</span>on_revoke)
+
+<span class="py">try</span>:
+    <span class="py">while</span> running:
+        msgs <span class="op">=</span> c.consume(num_messages<span class="op">=</span><span class="nu">500</span>, timeout<span class="op">=</span><span class="nu">1.0</span>)
+
+        <span class="py">if not</span> msgs: <span class="py">continue</span>
+
+        <span class="py">for</span> msg <span class="py">in</span> msgs:
+            <span class="py">if</span> msg.error():
+                <span class="py">if</span> msg.error().code() <span class="op">==</span> KafkaError._PARTITION_EOF:
+                    <span class="py">continue</span>  <span class="cm"># end of partition, not an error</span>
+                <span class="py">raise</span> KafkaException(msg.error())
+
+            process(msg)  <span class="cm"># ← your business logic</span>
+
+        <span class="cm"># Commit AFTER processing the batch — at-least-once</span>
+        c.commit(asynchronous<span class="op">=False</span>)  <span class="cm"># sync commit = no gaps</span>
+
+<span class="py">finally</span>:
+    c.close()  <span class="cm"># triggers graceful rebalance, commits offsets</span></pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Consumer Groups & Rebalancing</h3>
+      <div class="callout c-coral">
+        <strong>REBALANCE STORM — The #1 Production Problem</strong>
+        A rebalance pauses ALL consumers in a group while partitions are redistributed. Causes: slow processing (exceeds <code>max.poll.interval.ms</code>), GC pauses, DB queries in the hot path, or too many consumers for too few partitions. Symptoms: lag spikes, duplicate processing, offset commit failures.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Rebalance callbacks + static membership</span><span class="code-lang">python</span></div>
+        <pre><span class="py">from</span> confluent_kafka <span class="py">import</span> Consumer
+
+<span class="cm"># Static group membership — eliminates rebalance on restart</span>
+c <span class="op">=</span> Consumer({
+    <span class="st">'group.id'</span>:               <span class="st">'order-processor'</span>,
+    <span class="st">'group.instance.id'</span>:      <span class="st">'processor-us-east-1a'</span>,  <span class="cm"># STATIC</span>
+    <span class="st">'session.timeout.ms'</span>:     <span class="nu">300000</span>,  <span class="cm"># 5min — safe rolling restarts</span>
+    <span class="cm"># Static member holds its partitions for up to session.timeout
+    # after disconnect. Rolling deploys trigger zero rebalances.</span>
+})
+
+<span class="py">def</span> <span class="fn">on_assign</span>(consumer, partitions):
+    <span class="cm"># Called when partitions are assigned — good place to:</span>
+    <span class="cm"># - Seek to a custom offset</span>
+    <span class="cm"># - Reset a per-partition state machine</span>
+    <span class="cm"># - Load per-partition warm cache from DB</span>
+    <span class="py">for</span> p <span class="py">in</span> partitions:
+        log.info(f<span class="st">"Assigned partition {p.partition}"</span>)
+    consumer.assign(partitions)
+
+<span class="py">def</span> <span class="fn">on_revoke</span>(consumer, partitions):
+    <span class="cm"># Called BEFORE partitions are taken away.
+    # MUST commit all pending offsets here — your last chance.</span>
+    consumer.commit(asynchronous<span class="op">=False</span>)
+    <span class="py">for</span> p <span class="py">in</span> partitions:
+        flush_partition_state(p.partition)
+
+<span class="cm">─────────────────────────────────────────────────
+# Partition assignment strategies (broker-side)</span>
+<span class="cm"># partition.assignment.strategy=cooperative-sticky (Kafka 2.4+)</span>
+<span class="cm"># cooperative-sticky: incremental rebalance — only moves
+# partitions that need to move. Other partitions keep consuming.
+# vs range/roundrobin: STOP-THE-WORLD — all partitions revoked.</span>
+
+<span class="cm"># Always set cooperative-sticky in new deployments:</span>
+<span class="st">'partition.assignment.strategy'</span>: <span class="st">'cooperative-sticky'</span></pre>
+      </div>
+
+      <h3>Consumer Lag — Reading the Signal</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Lag monitoring + seek patterns</span><span class="code-lang">python</span></div>
+        <pre><span class="py">from</span> confluent_kafka <span class="py">import</span> Consumer, TopicPartition
+
+c <span class="op">=</span> Consumer({<span class="st">'group.id'</span>: <span class="st">'monitor'</span>, <span class="st">'bootstrap.servers'</span>: <span class="st">'...'</span>})
+
+<span class="cm"># Get consumer group lag for a topic:</span>
+md <span class="op">=</span> c.list_topics(<span class="st">'orders'</span>)
+partitions <span class="op">=</span> [
+    TopicPartition(<span class="st">'orders'</span>, p) <span class="py">for</span> p <span class="py">in</span> md.topics[<span class="st">'orders'</span>].partitions
+]
+committed  <span class="op">=</span> c.committed(partitions)
+high_water <span class="op">=</span> c.get_watermark_offsets
+
+<span class="py">for</span> tp <span class="py">in</span> committed:
+    _, hw <span class="op">=</span> c.get_watermark_offsets(tp)
+    lag <span class="op">=</span> hw <span class="op">-</span> (tp.offset <span class="py">if</span> tp.offset <span class="op">>=</span> <span class="nu">0</span> <span class="py">else</span> <span class="nu">0</span>)
+    <span class="py">print</span>(f<span class="st">"Partition {tp.partition}: lag={lag}"</span>)
+
+<span class="cm"># Seek to specific offset (replay from point in time):</span>
+c.seek(TopicPartition(<span class="st">'orders'</span>, partition<span class="op">=</span><span class="nu">0</span>, offset<span class="op">=</span><span class="nu">12345</span>))
+
+<span class="cm"># Seek to timestamp (replay from a specific time):</span>
+ts_ms <span class="op">=</span> <span class="nu">1704067200000</span>   <span class="cm"># 2024-01-01 00:00:00 UTC in ms</span>
+offsets_for_ts <span class="op">=</span> c.offsets_for_times([TopicPartition(<span class="st">'orders'</span>, <span class="nu">0</span>, ts_ms)])
+c.seek(offsets_for_ts[<span class="nu">0</span>])</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 4 — KAFKA STREAMS
+══════════════════════════════════════════════ -->
+<section id="streams">
+  <div class="section-header">
+    <div class="section-eyebrow">Stream Processing</div>
+    <div class="section-title">KAFKA <em>STREAMS</em></div>
+    <div class="section-sub">Kafka Streams is a library (not a cluster) that runs inside your Java/JVM application. No separate processing cluster. It reads from Kafka, transforms, and writes back to Kafka — with stateful windowed aggregations backed by RocksDB.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Topology Building Blocks</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Kafka Streams DSL — Java</span><span class="code-lang">java</span></div>
+        <pre><span class="ty">StreamsBuilder</span> builder <span class="op">=</span> <span class="kw">new</span> <span class="ty">StreamsBuilder</span>();
+
+<span class="cm">// KStream: unbounded stream of events</span>
+<span class="ty">KStream</span>&lt;<span class="ty">String</span>, <span class="ty">Order</span>&gt; orders <span class="op">=</span>
+    builder.stream(<span class="st">"orders"</span>, <span class="ty">Consumed</span>.with(
+        <span class="ty">Serdes</span>.String(), orderSerde
+    ));
+
+<span class="cm">// Filter + branch</span>
+<span class="ty">KStream</span>&lt;<span class="ty">String</span>, <span class="ty">Order</span>&gt;[] branches <span class="op">=</span> orders
+    .filter((k, v) <span class="op">-></span> v.getAmount() <span class="op">></span> <span class="nu">0</span>)
+    .branch(
+        (k, v) <span class="op">-></span> v.getStatus().equals(<span class="st">"COMPLETED"</span>),
+        (k, v) <span class="op">-></span> v.getStatus().equals(<span class="st">"REFUNDED"</span>),
+        (k, v) <span class="op">-></span> <span class="kw">true</span>  <span class="cm">// catch-all</span>
+    );
+<span class="ty">KStream</span> completed <span class="op">=</span> branches[<span class="nu">0</span>];
+<span class="ty">KStream</span> refunded  <span class="op">=</span> branches[<span class="nu">1</span>];
+
+<span class="cm">// Stateful: aggregate revenue per customer per hour</span>
+<span class="ty">KTable</span>&lt;<span class="ty">Windowed</span>&lt;<span class="ty">String</span>&gt;, <span class="ty">Double</span>&gt; hourlyRevenue <span class="op">=</span> completed
+    .groupByKey()
+    .windowedBy(<span class="ty">TimeWindows</span>.ofSizeWithNoGrace(
+        <span class="ty">Duration</span>.ofHours(<span class="nu">1</span>)
+    ))
+    .aggregate(
+        () <span class="op">-></span> <span class="nu">0.0</span>,
+        (key, order, agg) <span class="op">-></span> agg <span class="op">+</span> order.getAmount(),
+        <span class="ty">Materialized</span>.as(<span class="st">"hourly-revenue-store"</span>)
+    );
+
+<span class="cm">// Write result back to Kafka</span>
+hourlyRevenue
+    .toStream()
+    .to(<span class="st">"hourly-revenue"</span>);
+
+<span class="cm">// Start topology</span>
+<span class="ty">KafkaStreams</span> app <span class="op">=</span> <span class="kw">new</span> <span class="ty">KafkaStreams</span>(
+    builder.build(), streamsConfig
+);
+app.start();</pre>
+      </div>
+    </div>
+    <div>
+      <h3>KTable vs KStream vs GlobalKTable</h3>
+      <table>
+        <thead><tr><th>Abstraction</th><th>Represents</th><th>Use When</th></tr></thead>
+        <tbody>
+          <tr><td>KStream</td><td>Infinite stream of events (each = new fact)</td><td>Clickstream, logs, transactions</td></tr>
+          <tr><td>KTable</td><td>Changelog stream (latest value per key)</td><td>User profiles, account balances</td></tr>
+          <tr><td>GlobalKTable</td><td>KTable replicated to ALL instances</td><td>Small lookup tables (countries, SKUs)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Stream-Table join + windowing</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">// KStream-KTable join: enrich each order with customer profile</span>
+<span class="ty">KTable</span>&lt;<span class="ty">String</span>, <span class="ty">Customer</span>&gt; customers <span class="op">=</span>
+    builder.table(<span class="st">"customers"</span>);   <span class="cm">// latest value per customer_id</span>
+
+<span class="ty">KStream</span>&lt;<span class="ty">String</span>, <span class="ty">EnrichedOrder</span>&gt; enriched <span class="op">=</span>
+    orders.join(
+        customers,
+        (order, customer) <span class="op">-></span> <span class="kw">new</span> <span class="ty">EnrichedOrder</span>(order, customer)
+    );
+<span class="cm">// Note: both must be co-partitioned (same # of partitions, same key)</span>
+
+<span class="cm">─────────────────────────────────────────────────
+// WINDOWING TYPES:
+// Tumbling:  fixed-size, non-overlapping
+// Hopping:   fixed-size, overlapping (window can advance by hop)
+// Session:   activity-gap based (closes after N ms of inactivity)
+// Sliding:   every event creates a window ending at that event</span>
+
+<span class="cm">// Session window — user activity sessions</span>
+orders.groupByKey()
+    .windowedBy(<span class="ty">SessionWindows</span>
+        .ofInactivityGapWithNoGrace(<span class="ty">Duration</span>.ofMinutes(<span class="nu">30</span>))
+    )
+    .count();  <span class="cm">// events per session per user</span>
+
+<span class="cm">// Interactive query — read state store from ANY instance:</span>
+<span class="ty">ReadOnlyKeyValueStore</span>&lt;<span class="ty">String</span>, <span class="ty">Long</span>&gt; store <span class="op">=</span>
+    streams.store(<span class="ty">StoreQueryParameters</span>.fromNameAndType(
+        <span class="st">"hourly-revenue-store"</span>,
+        <span class="ty">QueryableStoreTypes</span>.keyValueStore()
+    ));
+<span class="ty">Long</span> revenue <span class="op">=</span> store.get(<span class="st">"customer-123"</span>);</pre>
+      </div>
+
+      <div class="callout c-plasma">
+        <strong>Grace Period — Handling Late-Arriving Events</strong>
+        By default, windowed aggregations reject records that arrive after the window closes. Use <code>.ofSizeAndGrace(Duration.ofHours(1), Duration.ofMinutes(5))</code> to accept late arrivals up to 5 minutes late. Critical for Kafka→S3→Kafka pipelines where end-to-end latency varies.
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 5 — KAFKA CONNECT
+══════════════════════════════════════════════ -->
+<section id="connect">
+  <div class="section-header">
+    <div class="section-eyebrow">Data Integration</div>
+    <div class="section-title">KAFKA <em>CONNECT</em></div>
+    <div class="section-sub">Kafka Connect is a distributed, fault-tolerant integration framework. Source connectors pull data in. Sink connectors push it out. Single Message Transforms (SMTs) reshape records inline — no code required for 80% of use cases.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Debezium — CDC from Any Database</h3>
+      <div class="callout c-sig">
+        <strong>CDC — The Most Important Source Connector</strong>
+        Debezium reads the database binary replication log (WAL in Postgres, binlog in MySQL). Every INSERT, UPDATE, and DELETE becomes a Kafka event with before/after state. Zero impact on the source database, sub-second latency, and full history — no polling, no triggers, no app changes.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Debezium PostgreSQL connector config</span><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="st">"name"</span>: <span class="st">"postgres-orders-cdc"</span>,
+  <span class="st">"config"</span>: {
+    <span class="st">"connector.class"</span>: <span class="st">"io.debezium.connector.postgresql.PostgresConnector"</span>,
+    <span class="st">"plugin.name"</span>:       <span class="st">"pgoutput"</span>,         <span class="cm">// no plugin needed in PG14+</span>
+    <span class="st">"database.hostname"</span>: <span class="st">"prod-db.internal"</span>,
+    <span class="st">"database.port"</span>:     <span class="st">"5432"</span>,
+    <span class="st">"database.user"</span>:     <span class="st">"debezium_ro"</span>,
+    <span class="st">"database.password"</span>: <span class="st">"${file:/secrets/db.properties:password}"</span>,
+    <span class="st">"database.dbname"</span>:   <span class="st">"ecommerce"</span>,
+    <span class="st">"database.server.name"</span>: <span class="st">"ecommerce-prod"</span>,  <span class="cm">// topic prefix</span>
+
+    <span class="cm">// Topic: ecommerce-prod.public.orders</span>
+    <span class="st">"table.include.list"</span>: <span class="st">"public.orders,public.customers,public.inventory"</span>,
+    <span class="st">"column.exclude.list"</span>: <span class="st">"public.customers.ssn,public.customers.ccnum"</span>,
+
+    <span class="cm">// Snapshot mode: initial | never | when_needed</span>
+    <span class="st">"snapshot.mode"</span>:      <span class="st">"initial"</span>,     <span class="cm">// full table scan on first start</span>
+    <span class="st">"snapshot.isolation.mode"</span>: <span class="st">"repeatable_read"</span>,
+
+    <span class="cm">// Outbox pattern — for transactional outbox</span>
+    <span class="st">"transforms"</span>: <span class="st">"outbox"</span>,
+    <span class="st">"transforms.outbox.type"</span>: <span class="st">"io.debezium.transforms.outbox.EventRouter"</span>,
+    <span class="st">"transforms.outbox.table.fields.additional.placement"</span>: <span class="st">"type:header:eventType"</span>
+  }
+}</pre>
+      </div>
+    </div>
+    <div>
+      <h3>S3 Sink — The Lakehouse Landing Zone</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">S3 Sink connector — Parquet output</span><span class="code-lang">json</span></div>
+        <pre>{
+  <span class="st">"name"</span>: <span class="st">"s3-sink-orders"</span>,
+  <span class="st">"config"</span>: {
+    <span class="st">"connector.class"</span>: <span class="st">"io.confluent.connect.s3.S3SinkConnector"</span>,
+    <span class="st">"tasks.max"</span>:        <span class="st">"8"</span>,               <span class="cm">// parallelism</span>
+    <span class="st">"topics"</span>:           <span class="st">"orders,inventory"</span>,
+
+    <span class="st">"s3.region"</span>:        <span class="st">"us-east-1"</span>,
+    <span class="st">"s3.bucket.name"</span>:   <span class="st">"my-data-lake"</span>,
+    <span class="st">"s3.part.size"</span>:     <span class="st">"67108864"</span>,       <span class="cm">// 64MB part uploads</span>
+
+    <span class="cm">// Hive-compatible partitioning: year=2024/month=01/day=15/</span>
+    <span class="st">"storage.class"</span>:    <span class="st">"io.confluent.connect.s3.storage.S3Storage"</span>,
+    <span class="st">"partitioner.class"</span>:<span class="st">"io.confluent.connect.storage.partitioner.TimeBasedPartitioner"</span>,
+    <span class="st">"path.format"</span>:      <span class="st">"'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH"</span>,
+    <span class="st">"locale"</span>:           <span class="st">"en-US"</span>,
+    <span class="st">"timezone"</span>:         <span class="st">"UTC"</span>,
+    <span class="st">"timestamp.extractor"</span>: <span class="st">"RecordField"</span>,
+    <span class="st">"timestamp.field"</span>:  <span class="st">"event_ts"</span>,
+
+    <span class="cm">// Format: Parquet with schema evolution</span>
+    <span class="st">"format.class"</span>:     <span class="st">"io.confluent.connect.s3.format.parquet.ParquetFormat"</span>,
+    <span class="st">"parquet.codec"</span>:    <span class="st">"zstd"</span>,
+    <span class="st">"schema.compatibility"</span>: <span class="st">"FULL_TRANSITIVE"</span>,
+
+    <span class="cm">// Flush every 10min OR 50k records OR 100MB</span>
+    <span class="st">"rotate.interval.ms"</span>:    <span class="st">"600000"</span>,
+    <span class="st">"flush.size"</span>:            <span class="st">"50000"</span>
+  }
+}</pre>
+      </div>
+
+      <h3>Single Message Transforms (SMTs)</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">SMT chains — no code required</span><span class="code-lang">json</span></div>
+        <pre><span class="st">"transforms"</span>: <span class="st">"route,flatten,mask,addfield,timestamp"</span>,
+
+<span class="cm">// 1. Route by field value → different topics</span>
+<span class="st">"transforms.route.type"</span>: <span class="st">"org.apache.kafka.connect.transforms.ValueToKey"</span>,
+<span class="st">"transforms.route.fields"</span>: <span class="st">"region"</span>,
+
+<span class="cm">// 2. Flatten nested struct → flat key=value</span>
+<span class="st">"transforms.flatten.type"</span>: <span class="st">"org.apache.kafka.connect.transforms.Flatten$Value"</span>,
+<span class="st">"transforms.flatten.delimiter"</span>: <span class="st">"_"</span>,
+
+<span class="cm">// 3. Mask PII fields with a fixed value</span>
+<span class="st">"transforms.mask.type"</span>: <span class="st">"org.apache.kafka.connect.transforms.MaskField$Value"</span>,
+<span class="st">"transforms.mask.fields"</span>: <span class="st">"ssn,credit_card,email"</span>,
+<span class="st">"transforms.mask.replacement"</span>: <span class="st">"[REDACTED]"</span>,
+
+<span class="cm">// 4. Add a static metadata field</span>
+<span class="st">"transforms.addfield.type"</span>: <span class="st">"org.apache.kafka.connect.transforms.InsertField$Value"</span>,
+<span class="st">"transforms.addfield.static.field"</span>: <span class="st">"_source"</span>,
+<span class="st">"transforms.addfield.static.value"</span>: <span class="st">"postgres-prod"</span>,
+
+<span class="cm">// 5. Convert timestamp format</span>
+<span class="st">"transforms.timestamp.type"</span>: <span class="st">"org.apache.kafka.connect.transforms.TimestampConverter$Value"</span>,
+<span class="st">"transforms.timestamp.field"</span>: <span class="st">"created_at"</span>,
+<span class="st">"transforms.timestamp.target.type"</span>: <span class="st">"unix"</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 6 — SCHEMA REGISTRY
+══════════════════════════════════════════════ -->
+<section id="schema">
+  <div class="section-header">
+    <div class="section-eyebrow">Schema Management</div>
+    <div class="section-title">SCHEMA <em>REGISTRY</em></div>
+    <div class="section-sub">Without schema management, Kafka topics become a shared mutable blob format — producers break consumers silently. The Schema Registry enforces data contracts, enables safe schema evolution, and shrinks message size by storing schemas out-of-band.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Avro — The Production Choice</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Avro schema + Python producer</span><span class="code-lang">python</span></div>
+        <pre><span class="py">from</span> confluent_kafka <span class="py">import</span> Producer
+<span class="py">from</span> confluent_kafka.schema_registry <span class="py">import</span> SchemaRegistryClient
+<span class="py">from</span> confluent_kafka.schema_registry.avro <span class="py">import</span> AvroSerializer
+
+<span class="cm"># Schema defined once in the registry</span>
+ORDER_SCHEMA_STR <span class="op">=</span> <span class="st">"""
+{
+  "type": "record",
+  "name": "Order",
+  "namespace": "com.myco.ecommerce",
+  "fields": [
+    {"name": "order_id",     "type": "string"},
+    {"name": "customer_id",  "type": "string"},
+    {"name": "amount_cents", "type": "long"},
+    {"name": "status",       "type": {"type": "enum",
+      "name": "OrderStatus",
+      "symbols": ["PENDING","PROCESSING","COMPLETED","CANCELLED"]}},
+    {"name": "created_at",   "type": {"type": "long",
+      "logicalType": "timestamp-millis"}},
+    {"name": "metadata",     "type": ["null", {
+      "type": "record", "name": "Meta",
+      "fields": [
+        {"name": "ip",  "type": "string"},
+        {"name": "ua",  "type": ["null","string"], "default": null}
+      ]
+    }], "default": null}
+  ]
+}
+"""</span>
+
+sr_client <span class="op">=</span> SchemaRegistryClient({<span class="st">'url'</span>: <span class="st">'https://sr.internal:8081'</span>})
+avro_serializer <span class="op">=</span> AvroSerializer(sr_client, ORDER_SCHEMA_STR,
+    conf<span class="op">=</span>{<span class="st">'auto.register.schemas'</span>: <span class="kw">True</span>}
+)
+
+<span class="cm"># Wire format: [0x00][4-byte schema ID][avro bytes]
+# Schema ID is looked up in registry by consumer.
+# Payload is 5–50× smaller than JSON for the same data.</span>
+
+p <span class="op">=</span> Producer({<span class="st">'bootstrap.servers'</span>: <span class="st">'broker:9092'</span>})
+p.produce(
+    topic<span class="op">=</span><span class="st">'orders'</span>,
+    key<span class="op">=</span>order[<span class="st">'customer_id'</span>].encode(),
+    value<span class="op">=</span>avro_serializer(order, SerializationContext(<span class="st">'orders'</span>, MessageField.VALUE))
+)</pre>
+      </div>
+    </div>
+    <div>
+      <h3>Compatibility Modes — Schema Evolution Rules</h3>
+      <div class="sev-row s-sig" style="background:var(--void2)">
+        <div class="sev-name" style="color:var(--signal)">BACKWARD</div>
+        <div class="sev-desc">New schema can read old data. Add fields with defaults. Remove fields without defaults. <strong>Default production choice.</strong></div>
+        <div><span class="badge b-sig">SAFE</span></div>
+      </div>
+      <div class="sev-row s-plasma" style="background:var(--void2)">
+        <div class="sev-name" style="color:var(--plasma)">FORWARD</div>
+        <div class="sev-desc">Old schema can read new data. Add fields without defaults. Remove fields with defaults. Safe for rolling consumer deploys.</div>
+        <div><span class="badge b-plasma">OK</span></div>
+      </div>
+      <div class="sev-row s-amber" style="background:var(--void2)">
+        <div class="sev-name" style="color:var(--amber)">FULL</div>
+        <div class="sev-desc">Both backward AND forward. Add/remove fields only with defaults. Most restrictive, safest for long-lived topics.</div>
+        <div><span class="badge b-amber">STRICT</span></div>
+      </div>
+      <div class="sev-row s-coral" style="background:var(--void2)">
+        <div class="sev-name" style="color:var(--coral)">NONE</div>
+        <div class="sev-desc">No compatibility checks. Any change allowed. Do not use in production. Only acceptable for dev/test topics.</div>
+        <div><span class="badge b-coral">DANGER</span></div>
+      </div>
+      <div class="sev-row s-violet" style="background:var(--void2)">
+        <div class="sev-name" style="color:var(--violet)">*_TRANSITIVE</div>
+        <div class="sev-desc">Like above but checks against ALL previous versions, not just the last. Use when consumers might be multiple versions behind.</div>
+        <div><span class="badge b-violet">SAFEST</span></div>
+      </div>
+
+      <div class="code-wrap" style="margin-top:1rem">
+        <div class="code-header"><span class="code-fname">What's allowed per mode (Avro)</span><span class="code-lang">avro</span></div>
+        <pre><span class="cm">// ALLOWED with BACKWARD compatibility:
+// ✅ Add field with default:  {"name":"region","type":"string","default":"US"}
+// ✅ Remove field that had a default in prior schema
+// ❌ Remove field with no default (old consumers break)
+// ❌ Change field type (int → string)
+// ❌ Rename field (it's a delete + add)
+
+// SAFE RENAME PATTERN: use aliases
+{
+  "name": "customer_identifier",   // new name
+  "aliases": ["customer_id"],      // old name — Avro maps it
+  "type": "string"
+}
+
+// Protobuf advantages over Avro for evolution:
+// - Field numbers never change (even if names do)
+// - Adding any field is always backward compatible
+// - Required → optional is always safe
+// - Better for gRPC-native stacks</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 7 — EXACTLY-ONCE
+══════════════════════════════════════════════ -->
+<section id="eos">
+  <div class="section-header">
+    <div class="section-eyebrow">Delivery Semantics</div>
+    <div class="section-title"><em>EXACTLY-ONCE</em> SEMANTICS</div>
+    <div class="section-sub">Exactly-once is the hardest problem in distributed systems. Kafka solves it end-to-end via three interlocking mechanisms: idempotent producers, transactions, and transactional consumers. Most teams don't need it — but when you do, here's exactly how it works.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>The Three Layers of EOS</h3>
+      <div class="flow">
+        <div class="flow-row">
+          <div class="flow-box fb-sig" style="width:100%">
+            Layer 1: Idempotent Producer
+            <div class="flow-note">PID + sequence number → broker deduplicates retries per partition</div>
+          </div>
+        </div>
+        <div class="flow-row"><div class="flow-arr" style="margin-left:40px">↓ enable.idempotence=true</div></div>
+        <div class="flow-row">
+          <div class="flow-box fb-amber" style="width:100%">
+            Layer 2: Producer Transactions
+            <div class="flow-note">transactional.id → atomic multi-partition, multi-topic writes</div>
+          </div>
+        </div>
+        <div class="flow-row"><div class="flow-arr" style="margin-left:40px">↓ isolation.level=read_committed</div></div>
+        <div class="flow-row">
+          <div class="flow-box fb-plasma" style="width:100%">
+            Layer 3: Transactional Consumer
+            <div class="flow-note">reads only committed offsets; abort markers invisible</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-wrap" style="margin-top:1rem">
+        <div class="code-header"><span class="code-fname">Idempotent producer mechanics</span><span class="code-lang">python</span></div>
+        <pre><span class="cm">"""
+Idempotent Producer Internals:
+  1. Broker assigns Producer ID (PID) on first connect
+  2. Producer tags each message: (PID, partition, sequence_num)
+  3. Broker tracks latest sequence per (PID, partition)
+  4. Duplicate: seq ≤ last seen → broker ACKs but does NOT write
+  5. Out-of-order: seq > expected → broker rejects (ProducerFencedException)
+
+This prevents duplicate writes on retry — the #1 cause of
+"at-least-once" overproduction on network errors.
+"""</span>
+
+p <span class="op">=</span> Producer({
+    <span class="st">'enable.idempotence'</span>:      <span class="kw">True</span>,
+    <span class="st">'acks'</span>:                    <span class="st">'all'</span>,     <span class="cm"># required for idempotence</span>
+    <span class="st">'retries'</span>:                 <span class="nu">2147483647</span>, <span class="cm"># max — idempotent = safe to retry</span>
+    <span class="st">'max.in.flight.requests.per.connection'</span>: <span class="nu">5</span>,  <span class="cm"># up to 5 with idempotence</span>
+})
+<span class="cm"># Idempotence scope: per partition.
+# Does NOT prevent duplicates across partitions without transactions.</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3>EOS Read-Process-Write Pattern</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Full EOS pipeline</span><span class="code-lang">python</span></div>
+        <pre><span class="cm">"""
+EOS Read-Process-Write:
+  Consumer reads from topic A
+  → processes record
+  → writes result to topic B
+  → commits input offset
+  All four in one atomic transaction.
+"""</span>
+
+consumer <span class="op">=</span> Consumer({
+    <span class="st">'group.id'</span>:              <span class="st">'eos-processor'</span>,
+    <span class="st">'enable.auto.commit'</span>:    <span class="kw">False</span>,
+    <span class="st">'isolation.level'</span>:       <span class="st">'read_committed'</span>,  <span class="cm"># CRITICAL</span>
+    <span class="cm"># read_committed: consumer skips aborted transactions
+    # and messages beyond the last stable offset (LSO).
+    # WITHOUT this: consumer reads partial/aborted transactions.</span>
+})
+
+producer <span class="op">=</span> Producer({
+    <span class="st">'transactional.id'</span>:      <span class="st">'eos-proc-instance-1'</span>,
+    <span class="st">'enable.idempotence'</span>:    <span class="kw">True</span>,
+})
+producer.init_transactions()
+consumer.subscribe([<span class="st">'raw-orders'</span>])
+
+<span class="py">while True</span>:
+    msgs <span class="op">=</span> consumer.consume(<span class="nu">100</span>, timeout<span class="op">=</span><span class="nu">1.0</span>)
+    <span class="py">if not</span> msgs: <span class="py">continue</span>
+
+    producer.begin_transaction()
+    <span class="py">try</span>:
+        <span class="py">for</span> msg <span class="py">in</span> msgs:
+            result <span class="op">=</span> transform(msg)
+            producer.produce(<span class="st">'processed-orders'</span>, value<span class="op">=</span>result)
+
+        <span class="cm"># Atomically commit offsets WITH the output write</span>
+        producer.send_offsets_to_transaction(
+            consumer.position(consumer.assignment()),
+            consumer.consumer_group_metadata()
+        )
+        producer.commit_transaction()
+
+    <span class="py">except</span> Exception <span class="py">as</span> e:
+        producer.abort_transaction()
+        <span class="cm"># Re-seek to last committed position</span>
+        consumer.seek_to_committed()
+
+<span class="cm">"""
+Why this is exactly-once:
+  - Output write + offset commit = one atomic transaction
+  - If process crashes mid-transaction: abort, re-seek, reprocess
+  - If broker fails after commit: idempotent producer handles retry
+  - Consumer with read_committed: never sees the aborted writes
+"""</span></pre>
+      </div>
+      <div class="callout c-coral">
+        <strong>Do You Actually Need EOS?</strong>
+        EOS adds ~20-30% throughput overhead. For most pipelines: idempotent consumer logic (upserts, deduplication by event_id) + at-least-once delivery = "good enough" EOS at a fraction of the cost. True EOS is essential for: financial transactions, inventory deductions, anything where double-processing causes irreversible harm.
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 8 — OPS
+══════════════════════════════════════════════ -->
+<section id="ops">
+  <div class="section-header">
+    <div class="section-eyebrow">Operations & Tuning</div>
+    <div class="section-title">OPS — <em>PRODUCTION SIGNAL</em></div>
+    <div class="section-sub">Kafka operations is where junior engineers become senior engineers. Partitioning decisions, retention math, broker JVM tuning, and the three metrics that tell you everything about cluster health.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Partition Sizing — The Critical Decision</h3>
+      <div class="callout c-amber">
+        <strong>You Cannot Decrease Partition Count</strong>
+        Kafka only allows increasing partitions, never decreasing. Adding partitions reshuffles key-to-partition mapping — existing consumers may get a different set of data. Design partition count at topic creation with 2× headroom for future scale.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Partition count formula</span><span class="code-lang">python</span></div>
+        <pre><span class="cm">"""
+Partition count rules of thumb:
+
+1. Throughput-based:
+   partitions = max(producer_throughput, consumer_throughput) / per_partition_throughput
+   Per partition: ~10MB/s write, ~50MB/s read (modern NVMe broker)
+
+2. Consumer parallelism:
+   Max parallelism = partition count
+   10 partitions → max 10 active consumers in a group
+
+3. Leadership load:
+   Each partition = 1 leader election on broker failure
+   Each partition leader = ~1-5ms coordination overhead
+   Recommendation: < 4000 partitions per broker (KRaft: much higher)
+
+4. Replication factor (RF):
+   RF=1 → no fault tolerance (dev only)
+   RF=2 → can survive 1 broker failure (min for production)
+   RF=3 → standard production — survives 2 simultaneous failures
+
+EXAMPLE: 100MB/s peak throughput, 4 consumers, RF=3
+   By throughput: 100/10 = 10 partitions minimum
+   By parallelism: 4 consumers → 4 partitions minimum
+   Add 2x headroom: 20 partitions
+   Final: 24 (round to multiple of consumer count = 4)
+"""</span>
+
+<span class="cm"># Create topic with admin client</span>
+<span class="py">from</span> confluent_kafka.admin <span class="py">import</span> AdminClient, NewTopic
+
+admin <span class="op">=</span> AdminClient({<span class="st">'bootstrap.servers'</span>: <span class="st">'broker:9092'</span>})
+admin.create_topics([
+    NewTopic(
+        topic              <span class="op">=</span> <span class="st">'orders'</span>,
+        num_partitions     <span class="op">=</span> <span class="nu">24</span>,
+        replication_factor <span class="op">=</span> <span class="nu">3</span>,
+        config             <span class="op">=</span> {
+            <span class="st">'retention.ms'</span>:       <span class="st">'604800000'</span>,  <span class="cm"># 7 days</span>
+            <span class="st">'retention.bytes'</span>:    <span class="st">'53687091200'</span>, <span class="cm"># 50GB per partition</span>
+            <span class="st">'compression.type'</span>:   <span class="st">'zstd'</span>,
+            <span class="st">'min.insync.replicas'</span>:<span class="st">'2'</span>,
+            <span class="st">'cleanup.policy'</span>:     <span class="st">'delete'</span>,      <span class="cm"># or 'compact' for KTable</span>
+            <span class="st">'message.timestamp.type'</span>: <span class="st">'CreateTime'</span>,
+        }
+    )
+])</pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Broker Tuning — The JVM & OS Config</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">server.properties — production broker</span><span class="code-lang">properties</span></div>
+        <pre><span class="cm">## NETWORK & THREADS</span>
+num.network.threads=8              <span class="cm"># socket threads: 2x CPU cores</span>
+num.io.threads=16                  <span class="cm"># disk I/O threads: 4x CPU cores</span>
+num.replica.fetchers=4             <span class="cm"># replication fetch parallelism</span>
+socket.send.buffer.bytes=1048576   <span class="cm"># 1MB socket buffer</span>
+socket.receive.buffer.bytes=1048576
+socket.request.max.bytes=104857600 <span class="cm"># 100MB max request</span>
+
+<span class="cm">## LOG STORAGE</span>
+log.dirs=/data/kafka-logs,/data2/kafka-logs  <span class="cm"># RAID-0 across SSDs</span>
+log.segment.bytes=1073741824       <span class="cm"># 1GB segments</span>
+log.retention.hours=168            <span class="cm"># 7 days</span>
+log.flush.interval.messages=10000  <span class="cm"># fsync every 10K messages</span>
+log.flush.interval.ms=1000        <span class="cm"># or every 1s — whichever first</span>
+
+<span class="cm">## REPLICATION</span>
+default.replication.factor=3
+min.insync.replicas=2
+replica.lag.time.max.ms=30000     <span class="cm"># remove from ISR after 30s lag</span>
+
+<span class="cm">## JVM (kafka-server-start.sh or KAFKA_HEAP_OPTS):</span>
+<span class="cm">## KAFKA_HEAP_OPTS="-Xms6g -Xmx6g"</span>
+<span class="cm">## -XX:+UseG1GC -XX:MaxGCPauseMillis=20</span>
+<span class="cm">## -XX:InitiatingHeapOccupancyPercent=35</span>
+<span class="cm">## -XX:+ExplicitGCInvokesConcurrent</span>
+
+<span class="cm">## OS: sudo sysctl -w vm.swappiness=1</span>
+<span class="cm">##     sudo sysctl -w net.core.rmem_max=134217728</span>
+<span class="cm">##     sudo sysctl -w vm.max_map_count=262144</span>
+<span class="cm">##     Set /proc/sys/fs/file-max to 1000000</span></pre>
+      </div>
+
+      <h3>The Three Metrics That Tell Everything</h3>
+      <div style="border:1px solid var(--border);background:var(--void2)">
+        <div class="perf-row" style="padding:0.55rem 1rem">
+          <div class="perf-label"><span style="color:var(--coral)">●</span> Consumer Lag</div>
+          <div class="perf-track"><div class="perf-fill" style="width:72%;background:var(--coral)"></div></div>
+          <div class="perf-val">→ falling behind</div>
+        </div>
+        <div class="perf-row" style="padding:0.55rem 1rem">
+          <div class="perf-label"><span style="color:var(--signal)">●</span> Under-replicated</div>
+          <div class="perf-track"><div class="perf-fill" style="width:0%;background:var(--signal)"></div></div>
+          <div class="perf-val">target: 0</div>
+        </div>
+        <div class="perf-row" style="padding:0.55rem 1rem">
+          <div class="perf-label"><span style="color:var(--amber)">●</span> Active Controller</div>
+          <div class="perf-track"><div class="perf-fill" style="width:100%;background:var(--amber)"></div></div>
+          <div class="perf-val">must be: 1</div>
+        </div>
+        <div class="perf-row" style="padding:0.55rem 1rem">
+          <div class="perf-label"><span style="color:var(--plasma)">●</span> Disk bytes/s</div>
+          <div class="perf-track"><div class="perf-fill" style="width:45%;background:var(--plasma)"></div></div>
+          <div class="perf-val">450 MB/s</div>
+        </div>
+        <div class="perf-row" style="padding:0.55rem 1rem;border-bottom:none">
+          <div class="perf-label"><span style="color:var(--violet)">●</span> ISR shrinks/s</div>
+          <div class="perf-track"><div class="perf-fill" style="width:2%;background:var(--violet)"></div></div>
+          <div class="perf-val">target: 0</div>
+        </div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Consumer lag alert — Python</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Alert when any partition lag > threshold</span>
+<span class="py">from</span> confluent_kafka <span class="py">import</span> Consumer, TopicPartition
+
+<span class="py">def</span> <span class="fn">check_consumer_lag</span>(group_id, topic, threshold<span class="op">=</span><span class="nu">10000</span>):
+    c <span class="op">=</span> Consumer({<span class="st">'bootstrap.servers'</span>:<span class="st">'broker:9092'</span>,<span class="st">'group.id'</span>:<span class="st">'lag-monitor'</span>})
+    tps <span class="op">=</span> [TopicPartition(topic, p) <span class="py">for</span> p <span class="py">in</span>
+           c.list_topics(topic).topics[topic].partitions]
+    committed <span class="op">=</span> c.committed(tps, timeout<span class="op">=</span><span class="nu">5</span>)
+    alerts <span class="op">=</span> []
+    <span class="py">for</span> tp <span class="py">in</span> committed:
+        _, hw <span class="op">=</span> c.get_watermark_offsets(tp, timeout<span class="op">=</span><span class="nu">5</span>)
+        lag <span class="op">=</span> hw <span class="op">-</span> max(tp.offset, <span class="nu">0</span>)
+        <span class="py">if</span> lag <span class="op">></span> threshold:
+            alerts.append({<span class="st">'partition'</span>: tp.partition, <span class="st">'lag'</span>: lag})
+    c.close()
+    <span class="py">return</span> alerts</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function showTab(g, id, btn) {
+  document.querySelectorAll(`[id^="${g}-"]`).forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(`${g}-${id}`);
+  if (el) el.classList.add('active');
+  btn.classList.add('active');
+}
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.perf-fill').forEach(b => {
+        const w = b.style.width; b.style.width = '0';
+        setTimeout(() => { b.style.width = w; }, 80);
+      });
+    }
+  });
+}, {threshold: 0.3});
+document.querySelectorAll('.perf-row').forEach(r => io.observe(r));
+</script>
+</body>
+</html>

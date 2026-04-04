@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polars Masterclass — The Rust DataFrame Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:    #f2ece0;
+  --paper2:   #ebe4d5;
+  --paper3:   #e0d8c8;
+  --ink:      #1c1a16;
+  --ink2:     #4a4640;
+  --ink3:     #8a8278;
+  --ink4:     #b8b0a4;
+  --rust:     #cc4400;
+  --rust2:    #e05a1a;
+  --rust-bg:  #fdf0e8;
+  --rust-bd:  #f0c4a8;
+  --blue:     #1a5fa8;
+  --blue-bg:  #e8f0f8;
+  --blue-bd:  #a8c4e0;
+  --green:    #2a7a48;
+  --green-bg: #e8f4ec;
+  --green-bd: #a0d0b4;
+  --violet:   #6b3fa0;
+  --violet-bg:#f0ebf8;
+  --violet-bd:#c8aadc;
+  --red:      #a02020;
+  --red-bg:   #faeaea;
+  --border:   #c8bfb0;
+  --border2:  #d8d0c4;
+  --code-bg:  #1c1a16;
+  --mono:     'DM Mono', monospace;
+  --serif:    'Courier Prime', monospace;
+  --sans:     'Barlow', sans-serif;
+  --display:  'Anton', sans-serif;
+  --grid-color: rgba(180,160,130,0.25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TITLE BLOCK HEADER (engineering drawing style) ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--ink);
+  border-bottom: 3px solid var(--rust);
+}
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: stretch;
+  height: 52px;
+}
+.logo-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 1.5rem;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+.logo-symbol {
+  font-family: var(--display);
+  font-size: 2rem;
+  color: var(--rust2);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.logo-sub {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.logo-ver {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--rust2);
+  letter-spacing: 0.06em;
+}
+nav {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  padding-left: 1.5rem;
+}
+nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  background: none;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.45);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  padding: 0 1.1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+  text-transform: uppercase;
+  position: relative;
+}
+.nav-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--rust2);
+  transform: scaleX(0);
+  transition: transform 0.15s;
+}
+.nav-btn:hover { color: rgba(255,255,255,0.85); }
+.nav-btn:hover::after { transform: scaleX(1); }
+.nav-btn.active { color: var(--rust2); }
+.nav-btn.active::after { transform: scaleX(1); }
+
+/* ── LAYOUT ── */
+.wrapper {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
+  position: relative;
+}
+section { display: none; animation: fadeIn 0.2s ease; }
+section.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── ENGINEERING DRAWING HEADER ── */
+.section-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+  border: 2px solid var(--ink);
+  margin-bottom: 2rem;
+  background: var(--paper2);
+}
+.sh-main {
+  padding: 1.25rem 1.5rem;
+  border-right: 2px solid var(--ink);
+}
+.sh-meta {
+  padding: 0.75rem 1.25rem;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.sh-meta-row {
+  display: flex;
+  flex-direction: column;
+}
+.sh-meta-label {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+}
+.sh-meta-val {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink);
+  font-weight: 500;
+}
+.section-title {
+  font-family: var(--display);
+  font-size: 2.8rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+.section-title em { color: var(--rust); font-style: normal; }
+.section-sub {
+  font-size: 0.88rem;
+  color: var(--ink2);
+  font-weight: 300;
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+/* ── GRIDS ── */
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+.g12 { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+@media (max-width: 960px) { .g2,.g3,.g12,.g21 { grid-template-columns: 1fr; } }
+
+/* ── CARDS ── */
+.card {
+  background: var(--paper2);
+  border: 1.5px solid var(--border);
+  padding: 1.25rem 1.5rem;
+  position: relative;
+}
+.card::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -1px; left: 1rem;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--rust);
+  color: white;
+  padding: 1px 8px;
+  display: block;
+}
+.card-title {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── CODE BLOCKS ── */
+.code-wrap {
+  background: var(--code-bg);
+  border: none;
+  margin: 1rem 0;
+  position: relative;
+  font-size: 0;
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2a2820;
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid #3a3830;
+}
+.code-fname {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: #8a8278;
+  letter-spacing: 0.03em;
+}
+.code-lang {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--rust2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+pre {
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.8;
+  color: #d4cec4;
+  tab-size: 2;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3830 transparent;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: #3a3830; }
+
+/* Syntax */
+.kw  { color: #f07060; }
+.fn  { color: #72c0e8; }
+.st  { color: #b0d870; }
+.cm  { color: #5a5650; font-style: italic; }
+.jj  { color: #f0c060; }
+.nm  { color: #c090e0; }
+.op  { color: #60d0c0; }
+.nu  { color: #f0a060; }
+.dc  { color: #80e060; }
+.py  { color: var(--rust2); font-weight: 500; }
+.ty  { color: #90e090; }
+.ch  { color: #f0d080; }
+
+/* ── CALLOUTS ── */
+.callout {
+  border: 1.5px solid;
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+  font-size: 0.87rem;
+  line-height: 1.6;
+  position: relative;
+}
+.callout strong {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.c-rust   { border-color: var(--rust-bd);   background: var(--rust-bg);   color: var(--rust);   }
+.c-blue   { border-color: var(--blue-bd);   background: var(--blue-bg);   color: var(--blue);   }
+.c-green  { border-color: var(--green-bd);  background: var(--green-bg);  color: var(--green);  }
+.c-violet { border-color: var(--violet-bd); background: var(--violet-bg); color: var(--violet); }
+.c-red    { border-color: #e0c0c0;          background: var(--red-bg);    color: var(--red);    }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  padding: 2px 7px;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  border: 1px solid;
+}
+.b-rust   { background: var(--rust-bg);   color: var(--rust);   border-color: var(--rust-bd);   }
+.b-blue   { background: var(--blue-bg);   color: var(--blue);   border-color: var(--blue-bd);   }
+.b-green  { background: var(--green-bg);  color: var(--green);  border-color: var(--green-bd);  }
+.b-violet { background: var(--violet-bg); color: var(--violet); border-color: var(--violet-bd); }
+
+/* ── TABLES ── */
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+th {
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  border-bottom: 2px solid var(--ink);
+  border-top: 1.5px solid var(--ink);
+  padding: 0.5rem 0.85rem;
+  text-align: left;
+  background: var(--paper3);
+}
+td {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--border2);
+  vertical-align: top;
+  color: var(--ink2);
+}
+tr:last-child td { border-bottom: 1.5px solid var(--ink); }
+tr:hover td { background: var(--rust-bg); }
+td:first-child { color: var(--ink); font-family: var(--mono); font-size: 0.78rem; }
+code, td code, p code, li code, span code {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  background: var(--paper3);
+  border: 1px solid var(--border);
+  padding: 0 4px;
+  color: var(--rust);
+}
+
+/* ── PILLS / TABS ── */
+.pills { display: flex; gap: 0; margin-bottom: 1.5rem; border: 1.5px solid var(--border); }
+.pill {
+  font-family: var(--mono);
+  font-size: 0.67rem;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--paper2);
+  color: var(--ink3);
+  transition: all 0.12s;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pill:last-child { border-right: none; }
+.pill:hover { background: var(--rust-bg); color: var(--rust); }
+.pill.active { background: var(--rust); color: white; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── STAT GRID ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  border: 1.5px solid var(--ink);
+  margin-bottom: 2rem;
+}
+.stat {
+  padding: 1.1rem 1rem;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  background: var(--paper2);
+  transition: background 0.12s;
+}
+.stat:last-child { border-right: none; }
+.stat:hover { background: var(--rust-bg); }
+.stat-num {
+  font-family: var(--display);
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-bottom: 0.2rem;
+}
+.stat-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--ink3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── COMPARISON BRIDGE ── */
+.bridge {
+  display: grid;
+  grid-template-columns: 1fr 48px 1fr;
+  gap: 0;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  margin: 0.5rem 0;
+  background: var(--paper2);
+  transition: background 0.12s;
+}
+.bridge:hover { background: var(--rust-bg); }
+.bridge-left, .bridge-right {
+  padding: 0.5rem 1rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+.bridge-left { color: var(--ink3); }
+.bridge-right { color: var(--rust); border-left: 1px solid var(--border); }
+.bridge-mid {
+  text-align: center;
+  color: var(--ink4);
+  font-size: 0.9rem;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0.5rem 0;
+  background: var(--paper3);
+}
+
+/* ── PERF BAR ── */
+.perf-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 80px;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border2);
+}
+.perf-label { font-family: var(--mono); font-size: 0.73rem; color: var(--ink2); }
+.perf-track { height: 8px; background: var(--paper3); border: 1px solid var(--border); }
+.perf-fill { height: 100%; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+.perf-val { font-family: var(--mono); font-size: 0.7rem; color: var(--ink3); text-align: right; }
+
+/* ── METHOD CHAIN VISUAL ── */
+.chain {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1.5px solid var(--border);
+  margin: 1rem 0;
+  overflow: hidden;
+}
+.chain-step {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  border-bottom: 1px solid var(--border2);
+  transition: background 0.1s;
+}
+.chain-step:last-child { border-bottom: none; }
+.chain-step:hover { background: var(--rust-bg); }
+.chain-num {
+  background: var(--paper3);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--ink4);
+  padding: 0.5rem 0;
+}
+.chain-content {
+  padding: 0.5rem 1rem;
+  font-family: var(--mono);
+  font-size: 0.77rem;
+  line-height: 1.5;
+}
+.chain-method { color: var(--rust); font-weight: 500; }
+.chain-type   { color: var(--blue); }
+.chain-note   { color: var(--ink3); font-style: italic; font-size: 0.7rem; }
+
+/* ── LAZY PLAN DIAGRAM ── */
+.plan-box {
+  border: 1.5px solid var(--border);
+  padding: 0.65rem 1rem;
+  margin: 2px 0;
+  background: var(--paper2);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  transition: background 0.1s;
+  cursor: default;
+}
+.plan-box:hover { background: var(--rust-bg); }
+.plan-icon { width: 18px; height: 18px; flex-shrink: 0; border: 1.5px solid; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-weight: 700; }
+.plan-name { color: var(--ink); font-weight: 500; flex: 1; }
+.plan-detail { color: var(--ink3); font-size: 0.68rem; }
+.plan-arrow { text-align: center; color: var(--ink4); font-family: var(--mono); font-size: 0.8rem; padding: 1px 0; }
+.pi-scan    { border-color: var(--blue);   color: var(--blue);   background: var(--blue-bg);   }
+.pi-filter  { border-color: var(--rust);   color: var(--rust);   background: var(--rust-bg);   }
+.pi-select  { border-color: var(--violet); color: var(--violet); background: var(--violet-bg); }
+.pi-join    { border-color: var(--green);  color: var(--green);  background: var(--green-bg);  }
+.pi-agg     { border-color: var(--rust);   color: var(--rust);   background: var(--rust-bg);   }
+.pi-sort    { border-color: var(--ink3);   color: var(--ink3);   background: var(--paper3);    }
+.pi-sink    { border-color: var(--ink);    color: white;         background: var(--ink);        }
+
+/* ── DTYPE TABLE ── */
+.dtype-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1.5px solid var(--border);
+  margin: 1rem 0;
+}
+.dtype-cell {
+  background: var(--paper2);
+  padding: 0.55rem 0.85rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.dtype-name { font-family: var(--mono); font-size: 0.75rem; color: var(--rust); font-weight: 500; }
+.dtype-sub  { font-family: var(--mono); font-size: 0.65rem; color: var(--ink3); }
+
+/* ── SEPARATOR ── */
+.sep { border: none; border-top: 1.5px solid var(--border); margin: 2rem 0; }
+.sep-heavy { border-top: 2px solid var(--ink); }
+
+/* ── TEXT ── */
+p { margin-bottom: 0.9rem; color: var(--ink2); font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+h3 { font-family: var(--display); font-size: 1.5rem; letter-spacing: 0.04em; color: var(--ink); margin: 1.75rem 0 0.6rem; }
+h3:first-child { margin-top: 0; }
+h4 { font-family: var(--mono); font-size: 0.72rem; color: var(--ink3); letter-spacing: 0.1em; text-transform: uppercase; margin: 1.2rem 0 0.5rem; }
+ul, ol { padding-left: 1.5rem; color: var(--ink2); font-weight: 300; }
+ul li, ol li { margin-bottom: 0.3rem; }
+strong { color: var(--ink); font-weight: 600; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--paper3); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="logo-symbol">PL</div>
+      <div>
+        <div style="font-family:var(--mono);font-size:0.72rem;color:rgba(255,255,255,0.7);letter-spacing:0.08em">POLARS</div>
+        <div class="logo-sub">Rust DataFrame Engine</div>
+        <div class="logo-ver">v1.x STABLE</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="show('orient',this)">ORIENT</button>
+      <button class="nav-btn" onclick="show('lazy',this)">LAZY API</button>
+      <button class="nav-btn" onclick="show('exprs',this)">EXPRESSIONS</button>
+      <button class="nav-btn" onclick="show('dtypes',this)">DTYPES</button>
+      <button class="nav-btn" onclick="show('io',this)">I/O</button>
+      <button class="nav-btn" onclick="show('groupby',this)">GROUP BY</button>
+      <button class="nav-btn" onclick="show('join',this)">JOINS</button>
+      <button class="nav-btn" onclick="show('plugins',this)">ECOSYSTEM</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 1: ORIENTATION
+══════════════════════════════════════════════ -->
+<section id="orient" class="active">
+  <div class="section-header">
+    <div class="sh-main">
+      <div class="section-title">THE THIRD <em>PILLAR</em></div>
+      <div class="section-sub">Polars is a Rust-native DataFrame library with a Python API. It is not a faster pandas — it is a different paradigm. Lazy evaluation, expression trees, query optimization, zero-copy Apache Arrow, and a type system that prevents entire categories of bugs at construction time.</div>
+    </div>
+    <div class="sh-meta">
+      <div class="sh-meta-row"><div class="sh-meta-label">Engine</div><div class="sh-meta-val">Rust + SIMD</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Memory Model</div><div class="sh-meta-val">Apache Arrow</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Evaluation</div><div class="sh-meta-val">Lazy / Eager</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Null Handling</div><div class="sh-meta-val">Explicit — no NaN</div></div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-num" style="color:var(--rust)">0</div><div class="stat-label">GIL Dependency</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--blue)">Arrow</div><div class="stat-label">Memory Format</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--green)">Lazy</div><div class="stat-label">Default Eval Mode</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--violet)">SIMD</div><div class="stat-label">CPU Vectorization</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--rust)">∞</div><div class="stat-label">Streaming Support</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--blue)">Null</div><div class="stat-label">Not NaN</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="card" data-label="mental model">
+        <div class="card-title">pandas → Polars: the paradigm shift</div>
+        <div class="bridge">
+          <div class="bridge-left">df['col'].fillna(0)</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">pl.col('col').fill_null(0)</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-left">df['col'].apply(fn)</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">pl.col('col').map_elements(fn)</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-left">df[df['x'] > 5]</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">.filter(pl.col('x') > 5)</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-left">df.groupby('k').agg({'v': 'sum'})</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">.group_by('k').agg(pl.col('v').sum())</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-left">df.merge(other, on='id')</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">.join(other, on='id', how='left')</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-left">df['new'] = df['a'] + df['b']</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">.with_columns((pl.col('a') + pl.col('b')).alias('new'))</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-left">df.sort_values('col')</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">.sort('col', descending=False)</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-left">pd.read_csv() → eager</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">pl.scan_csv() → lazy LazyFrame</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-left">np.nan for missing</div>
+          <div class="bridge-mid">→</div>
+          <div class="bridge-right">null — explicit, typed</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" data-label="quick start">
+        <div class="card-title">Getting Started — Zero to 100</div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">install + first queries</span><span class="code-lang">python</span></div>
+          <pre><span class="py">import</span> polars <span class="py">as</span> pl
+
+<span class="cm"># The two modes — choose your weapon</span>
+df  <span class="op">=</span> pl.read_parquet(<span class="st">'events.parquet'</span>)    <span class="cm"># eager: loads now</span>
+lf  <span class="op">=</span> pl.scan_parquet(<span class="st">'events.parquet'</span>)    <span class="cm"># lazy: builds a plan</span>
+
+<span class="cm"># Core pattern: build expression, call collect()</span>
+result <span class="op">=</span> (
+    pl.scan_parquet(<span class="st">'s3://lake/events/**/*.parquet'</span>)
+    .filter(pl.col(<span class="st">'event_type'</span>) <span class="op">==</span> <span class="st">'purchase'</span>)
+    .filter(pl.col(<span class="st">'event_ts'</span>) <span class="op">>=</span> pl.lit(<span class="st">'2024-01-01'</span>).str.to_datetime())
+    .with_columns(
+        (pl.col(<span class="st">'amount_cents'</span>) <span class="op">/</span> <span class="nu">100</span>).alias(<span class="st">'amount'</span>),
+        pl.col(<span class="st">'event_ts'</span>).dt.truncate(<span class="st">'1d'</span>).alias(<span class="st">'day'</span>)
+    )
+    .group_by([<span class="st">'day'</span>, <span class="st">'user_id'</span>])
+    .agg(
+        pl.len().alias(<span class="st">'purchase_count'</span>),
+        pl.col(<span class="st">'amount'</span>).sum().alias(<span class="st">'total_spend'</span>),
+        pl.col(<span class="st">'amount'</span>).mean().alias(<span class="st">'avg_order'</span>)
+    )
+    .sort(<span class="st">'total_spend'</span>, descending<span class="op">=True</span>)
+    .collect()   <span class="cm"># ← triggers optimized execution</span>
+)
+
+<span class="cm"># Instant profiling — like DuckDB SUMMARIZE:</span>
+<span class="py">print</span>(df.describe())   <span class="cm"># count, mean, std, min, max per column</span>
+<span class="py">print</span>(df.schema)       <span class="cm"># full type information</span>
+<span class="py">print</span>(df.estimated_size(<span class="st">'mb'</span>))  <span class="cm"># memory footprint</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep sep-heavy">
+  <h3>Why Rust? The Technical Reality</h3>
+  <div class="g3">
+    <div class="card" data-label="no GIL">
+      <div class="card-title">True Parallelism</div>
+      <p>Python's Global Interpreter Lock prevents true multi-threading. Polars' Rust core releases the GIL immediately. Every operation — sort, group_by, join — uses all CPU cores via Rayon's work-stealing thread pool. A 16-core machine runs 16× faster, not 1×.</p>
+    </div>
+    <div class="card" data-label="memory">
+      <div class="card-title">Zero-Copy Arrow</div>
+      <p>Polars stores data in Apache Arrow columnar buffers. When you pass a Polars DataFrame to DuckDB or PyArrow, <strong>no data is copied</strong>. The same memory is read by all three engines. The full dbt + DuckDB + Polars stack moves data between tools in nanoseconds.</p>
+    </div>
+    <div class="card" data-label="safety">
+      <div class="card-title">Type System Catches Bugs</div>
+      <p>Polars' schema is fixed at LazyFrame construction. If you <code>.filter(pl.col('amt') > 'oops')</code> — comparing numeric to string — the error fires at query build time, not hours into a production run. Entire categories of runtime bugs become compile-time errors.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2: LAZY API
+══════════════════════════════════════════════ -->
+<section id="lazy">
+  <div class="section-header">
+    <div class="sh-main">
+      <div class="section-title">THE <em>LAZY</em> API</div>
+      <div class="section-sub">LazyFrame is the heart of Polars. You describe what you want — not how to compute it. Polars' query optimizer then rewrites, reorders, and parallelizes your plan before executing a single byte of data access.</div>
+    </div>
+    <div class="sh-meta">
+      <div class="sh-meta-row"><div class="sh-meta-label">Evaluation</div><div class="sh-meta-val">Deferred</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Optimizer</div><div class="sh-meta-val">Predicate / Projection</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Trigger</div><div class="sh-meta-val">.collect()</div></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>The Lazy Execution Pipeline</h3>
+      <p>Every <code>.scan_*()</code> call returns a <code>LazyFrame</code>. Chained operations build a logical plan. <code>.collect()</code> runs the optimizer, produces a physical plan, and executes it.</p>
+      <div class="chain">
+        <div class="chain-step">
+          <div class="chain-num">1</div>
+          <div class="chain-content"><span class="chain-method">pl.scan_parquet</span>(<span class="st" style="font-size:0.75rem">'events/**/*.parquet'</span>)<br><span class="chain-note">→ LazyFrame. Zero data read. Registers scan source.</span></div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">2</div>
+          <div class="chain-content"><span class="chain-method">.filter</span>(pl.col(<span class="st" style="font-size:0.75rem">'ts'</span>) >= <span class="st" style="font-size:0.75rem">'2024-01-01'</span>)<br><span class="chain-note">→ Adds predicate node to plan. Optimizer will push this to scan.</span></div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">3</div>
+          <div class="chain-content"><span class="chain-method">.select</span>([<span class="st" style="font-size:0.75rem">'user_id'</span>, <span class="st" style="font-size:0.75rem">'amount'</span>, <span class="st" style="font-size:0.75rem">'ts'</span>])<br><span class="chain-note">→ Projection pushdown: only these 3 columns read from disk.</span></div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">4</div>
+          <div class="chain-content"><span class="chain-method">.group_by</span>(<span class="st" style="font-size:0.75rem">'user_id'</span>)<span class="chain-method">.agg</span>(pl.col(<span class="st" style="font-size:0.75rem">'amount'</span>).sum())<br><span class="chain-note">→ Aggregation node. Optimizer may split for streaming.</span></div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">5</div>
+          <div class="chain-content"><span class="chain-method">.collect</span>() → <span class="chain-type">DataFrame</span><br><span class="chain-note">→ Triggers: optimize → physical plan → parallel execution → Arrow buffer.</span></div>
+        </div>
+      </div>
+      <div class="callout c-rust">
+        <strong>The Optimizer Rewrites Your Code</strong>
+        You write filters after joins — the optimizer moves them before. You select 3 columns from a 50-column file — the optimizer pushes projection to the file reader. You chain two filters — they're merged into one pass. You never see this happening, but it's why Polars is often 5–50× faster than equivalent pandas code.
+      </div>
+    </div>
+
+    <div>
+      <h3>Query Plan Inspection</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">inspect + optimize + stream</span><span class="code-lang">python</span></div>
+        <pre><span class="py">import</span> polars <span class="py">as</span> pl
+
+lf <span class="op">=</span> (
+    pl.scan_parquet(<span class="st">'events.parquet'</span>)
+    .filter(pl.col(<span class="st">'event_type'</span>) <span class="op">==</span> <span class="st">'purchase'</span>)
+    .select([<span class="st">'user_id'</span>, <span class="st">'amount'</span>, <span class="st">'event_ts'</span>])
+    .group_by(<span class="st">'user_id'</span>)
+    .agg(pl.col(<span class="st">'amount'</span>).sum())
+)
+
+<span class="cm"># See the LOGICAL plan (your intent):</span>
+<span class="py">print</span>(lf.explain(optimized<span class="op">=False</span>))
+
+<span class="cm"># See the OPTIMIZED plan (what actually runs):</span>
+<span class="py">print</span>(lf.explain(optimized<span class="op">=True</span>))
+<span class="cm"># Notice: filter & select are pushed INTO the ParquetScan.</span>
+
+<span class="cm"># Visualize as a tree (requires graphviz):</span>
+lf.show_graph(optimized<span class="op">=True</span>)
+
+<span class="cm"># ─── STREAMING — larger-than-RAM execution ───────────</span>
+<span class="cm"># collect() loads everything into RAM.</span>
+<span class="cm"># collect(engine='streaming') processes in chunks.</span>
+
+result <span class="op">=</span> (
+    pl.scan_parquet(<span class="st">'s3://lake/events/**/*.parquet'</span>)
+    .filter(pl.col(<span class="st">'amount'</span>) <span class="op">></span> <span class="nu">0</span>)
+    .group_by(<span class="st">'user_id'</span>)
+    .agg(pl.col(<span class="st">'amount'</span>).sum())
+    .collect(engine<span class="op">=</span><span class="st">'streaming'</span>)  <span class="cm"># process 500MB at a time</span>
+)
+
+<span class="cm"># sink_parquet — stream directly to disk, never loads to RAM:</span>
+(
+    pl.scan_parquet(<span class="st">'huge_100gb_file.parquet'</span>)
+    .filter(pl.col(<span class="st">'status'</span>) <span class="op">==</span> <span class="st">'active'</span>)
+    .sink_parquet(<span class="st">'output/active_users.parquet'</span>)
+    <span class="cm"># executes streaming — never materializes full DataFrame</span>
+)
+
+<span class="cm"># sink_csv, sink_ipc, sink_ndjson also available</span>
+(
+    pl.scan_parquet(<span class="st">'events.parquet'</span>)
+    .sink_ipc(<span class="st">'events.arrow'</span>)    <span class="cm"># Arrow IPC stream format</span>
+)</pre>
+      </div>
+
+      <h3>Logical Plan Nodes</h3>
+      <div class="plan-box"><div class="plan-icon pi-scan">SC</div><div class="plan-name">ParquetScan / CsvScan / IpcScan</div><div class="plan-detail">source + pushdown</div></div>
+      <div class="plan-arrow">↓ (predicate + projection pushed here)</div>
+      <div class="plan-box"><div class="plan-icon pi-filter">FL</div><div class="plan-name">Filter</div><div class="plan-detail">Boolean mask predicate</div></div>
+      <div class="plan-arrow">↓</div>
+      <div class="plan-box"><div class="plan-icon pi-select">SL</div><div class="plan-name">Select / WithColumns</div><div class="plan-detail">Expression evaluation</div></div>
+      <div class="plan-arrow">↓</div>
+      <div class="plan-box"><div class="plan-icon pi-join">JN</div><div class="plan-name">Join</div><div class="plan-detail">Hash / sort-merge / cross</div></div>
+      <div class="plan-arrow">↓</div>
+      <div class="plan-box"><div class="plan-icon pi-agg">AG</div><div class="plan-name">GroupBy / Aggregate</div><div class="plan-detail">Parallel hash aggregation</div></div>
+      <div class="plan-arrow">↓</div>
+      <div class="plan-box"><div class="plan-icon pi-sort">SO</div><div class="plan-name">Sort</div><div class="plan-detail">Parallel sort or top-k</div></div>
+      <div class="plan-arrow">↓</div>
+      <div class="plan-box"><div class="plan-icon pi-sink">→</div><div class="plan-name">Collect / Sink</div><div class="plan-detail">DataFrame or streaming output</div></div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>Scan Options — The Ingress Interface</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-fname">scan_* — full parameter reference</span><span class="code-lang">python</span></div>
+    <pre><span class="cm"># scan_parquet — the workhorse</span>
+pl.scan_parquet(
+    source              <span class="op">=</span> <span class="st">'s3://bucket/data/**/*.parquet'</span>,
+    n_rows              <span class="op">=</span> <span class="nu">1_000_000</span>,    <span class="cm"># early stop (fast LIMIT)</span>
+    row_index_name      <span class="op">=</span> <span class="st">'_row_idx'</span>,    <span class="cm"># inject row numbers</span>
+    row_index_offset    <span class="op">=</span> <span class="nu">0</span>,
+    parallel            <span class="op">=</span> <span class="st">'auto'</span>,        <span class="cm"># 'columns' | 'row_groups' | 'prefiltered'</span>
+    use_statistics      <span class="op">=</span> <span class="kw">True</span>,          <span class="cm"># row group zone map pushdown</span>
+    hive_partitioning   <span class="op">=</span> <span class="kw">True</span>,          <span class="cm"># inject partition columns from path</span>
+    hive_schema         <span class="op">=</span> {<span class="st">'year'</span>: pl.Int32, <span class="st">'month'</span>: pl.Int32},
+    include_file_paths  <span class="op">=</span> <span class="st">'_source_file'</span>, <span class="cm"># track which file each row came from</span>
+    storage_options     <span class="op">=</span> {<span class="st">'aws_access_key_id'</span>: <span class="st">'...'</span>, <span class="st">'region'</span>: <span class="st">'us-east-1'</span>}
+)
+
+<span class="cm"># scan_csv — streaming CSV with full control</span>
+pl.scan_csv(
+    source          <span class="op">=</span> <span class="st">'data/*.csv'</span>,
+    separator       <span class="op">=</span> <span class="st">','</span>,
+    has_header      <span class="op">=</span> <span class="kw">True</span>,
+    skip_rows       <span class="op">=</span> <span class="nu">0</span>,
+    dtypes          <span class="op">=</span> {<span class="st">'id'</span>: pl.Int64, <span class="st">'amount'</span>: pl.Float64},
+    null_values     <span class="op">=</span> [<span class="st">''</span>, <span class="st">'N/A'</span>, <span class="st">'null'</span>],
+    try_parse_dates <span class="op">=</span> <span class="kw">True</span>,             <span class="cm"># auto-detect date columns</span>
+    ignore_errors   <span class="op">=</span> <span class="kw">True</span>,             <span class="cm"># skip malformed rows</span>
+    encoding        <span class="op">=</span> <span class="st">'utf8-lossy'</span>,     <span class="cm"># handle dirty encodings</span>
+    comment_prefix  <span class="op">=</span> <span class="st">'#'</span>               <span class="cm"># skip comment lines</span>
+)
+
+<span class="cm"># scan_ndjson — Kafka S3 sink output</span>
+pl.scan_ndjson(
+    source          <span class="op">=</span> <span class="st">'s3://kafka-sink/topic=events/**/*.json'</span>,
+    infer_schema_length <span class="op">=</span> <span class="nu">1000</span>,        <span class="cm"># sample N rows for schema inference</span>
+    schema          <span class="op">=</span> pl.Schema({      <span class="cm"># or provide explicit schema</span>
+        <span class="st">'event_id'</span>:   pl.String,
+        <span class="st">'user_id'</span>:    pl.Int64,
+        <span class="st">'event_ts'</span>:   pl.Datetime(<span class="st">'us'</span>),
+        <span class="st">'payload'</span>:    pl.String,       <span class="cm"># keep JSON as string for later parsing</span>
+    })
+)</pre>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 3: EXPRESSIONS
+══════════════════════════════════════════════ -->
+<section id="exprs">
+  <div class="section-header">
+    <div class="sh-main">
+      <div class="section-title"><em>EXPRESSIONS</em> — THE ALGEBRA</div>
+      <div class="section-sub">Polars expressions are composable, lazy computation units. They describe transformations on columns without executing them. The optimizer analyzes expression trees to determine parallelism, eliminate dead computation, and push work down to the I/O layer.</div>
+    </div>
+    <div class="sh-meta">
+      <div class="sh-meta-row"><div class="sh-meta-label">Type</div><div class="sh-meta-val">pl.Expr</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Entry Point</div><div class="sh-meta-val">pl.col()</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Compose</div><div class="sh-meta-val">Chain methods</div></div>
+    </div>
+  </div>
+
+  <div class="pills" id="ex-pills">
+    <button class="pill active" onclick="showTab('ex','string',this)">String</button>
+    <button class="pill" onclick="showTab('ex','datetime',this)">Datetime</button>
+    <button class="pill" onclick="showTab('ex','list',this)">List / Struct</button>
+    <button class="pill" onclick="showTab('ex','window',this)">Window</button>
+    <button class="pill" onclick="showTab('ex','conditional',this)">When/Then</button>
+    <button class="pill" onclick="showTab('ex','meta',this)">Meta Exprs</button>
+  </div>
+
+  <!-- STRING -->
+  <div id="ex-string" class="tab-pane active">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">pl.col().str — string namespace</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># The .str namespace wraps every string operation</span>
+df.with_columns([
+
+    pl.col(<span class="st">'email'</span>)
+      .str.to_lowercase()
+      .str.strip_chars()
+      .str.split(<span class="st">'@'</span>)
+      .list.first()             <span class="cm"># → local part of email</span>
+      .alias(<span class="st">'email_local'</span>),
+
+    pl.col(<span class="st">'phone'</span>)
+      .str.replace_all(r<span class="st">'[^\d]'</span>, <span class="st">''</span>)  <span class="cm"># strip non-digits (regex)</span>
+      .str.zfill(<span class="nu">10</span>)                  <span class="cm"># zero-pad to 10 chars</span>
+      .alias(<span class="st">'phone_clean'</span>),
+
+    pl.col(<span class="st">'payload_str'</span>)
+      .str.json_path_match(<span class="st">'$.user.id'</span>)    <span class="cm"># JSONPath on string column</span>
+      .cast(pl.Int64)
+      .alias(<span class="st">'user_id_extracted'</span>),
+
+    pl.col(<span class="st">'event_type'</span>)
+      .str.contains(<span class="st">'purchase'</span>)           <span class="cm"># boolean mask</span>
+      .alias(<span class="st">'is_purchase'</span>),
+
+    pl.col(<span class="st">'url'</span>)
+      .str.extract(r<span class="st">'utm_source=([^&]+)'</span>, group_index<span class="op">=</span><span class="nu">1</span>)
+      .alias(<span class="st">'utm_source'</span>),
+
+    pl.col(<span class="st">'tags_csv'</span>)
+      .str.split(<span class="st">','</span>)                     <span class="cm"># → List[String]</span>
+      .list.eval(pl.element().str.strip_chars())
+      .alias(<span class="st">'tags'</span>),
+
+    pl.col(<span class="st">'name'</span>).str.count_matches(r<span class="st">'\s+'</span>).alias(<span class="st">'word_count'</span>),
+    pl.col(<span class="st">'text'</span>).str.len_chars().alias(<span class="st">'char_count'</span>),
+    pl.col(<span class="st">'code'</span>).str.starts_with(<span class="st">'ORD-'</span>).alias(<span class="st">'is_order'</span>),
+])</pre>
+      </div>
+      <div class="callout c-rust">
+        <strong>Regex is Rust Regex — Fast</strong>
+        All <code>.str.contains()</code>, <code>.str.extract()</code>, and <code>.str.replace_all()</code> use the Rust <code>regex</code> crate. It's compiled once, executed across all CPU cores on vectorized string data. Regex processing in Polars is orders of magnitude faster than Python's <code>re</code> module in a loop.
+      </div>
+    </div>
+  </div>
+
+  <!-- DATETIME -->
+  <div id="ex-datetime" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">pl.col().dt — datetime namespace</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Parse, truncate, extract, convert — all vectorized</span>
+df.with_columns([
+
+    <span class="cm"># Parse strings → Datetime</span>
+    pl.col(<span class="st">'ts_str'</span>)
+      .str.to_datetime(<span class="st">'%Y-%m-%dT%H:%M:%S%.f%z'</span>)
+      .dt.convert_time_zone(<span class="st">'UTC'</span>)
+      .alias(<span class="st">'ts_utc'</span>),
+
+    <span class="cm"># Truncate to period (the Polars date_trunc)</span>
+    pl.col(<span class="st">'ts_utc'</span>).dt.truncate(<span class="st">'1h'</span>).alias(<span class="st">'hour_bucket'</span>),
+    pl.col(<span class="st">'ts_utc'</span>).dt.truncate(<span class="st">'1d'</span>).alias(<span class="st">'day'</span>),
+    pl.col(<span class="st">'ts_utc'</span>).dt.truncate(<span class="st">'1mo'</span>).alias(<span class="st">'month'</span>),
+
+    <span class="cm"># Extract components</span>
+    pl.col(<span class="st">'ts_utc'</span>).dt.year().alias(<span class="st">'year'</span>),
+    pl.col(<span class="st">'ts_utc'</span>).dt.month().alias(<span class="st">'month_num'</span>),
+    pl.col(<span class="st">'ts_utc'</span>).dt.weekday().alias(<span class="st">'weekday'</span>),   <span class="cm"># 1=Mon</span>
+    pl.col(<span class="st">'ts_utc'</span>).dt.hour().alias(<span class="st">'hour'</span>),
+    pl.col(<span class="st">'ts_utc'</span>).dt.ordinal_day().alias(<span class="st">'doy'</span>),
+
+    <span class="cm"># Duration arithmetic</span>
+    (pl.col(<span class="st">'end_ts'</span>) <span class="op">-</span> pl.col(<span class="st">'start_ts'</span>))
+      .dt.total_seconds()
+      .alias(<span class="st">'session_seconds'</span>),
+
+    <span class="cm"># Epoch conversions</span>
+    pl.col(<span class="st">'epoch_ms'</span>)
+      .cast(pl.Datetime(<span class="st">'ms'</span>))
+      .dt.convert_time_zone(<span class="st">'America/New_York'</span>)
+      .alias(<span class="st">'ts_local'</span>),
+
+    <span class="cm"># Rolling periods: "is this weekend?"</span>
+    pl.col(<span class="st">'ts_utc'</span>).dt.weekday().is_in([<span class="nu">6</span>,<span class="nu">7</span>]).alias(<span class="st">'is_weekend'</span>),
+
+    <span class="cm"># Offset by duration</span>
+    (pl.col(<span class="st">'ts_utc'</span>) <span class="op">+</span> pl.duration(days<span class="op">=</span><span class="nu">30</span>)).alias(<span class="st">'ts_plus_30d'</span>),
+])</pre>
+      </div>
+      <div class="callout c-blue">
+        <strong>Timezone Handling — No Surprises</strong>
+        Polars distinguishes <code>Datetime('us')</code> (timezone-naive, microseconds) from <code>Datetime('us', 'UTC')</code> (timezone-aware). Operations between naive and aware datetimes raise errors at plan time — before your pipeline runs. pandas silently mixes them and produces garbage.
+      </div>
+    </div>
+  </div>
+
+  <!-- LIST / STRUCT -->
+  <div id="ex-list" class="tab-pane">
+    <div class="g2">
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">List column operations</span><span class="code-lang">python</span></div>
+          <pre><span class="cm"># Polars has first-class List and Struct types.
+# These unlock JSON-like nested data without exploding rows.</span>
+
+df.with_columns([
+
+    <span class="cm"># List stats without unnesting</span>
+    pl.col(<span class="st">'line_items'</span>).list.len().alias(<span class="st">'item_count'</span>),
+    pl.col(<span class="st">'prices'</span>).list.sum().alias(<span class="st">'total'</span>),
+    pl.col(<span class="st">'prices'</span>).list.mean().alias(<span class="st">'avg_price'</span>),
+    pl.col(<span class="st">'prices'</span>).list.max().alias(<span class="st">'max_price'</span>),
+    pl.col(<span class="st">'tags'</span>).list.first().alias(<span class="st">'primary_tag'</span>),
+    pl.col(<span class="st">'tags'</span>).list.last().alias(<span class="st">'last_tag'</span>),
+
+    <span class="cm"># Filter list elements with lambda</span>
+    pl.col(<span class="st">'prices'</span>)
+      .list.eval(pl.element().filter(pl.element() <span class="op">></span> <span class="nu">100</span>))
+      .alias(<span class="st">'expensive_items'</span>),
+
+    <span class="cm"># Sort / unique list elements</span>
+    pl.col(<span class="st">'tags'</span>).list.sort().list.unique().alias(<span class="st">'sorted_unique_tags'</span>),
+
+    <span class="cm"># Contains check</span>
+    pl.col(<span class="st">'tags'</span>).list.contains(<span class="st">'premium'</span>).alias(<span class="st">'is_premium'</span>),
+
+    <span class="cm"># Gather by index</span>
+    pl.col(<span class="st">'prices'</span>).list.gather([<span class="nu">0</span>, <span class="nu">-1</span>]).alias(<span class="st">'first_and_last'</span>),
+])
+
+<span class="cm"># EXPLODE list column to rows (1-to-many):</span>
+df.explode(<span class="st">'line_items'</span>)
+
+<span class="cm"># list.eval — run ANY expression on each list element:
+# This is Polars' equivalent of pandas apply() but vectorized.</span>
+df.with_columns(
+    pl.col(<span class="st">'amounts'</span>)
+      .list.eval(
+          (pl.element() <span class="op">-</span> pl.element().mean()) <span class="op">/</span> pl.element().std()
+      )
+      .alias(<span class="st">'amounts_z_score'</span>)
+)</pre>
+        </div>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Struct — typed nested objects</span><span class="code-lang">python</span></div>
+          <pre><span class="cm"># Struct: a column where each value is a named record.
+# Perfect for JSON payloads and nested API responses.</span>
+
+<span class="cm"># Parse JSON string → Struct</span>
+df.with_columns(
+    pl.col(<span class="st">'json_payload'</span>)
+      .str.json_decode()           <span class="cm"># → Struct column</span>
+      .alias(<span class="st">'payload_struct'</span>)
+)
+
+<span class="cm"># Access struct fields with dot notation:</span>
+df.with_columns([
+    pl.col(<span class="st">'payload_struct'</span>).struct.field(<span class="st">'user_id'</span>).alias(<span class="st">'user_id'</span>),
+    pl.col(<span class="st">'payload_struct'</span>).struct.field(<span class="st">'email'</span>).alias(<span class="st">'email'</span>),
+])
+
+<span class="cm"># Unnest struct → individual columns:</span>
+df.unnest(<span class="st">'payload_struct'</span>)
+
+<span class="cm"># Build a struct column from multiple columns:</span>
+df.select(
+    pl.struct([
+        pl.col(<span class="st">'first_name'</span>),
+        pl.col(<span class="st">'last_name'</span>),
+        pl.col(<span class="st">'age'</span>),
+    ]).alias(<span class="st">'person'</span>)
+)
+
+<span class="cm"># Rename struct fields:</span>
+pl.col(<span class="st">'payload_struct'</span>).struct.rename_fields([
+    <span class="st">'user_id'</span>, <span class="st">'email'</span>, <span class="st">'session_id'</span>
+])
+
+<span class="cm"># Struct in group_by — keep related fields together:</span>
+df.group_by(<span class="st">'user_id'</span>).agg(
+    pl.struct([
+        pl.col(<span class="st">'event_type'</span>).first(),
+        pl.col(<span class="st">'event_ts'</span>).first(),
+        pl.col(<span class="st">'amount'</span>).sum(),
+    ]).alias(<span class="st">'first_event_summary'</span>)
+)</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINDOW -->
+  <div id="ex-window" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Window expressions — over()</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Window expressions in Polars use .over() instead of SQL's OVER PARTITION BY.
+# They compute GROUP-level aggregations and broadcast back to original rows —
+# without a join step. This is the Polars secret weapon for per-group metrics.</span>
+
+df.with_columns([
+
+    <span class="cm"># Running total per user — keeps all rows</span>
+    pl.col(<span class="st">'amount'</span>)
+      .cum_sum()
+      .over(<span class="st">'user_id'</span>)
+      .alias(<span class="st">'running_total_per_user'</span>),
+
+    <span class="cm"># Rank within group</span>
+    pl.col(<span class="st">'amount'</span>)
+      .rank(method<span class="op">=</span><span class="st">'dense'</span>, descending<span class="op">=True</span>)
+      .over(<span class="st">'user_id'</span>)
+      .alias(<span class="st">'spend_rank'</span>),
+
+    <span class="cm"># Group size (no join needed)</span>
+    pl.len().over(<span class="st">'user_id'</span>).alias(<span class="st">'user_event_count'</span>),
+
+    <span class="cm"># Group mean (broadcast back to all rows)</span>
+    pl.col(<span class="st">'amount'</span>).mean().over(<span class="st">'user_id'</span>).alias(<span class="st">'user_avg_spend'</span>),
+
+    <span class="cm"># Z-score per user (subtract group mean, divide by group std)</span>
+    (
+        (pl.col(<span class="st">'amount'</span>) <span class="op">-</span> pl.col(<span class="st">'amount'</span>).mean().over(<span class="st">'user_id'</span>))
+        <span class="op">/</span> pl.col(<span class="st">'amount'</span>).std().over(<span class="st">'user_id'</span>)
+    ).alias(<span class="st">'amount_zscore'</span>),
+
+    <span class="cm"># First/last event per user</span>
+    pl.col(<span class="st">'event_ts'</span>).min().over(<span class="st">'user_id'</span>).alias(<span class="st">'first_seen'</span>),
+    pl.col(<span class="st">'event_ts'</span>).max().over(<span class="st">'user_id'</span>).alias(<span class="st">'last_seen'</span>),
+
+    <span class="cm"># Previous row value per group (lag)</span>
+    pl.col(<span class="st">'amount'</span>)
+      .shift(<span class="nu">1</span>)
+      .over(<span class="st">'user_id'</span>, order_by<span class="op">=</span><span class="st">'event_ts'</span>)
+      .alias(<span class="st">'prev_amount'</span>),
+
+    <span class="cm"># Rolling window per group (7-day rolling sum)</span>
+    pl.col(<span class="st">'amount'</span>)
+      .rolling_sum_by(<span class="st">'event_ts'</span>, window_size<span class="op">=</span><span class="st">'7d'</span>)
+      .over(<span class="st">'user_id'</span>)
+      .alias(<span class="st">'rolling_7d_spend'</span>),
+])</pre>
+      </div>
+      <div class="callout c-green">
+        <strong>over() — Massively More Efficient Than SQL Window Functions in pandas</strong>
+        In pandas, window-per-group requires <code>.groupby().transform()</code> — which has shocking overhead. In Polars, <code>.over('user_id')</code> computes the aggregate in a single parallel pass, stores it as a hash table, and broadcasts values back in a second pass. No <code>merge()</code>, no intermediate DataFrame, no memory duplication.
+      </div>
+    </div>
+  </div>
+
+  <!-- WHEN/THEN -->
+  <div id="ex-conditional" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">when/then/otherwise — vectorized CASE WHEN</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># pl.when().then().otherwise() is Polars' CASE WHEN.
+# Unlike Python if/else, this evaluates ALL branches in parallel,
+# then selects results with a bitmask — zero branch prediction cost.</span>
+
+df.with_columns([
+
+    <span class="cm"># Simple binary</span>
+    pl.when(pl.col(<span class="st">'status'</span>) <span class="op">==</span> <span class="st">'active'</span>)
+      .then(pl.lit(<span class="nu">1</span>))
+      .otherwise(pl.lit(<span class="nu">0</span>))
+      .alias(<span class="st">'is_active'</span>),
+
+    <span class="cm"># Multi-branch (chain .when().then())</span>
+    pl.when(pl.col(<span class="st">'amount'</span>) <span class="op"><</span> <span class="nu">10</span>)
+      .then(pl.lit(<span class="st">'micro'</span>))
+      .when(pl.col(<span class="st">'amount'</span>) <span class="op"><</span> <span class="nu">100</span>)
+      .then(pl.lit(<span class="st">'small'</span>))
+      .when(pl.col(<span class="st">'amount'</span>) <span class="op"><</span> <span class="nu">1000</span>)
+      .then(pl.lit(<span class="st">'medium'</span>))
+      .otherwise(pl.lit(<span class="st">'large'</span>))
+      .alias(<span class="st">'order_tier'</span>),
+
+    <span class="cm"># Reference another column in the result</span>
+    pl.when(pl.col(<span class="st">'is_refund'</span>))
+      .then(pl.col(<span class="st">'amount'</span>) <span class="op">*</span> <span class="op">-</span><span class="nu">1</span>)
+      .otherwise(pl.col(<span class="st">'amount'</span>))
+      .alias(<span class="st">'signed_amount'</span>),
+
+    <span class="cm"># Null handling in conditionals</span>
+    pl.when(pl.col(<span class="st">'discount_code'</span>).is_null())
+      .then(pl.lit(<span class="st">'NONE'</span>))
+      .otherwise(pl.col(<span class="st">'discount_code'</span>).str.to_uppercase())
+      .alias(<span class="st">'discount_normalized'</span>),
+
+    <span class="cm"># Complex predicate with multiple conditions</span>
+    pl.when(
+        (pl.col(<span class="st">'amount'</span>) <span class="op">></span> <span class="nu">100</span>) <span class="op">&</span>
+        (pl.col(<span class="st">'status'</span>) <span class="op">==</span> <span class="st">'completed'</span>) <span class="op">&</span>
+        pl.col(<span class="st">'user_id'</span>).is_not_null()
+    )
+    .then(pl.col(<span class="st">'amount'</span>) <span class="op">*</span> <span class="nu">0.05</span>)  <span class="cm"># 5% cashback</span>
+    .otherwise(pl.lit(<span class="nu">0.0</span>))
+    .alias(<span class="st">'cashback'</span>),
+])</pre>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">map_elements + map_batches</span><span class="code-lang">python</span></div>
+          <pre><span class="cm"># map_elements: Python function per element (slow — avoid!)
+# Use only when no native Polars expression exists.</span>
+df.with_columns(
+    pl.col(<span class="st">'text'</span>)
+      .map_elements(
+          <span class="py">lambda</span> s: my_nlp_model.predict(s),
+          return_dtype<span class="op">=</span>pl.Float32
+      )
+      .alias(<span class="st">'sentiment_score'</span>)
+)
+
+<span class="cm"># map_batches: Python function on a SERIES (vectorized).
+# Much faster — operates on Rust Series object.</span>
+<span class="py">import</span> numpy <span class="py">as</span> np
+
+df.with_columns(
+    pl.col(<span class="st">'amount'</span>)
+      .map_batches(
+          <span class="py">lambda</span> s: pl.Series(np.log1p(s.to_numpy())),
+          return_dtype<span class="op">=</span>pl.Float64
+      )
+      .alias(<span class="st">'log_amount'</span>)
+)
+
+<span class="cm"># Plugin expressions (Rust UDFs via pyo3-polars):
+# Write UDFs in Rust that execute inside the optimizer's plan.
+# Zero Python overhead — runs at native Rust speed.
+# → cargo new polars-plugin && implement GrokExpression trait</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- META EXPRS -->
+  <div id="ex-meta" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">pl.all(), pl.exclude(), pl.col(dtype)</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># pl.all() — selects every column</span>
+df.select(pl.all().sort_by(<span class="st">'event_ts'</span>))
+
+<span class="cm"># pl.exclude() — all columns except named ones</span>
+df.select(pl.exclude(<span class="st">'_loaded_at'</span>, <span class="st">'_fivetran_deleted'</span>, <span class="st">'ssn'</span>))
+
+<span class="cm"># pl.col(dtype) — select columns by data type</span>
+df.select(pl.col(pl.Float64))          <span class="cm"># all numeric float64 cols</span>
+df.select(pl.col(pl.Utf8))             <span class="cm"># all string cols</span>
+df.select(pl.col(pl.Datetime))         <span class="cm"># all datetime cols</span>
+df.select(pl.col(pl.List))             <span class="cm"># all list cols</span>
+
+<span class="cm"># Apply operation to ALL numeric columns at once:</span>
+df.with_columns(
+    pl.col(pl.Float64).round(<span class="nu">2</span>)       <span class="cm"># round all floats</span>
+)
+
+<span class="cm"># Normalize (z-score) ALL numeric columns in one expression:</span>
+df.with_columns([
+    ((pl.col(c) <span class="op">-</span> pl.col(c).mean()) <span class="op">/</span> pl.col(c).std()).alias(c)
+    <span class="py">for</span> c <span class="py">in</span> df.select(pl.col(pl.Float64)).columns
+])
+
+<span class="cm"># cs (column selectors) — the powerful selection DSL:</span>
+<span class="py">import</span> polars.selectors <span class="py">as</span> cs
+
+df.select(cs.numeric())                <span class="cm"># all numeric types</span>
+df.select(cs.string())                 <span class="cm"># all string types</span>
+df.select(cs.temporal())               <span class="cm"># all date/datetime/duration</span>
+df.select(cs.starts_with(<span class="st">'event_'</span>))   <span class="cm"># column name prefix</span>
+df.select(cs.ends_with(<span class="st">'_at'</span>))        <span class="cm"># column name suffix</span>
+df.select(cs.contains(<span class="st">'amount'</span>))      <span class="cm"># column name substring</span>
+df.select(cs.numeric() <span class="op">-</span> cs.by_name(<span class="st">'id'</span>))   <span class="cm"># set subtraction</span>
+df.select(cs.numeric() <span class="op">|</span> cs.temporal())        <span class="cm"># set union</span>
+df.select(~cs.numeric())                        <span class="cm"># complement (everything else)</span></pre>
+      </div>
+      <div>
+        <div class="callout c-violet">
+          <strong>Column Selectors (cs) — The DuckDB COLUMNS() of Polars</strong>
+          <code>polars.selectors</code> is a first-class selection algebra. You can compose selectors with set operations: <code>cs.numeric() - cs.by_name('id')</code> means "all numeric columns except id." Combined with <code>.with_columns()</code>, this lets you apply transformations to dynamically-selected column sets — perfect for schema-agnostic pipeline code.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Dynamic schema-agnostic transforms</span><span class="code-lang">python</span></div>
+          <pre><span class="py">import</span> polars <span class="py">as</span> pl
+<span class="py">import</span> polars.selectors <span class="py">as</span> cs
+
+<span class="py">def</span> <span class="fn">normalize_pipeline</span>(lf: pl.LazyFrame) -> pl.LazyFrame:
+    <span class="cm">"""Works on any schema — no column names hardcoded."""</span>
+    <span class="py">return</span> (
+        lf
+        .with_columns(
+            <span class="cm"># Lowercase all strings</span>
+            cs.string().str.to_lowercase(),
+            <span class="cm"># Round all floats</span>
+            cs.float().round(<span class="nu">4</span>),
+            <span class="cm"># UTC-normalize all datetimes</span>
+            cs.temporal().dt.convert_time_zone(<span class="st">'UTC'</span>),
+        )
+        .with_columns(
+            <span class="cm"># Fill nulls: 0 for numeric, 'unknown' for string</span>
+            cs.numeric().fill_null(<span class="nu">0</span>),
+            cs.string().fill_null(<span class="st">'unknown'</span>),
+        )
+    )</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 4: DTYPES
+══════════════════════════════════════════════ -->
+<section id="dtypes">
+  <div class="section-header">
+    <div class="sh-main">
+      <div class="section-title">THE <em>TYPE SYSTEM</em></div>
+      <div class="section-sub">Polars' type system is its backbone. Every column has a fixed, known type. Mismatched operations fail at plan construction, not at runtime. Choosing the right dtype cuts memory usage by 4–8× and doubles CPU throughput by enabling SIMD.</div>
+    </div>
+    <div class="sh-meta">
+      <div class="sh-meta-row"><div class="sh-meta-label">Null Model</div><div class="sh-meta-val">Validity bitmask</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">No NaN</div><div class="sh-meta-val">Float NaN ≠ null</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">String</div><div class="sh-meta-val">Categorical option</div></div>
+    </div>
+  </div>
+
+  <h3>Complete Dtype Reference</h3>
+  <div class="dtype-grid">
+    <div class="dtype-cell"><span class="dtype-name">Int8</span><span class="dtype-sub">-128 to 127 · 1 byte</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Int16</span><span class="dtype-sub">-32768 to 32767 · 2 bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Int32</span><span class="dtype-sub">-2.1B to 2.1B · 4 bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Int64</span><span class="dtype-sub">±9.2×10¹⁸ · 8 bytes (default)</span></div>
+    <div class="dtype-cell"><span class="dtype-name">UInt8</span><span class="dtype-sub">0–255 · 1 byte</span></div>
+    <div class="dtype-cell"><span class="dtype-name">UInt16</span><span class="dtype-sub">0–65535 · 2 bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">UInt32</span><span class="dtype-sub">0–4.2B · 4 bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">UInt64</span><span class="dtype-sub">0–1.8×10¹⁹ · 8 bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Float32</span><span class="dtype-sub">~7 sig digits · 4 bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Float64</span><span class="dtype-sub">~15 sig digits · 8 bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">String</span><span class="dtype-sub">UTF-8 · variable</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Categorical</span><span class="dtype-sub">String → UInt32 dict</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Enum</span><span class="dtype-sub">Fixed Categorical · fastest</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Boolean</span><span class="dtype-sub">Bitmask · 1 bit/value</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Date</span><span class="dtype-sub">days since epoch · 4 bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Datetime(tu, tz)</span><span class="dtype-sub">ns/us/ms + optional tz</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Time</span><span class="dtype-sub">nanoseconds since midnight</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Duration</span><span class="dtype-sub">signed time delta</span></div>
+    <div class="dtype-cell"><span class="dtype-name">List(inner)</span><span class="dtype-sub">variable-length nested</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Array(inner, n)</span><span class="dtype-sub">fixed-length nested</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Struct([fields])</span><span class="dtype-sub">named field record</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Decimal(p, s)</span><span class="dtype-sub">exact decimal arithmetic</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Binary</span><span class="dtype-sub">raw bytes</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Null</span><span class="dtype-sub">all-null placeholder</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Object</span><span class="dtype-sub">arbitrary Python (escape hatch)</span></div>
+    <div class="dtype-cell"><span class="dtype-name">Unknown</span><span class="dtype-sub">pre-collect schema</span></div>
+  </div>
+
+  <hr class="sep">
+  <div class="g2">
+    <div>
+      <h3>Categorical — The String Memory Killer</h3>
+      <div class="callout c-rust">
+        <strong>String vs Categorical — The 8× Memory Difference</strong>
+        A column with 100M rows of status values like "active", "cancelled", "pending" stores 700MB as <code>String</code>. As <code>Categorical</code>, it stores a 3-entry dictionary and 100M UInt32 indices — about 400MB. As <code>Enum</code> (fixed categories), it stores UInt8 indices — 100MB. Same data, 7× less memory, 3× faster group_by.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Categorical + Enum patterns</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Cast to Categorical at read time — saves memory from the start</span>
+lf <span class="op">=</span> pl.scan_parquet(<span class="st">'events.parquet'</span>).with_columns(
+    pl.col(<span class="st">'event_type'</span>).cast(pl.Categorical),
+    pl.col(<span class="st">'status'</span>).cast(pl.Categorical),
+    pl.col(<span class="st">'country'</span>).cast(pl.Categorical),
+)
+
+<span class="cm"># Enum — when you KNOW the valid values (best performance):</span>
+OrderStatus <span class="op">=</span> pl.Enum([<span class="st">'pending'</span>, <span class="st">'processing'</span>, <span class="st">'shipped'</span>,
+                        <span class="st">'delivered'</span>, <span class="st">'cancelled'</span>, <span class="st">'refunded'</span>])
+df.with_columns(
+    pl.col(<span class="st">'status'</span>).cast(OrderStatus)
+)
+<span class="cm"># Invalid value in 'status'? Error at cast time, not query time.</span>
+
+<span class="cm"># Global Categorical — align dictionaries across DataFrames for joins:</span>
+<span class="kw">with</span> pl.StringCache():
+    df1 <span class="op">=</span> pl.read_parquet(<span class="st">'jan.parquet'</span>).with_columns(
+        pl.col(<span class="st">'user_type'</span>).cast(pl.Categorical)
+    )
+    df2 <span class="op">=</span> pl.read_parquet(<span class="st">'feb.parquet'</span>).with_columns(
+        pl.col(<span class="st">'user_type'</span>).cast(pl.Categorical)
+    )
+    joined <span class="op">=</span> df1.join(df2, on<span class="op">=</span><span class="st">'user_type'</span>)  <span class="cm"># dictionaries aligned</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Schema Enforcement Pattern</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Schema-first ingress pipeline</span><span class="code-lang">python</span></div>
+        <pre><span class="py">import</span> polars <span class="py">as</span> pl
+<span class="py">from</span> polars <span class="py">import</span> Schema
+
+<span class="cm"># Define your schema once — use it everywhere</span>
+EVENTS_SCHEMA <span class="op">=</span> Schema({
+    <span class="st">'event_id'</span>:    pl.String,
+    <span class="st">'user_id'</span>:     pl.Int64,
+    <span class="st">'event_type'</span>:  pl.Enum([<span class="st">'purchase'</span>, <span class="st">'view'</span>, <span class="st">'click'</span>, <span class="st">'refund'</span>]),
+    <span class="st">'event_ts'</span>:    pl.Datetime(<span class="st">'us'</span>, <span class="st">'UTC'</span>),
+    <span class="st">'amount'</span>:      pl.Decimal(precision<span class="op">=</span><span class="nu">18</span>, scale<span class="op">=</span><span class="nu">4</span>),
+    <span class="st">'session_id'</span>:  pl.String,
+    <span class="st">'platform'</span>:    pl.Categorical,
+    <span class="st">'country'</span>:     pl.Categorical,
+    <span class="st">'metadata'</span>:    pl.Struct({
+                       <span class="st">'ip'</span>: pl.String,
+                       <span class="st">'ua'</span>: pl.String,
+                   }),
+})
+
+<span class="py">def</span> <span class="fn">read_events</span>(path: str) -> pl.LazyFrame:
+    <span class="py">return</span> pl.scan_parquet(
+        path,
+        schema<span class="op">=</span>EVENTS_SCHEMA  <span class="cm"># enforced at read time</span>
+    )
+
+<span class="cm"># Schema mismatch → SchemaError before data is read.
+# Cast to schema after reading unknown sources:</span>
+<span class="py">def</span> <span class="fn">enforce_schema</span>(lf: pl.LazyFrame) -> pl.LazyFrame:
+    <span class="py">return</span> lf.cast(EVENTS_SCHEMA, strict<span class="op">=False</span>)
+    <span class="cm"># strict=False: coerce where possible, null where impossible</span>
+    <span class="cm"># strict=True (default): raise on any type mismatch</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 5: I/O
+══════════════════════════════════════════════ -->
+<section id="io">
+  <div class="section-header">
+    <div class="sh-main">
+      <div class="section-title"><em>I/O</em> — READ AND WRITE EVERYTHING</div>
+      <div class="section-sub">Polars reads and writes all major data formats natively. The Rust-native I/O stack is dramatically faster than pandas' equivalent — especially for Parquet, where Polars uses a custom reader with parallel row-group decompression.</div>
+    </div>
+    <div class="sh-meta">
+      <div class="sh-meta-row"><div class="sh-meta-label">Parquet Engine</div><div class="sh-meta-val">Custom Rust</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Cloud</div><div class="sh-meta-val">S3/GCS/AZ native</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">DuckDB Bridge</div><div class="sh-meta-val">Zero-copy Arrow</div></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Write Formats — Full Arsenal</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">write_* — output options</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Parquet — production output format</span>
+df.write_parquet(
+    <span class="st">'output.parquet'</span>,
+    compression         <span class="op">=</span> <span class="st">'zstd'</span>,          <span class="cm"># best ratio + speed</span>
+    compression_level   <span class="op">=</span> <span class="nu">3</span>,               <span class="cm"># 1-22, default 3</span>
+    statistics          <span class="op">=</span> <span class="kw">True</span>,            <span class="cm"># zone map metadata</span>
+    row_group_size      <span class="op">=</span> <span class="nu">122_880</span>,         <span class="cm"># rows per group</span>
+    use_pyarrow         <span class="op">=</span> <span class="kw">False</span>,           <span class="cm"># use native Rust writer</span>
+)
+
+<span class="cm"># Partitioned Parquet (via sink — streaming)</span>
+(
+    df.lazy()
+    .sink_parquet(
+        pl.PartitionMaxSizeBytes(<span class="st">'output_dir/'</span>, max_size<span class="op">=</span><span class="nu">256</span><span class="op">*</span><span class="nu">1024</span><span class="op">**</span><span class="nu">2</span>)
+    )
+)
+
+<span class="cm"># Delta Lake — write directly from Polars</span>
+<span class="py">from</span> deltalake.writer <span class="py">import</span> write_deltalake
+write_deltalake(<span class="st">'s3://bucket/delta/events'</span>, df.to_arrow(),
+                mode<span class="op">=</span><span class="st">'append'</span>, partition_by<span class="op">=</span>[<span class="st">'year'</span>, <span class="st">'month'</span>])
+
+<span class="cm"># CSV, JSON, Arrow IPC, NDJSON</span>
+df.write_csv(<span class="st">'output.csv'</span>, separator<span class="op">=</span><span class="st">'|'</span>, date_format<span class="op">=</span><span class="st">'%Y-%m-%d'</span>)
+df.write_ndjson(<span class="st">'output.ndjson'</span>)
+df.write_ipc(<span class="st">'output.arrow'</span>, compression<span class="op">=</span><span class="st">'lz4'</span>)   <span class="cm"># Arrow IPC</span>
+df.write_ipc_stream(<span class="st">'stream.arrows'</span>)              <span class="cm"># Arrow streaming IPC</span>
+df.write_avro(<span class="st">'output.avro'</span>)                      <span class="cm"># Apache Avro</span>
+df.write_excel(<span class="st">'report.xlsx'</span>, worksheet<span class="op">=</span><span class="st">'Data'</span>)  <span class="cm"># Excel</span>
+df.write_database(
+    table_name<span class="op">=</span><span class="st">'events'</span>,
+    connection<span class="op">=</span><span class="st">'postgresql://user:pw@host/db'</span>,
+    if_table_exists<span class="op">=</span><span class="st">'append'</span>                      <span class="cm"># 'replace' | 'fail'</span>
+)</pre>
+      </div>
+    </div>
+    <div>
+      <h3>Cloud + Arrow Bridge</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Cloud storage + DuckDB interchange</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Cloud storage credentials via environment or explicit config:</span>
+<span class="py">import</span> polars <span class="py">as</span> pl
+
+storage_options <span class="op">=</span> {
+    <span class="st">'aws_access_key_id'</span>:     <span class="st">'...'</span>,
+    <span class="st">'aws_secret_access_key'</span>: <span class="st">'...'</span>,
+    <span class="st">'aws_region'</span>:            <span class="st">'us-east-1'</span>,
+}
+
+<span class="cm"># Read from S3 (lazy)</span>
+lf <span class="op">=</span> pl.scan_parquet(
+    <span class="st">'s3://bucket/events/**/*.parquet'</span>,
+    storage_options<span class="op">=</span>storage_options
+)
+
+<span class="cm"># Write to GCS</span>
+df.write_parquet(
+    <span class="st">'gs://bucket/output.parquet'</span>,
+    storage_options<span class="op">=</span>{<span class="st">'service_account'</span>: <span class="st">'key.json'</span>}
+)
+
+<span class="cm">─────────────────────────────────────────────────
+# Arrow bridge — zero-copy interchange ecosystem:</span>
+
+<span class="cm"># Polars → PyArrow (zero copy)</span>
+arrow_table <span class="op">=</span> df.to_arrow()
+
+<span class="cm"># PyArrow → Polars (zero copy)</span>
+df <span class="op">=</span> pl.from_arrow(arrow_table)
+
+<span class="cm"># Polars → pandas (one copy, Arrow → pandas)</span>
+pandas_df <span class="op">=</span> df.to_pandas()
+<span class="cm"># Use use_pyarrow_extension_array=True for Arrow-backed pandas:</span>
+pandas_df <span class="op">=</span> df.to_pandas(use_pyarrow_extension_array<span class="op">=True</span>)
+
+<span class="cm"># pandas → Polars</span>
+df <span class="op">=</span> pl.from_pandas(pandas_df)
+
+<span class="cm"># Polars ↔ DuckDB (zero copy via Arrow):</span>
+<span class="py">import</span> duckdb
+
+<span class="cm"># DuckDB queries a Polars LazyFrame directly:</span>
+lf <span class="op">=</span> pl.scan_parquet(<span class="st">'events.parquet'</span>)
+result <span class="op">=</span> duckdb.sql(<span class="st">"SELECT * FROM lf WHERE amount > 100"</span>).pl()
+
+<span class="cm"># Polars queries a DuckDB relation directly:</span>
+con <span class="op">=</span> duckdb.connect(<span class="st">'analytics.duckdb'</span>)
+arrow_result <span class="op">=</span> con.execute(<span class="st">"SELECT * FROM events"</span>).arrow()
+df <span class="op">=</span> pl.from_arrow(arrow_result)</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 6: GROUP BY
+══════════════════════════════════════════════ -->
+<section id="groupby">
+  <div class="section-header">
+    <div class="sh-main">
+      <div class="section-title">GROUP BY <em>MASTERY</em></div>
+      <div class="section-sub">Polars group_by is a parallel hash aggregation engine. Unlike SQL, the aggregation expressions are full Polars expressions — you can run complex multi-step computations inside a single agg() call.</div>
+    </div>
+    <div class="sh-meta">
+      <div class="sh-meta-row"><div class="sh-meta-label">Algorithm</div><div class="sh-meta-val">Parallel hash agg</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Order</div><div class="sh-meta-val">Non-deterministic</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Stable</div><div class="sh-meta-val">group_by_stable()</div></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">group_by — the full expression surface</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Every agg() argument is a full Polars expression</span>
+df.group_by([<span class="st">'user_id'</span>, <span class="st">'event_type'</span>]).agg([
+
+    <span class="cm"># Basic aggregations</span>
+    pl.len().alias(<span class="st">'count'</span>),
+    pl.col(<span class="st">'amount'</span>).sum().alias(<span class="st">'total'</span>),
+    pl.col(<span class="st">'amount'</span>).mean().alias(<span class="st">'avg'</span>),
+    pl.col(<span class="st">'amount'</span>).std().alias(<span class="st">'std'</span>),
+    pl.col(<span class="st">'amount'</span>).min().alias(<span class="st">'min'</span>),
+    pl.col(<span class="st">'amount'</span>).max().alias(<span class="st">'max'</span>),
+    pl.col(<span class="st">'amount'</span>).median().alias(<span class="st">'p50'</span>),
+
+    <span class="cm"># Quantiles</span>
+    pl.col(<span class="st">'amount'</span>).quantile(<span class="nu">0.95</span>).alias(<span class="st">'p95'</span>),
+    pl.col(<span class="st">'amount'</span>).quantile(<span class="nu">0.99</span>).alias(<span class="st">'p99'</span>),
+
+    <span class="cm"># First / last (ordered)</span>
+    pl.col(<span class="st">'event_ts'</span>).min().alias(<span class="st">'first_event'</span>),
+    pl.col(<span class="st">'event_ts'</span>).max().alias(<span class="st">'last_event'</span>),
+    pl.col(<span class="st">'session_id'</span>).first().alias(<span class="st">'first_session'</span>),
+
+    <span class="cm"># Count distinct</span>
+    pl.col(<span class="st">'session_id'</span>).n_unique().alias(<span class="st">'unique_sessions'</span>),
+
+    <span class="cm"># Collect into a list</span>
+    pl.col(<span class="st">'amount'</span>).sort_by(pl.col(<span class="st">'event_ts'</span>)).alias(<span class="st">'amounts_ordered'</span>),
+
+    <span class="cm"># Conditional count inside agg</span>
+    (pl.col(<span class="st">'amount'</span>) <span class="op">></span> <span class="nu">100</span>).sum().alias(<span class="st">'large_orders'</span>),
+
+    <span class="cm"># Complex expression inside agg</span>
+    (pl.col(<span class="st">'amount'</span>) <span class="op">*</span> pl.col(<span class="st">'quantity'</span>)).sum().alias(<span class="st">'revenue'</span>),
+
+    <span class="cm"># Filter inside agg (conditional aggregation)</span>
+    pl.col(<span class="st">'amount'</span>).filter(pl.col(<span class="st">'status'</span>) <span class="op">==</span> <span class="st">'completed'</span>)
+      .sum().alias(<span class="st">'completed_revenue'</span>),
+
+    <span class="cm"># Mode (most frequent value)</span>
+    pl.col(<span class="st">'platform'</span>).mode().first().alias(<span class="st">'primary_platform'</span>),
+
+    <span class="cm"># String concatenation</span>
+    pl.col(<span class="st">'event_type'</span>).unique().sort().str.join(<span class="st">','</span>).alias(<span class="st">'event_types'</span>),
+])</pre>
+      </div>
+    </div>
+    <div>
+      <h3>Specialized Group By Variants</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">group_by_dynamic + rolling</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># group_by_dynamic — time-window aggregations
+# Perfect for: metrics over time, moving aggregates</span>
+
+df.group_by_dynamic(
+    index_column  <span class="op">=</span> <span class="st">'event_ts'</span>,
+    every         <span class="op">=</span> <span class="st">'1h'</span>,          <span class="cm"># window size</span>
+    period        <span class="op">=</span> <span class="st">'1h'</span>,          <span class="cm"># = every: no overlap</span>
+    offset        <span class="op">=</span> <span class="st">'0h'</span>,
+    include_boundaries <span class="op">=</span> <span class="kw">True</span>,    <span class="cm"># add _lower_boundary, _upper_boundary</span>
+    closed        <span class="op">=</span> <span class="st">'left'</span>,        <span class="cm"># interval semantics</span>
+    group_by      <span class="op">=</span> [<span class="st">'user_id'</span>],   <span class="cm"># optional: partition first</span>
+    start_by      <span class="op">=</span> <span class="st">'datapoint'</span>,   <span class="cm"># 'window' | 'datapoint' | 'monday'</span>
+).agg([
+    pl.col(<span class="st">'amount'</span>).sum().alias(<span class="st">'hourly_spend'</span>),
+    pl.len().alias(<span class="st">'event_count'</span>),
+])
+
+<span class="cm">─────────────────────────────────────────────────</span>
+<span class="cm"># Rolling aggregations (per-row sliding window)</span>
+
+df.with_columns(
+    pl.col(<span class="st">'amount'</span>)
+      .rolling_mean_by(<span class="st">'event_ts'</span>, window_size<span class="op">=</span><span class="st">'7d'</span>)
+      .alias(<span class="st">'rolling_7d_avg'</span>),
+
+    pl.col(<span class="st">'amount'</span>)
+      .rolling_sum_by(<span class="st">'event_ts'</span>, window_size<span class="op">=</span><span class="st">'30d'</span>)
+      .alias(<span class="st">'rolling_30d_sum'</span>),
+
+    pl.col(<span class="st">'amount'</span>)
+      .rolling_max_by(<span class="st">'event_ts'</span>, window_size<span class="op">=</span><span class="st">'24h'</span>)
+      .alias(<span class="st">'rolling_24h_max'</span>),
+)
+
+<span class="cm">─────────────────────────────────────────────────</span>
+<span class="cm"># partition_by — split DataFrame into dict of DataFrames</span>
+partitions <span class="op">=</span> df.partition_by(<span class="st">'year'</span>, <span class="st">'month'</span>, as_dict<span class="op">=True</span>)
+<span class="py">for</span> (year, month), chunk <span class="py">in</span> partitions.items():
+    chunk.write_parquet(f<span class="st">'output/year={year}/month={month}/data.parquet'</span>)</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 7: JOINS
+══════════════════════════════════════════════ -->
+<section id="join">
+  <div class="section-header">
+    <div class="sh-main">
+      <div class="section-title">JOINS <em>&</em> RESHAPING</div>
+      <div class="section-sub">Polars implements multiple join algorithms and chooses the optimal one based on cardinality estimates. The API surface includes join types absent from pandas but essential for data pipeline work.</div>
+    </div>
+    <div class="sh-meta">
+      <div class="sh-meta-row"><div class="sh-meta-label">Default Algorithm</div><div class="sh-meta-val">Hash join</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Sort-merge</div><div class="sh-meta-val">sort=True</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Parallel</div><div class="sh-meta-val">All cores</div></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">join() — full parameter surface</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Standard join types:</span>
+df.join(other,
+    on         <span class="op">=</span> <span class="st">'user_id'</span>,           <span class="cm"># same name both sides</span>
+    left_on    <span class="op">=</span> <span class="st">'user_id'</span>,           <span class="cm"># different names:
+</span>    right_on   <span class="op">=</span> <span class="st">'id'</span>,               <span class="cm">#   use left_on/right_on</span>
+    how        <span class="op">=</span> <span class="st">'left'</span>,             <span class="cm"># 'inner'|'left'|'right'|'full'|'semi'|'anti'|'cross'</span>
+    suffix     <span class="op">=</span> <span class="st">'_right'</span>,           <span class="cm"># collision suffix</span>
+    coalesce   <span class="op">=</span> <span class="kw">True</span>,               <span class="cm"># coalesce join keys</span>
+    validate   <span class="op">=</span> <span class="st">'m:1'</span>,             <span class="cm"># '1:1'|'1:m'|'m:1'|'m:m' — data contract!</span>
+)
+
+<span class="cm"># validate= is the hidden gem. Pass '1:1' and Polars
+# raises an error if the right table has duplicates on
+# the join key — catch integrity bugs before they propagate.</span>
+
+<span class="cm"># Semi join — filter left by existence in right (no duplication):</span>
+active_users <span class="op">=</span> df.join(paid_users, on<span class="op">=</span><span class="st">'user_id'</span>, how<span class="op">=</span><span class="st">'semi'</span>)
+
+<span class="cm"># Anti join — filter left by NON-existence in right:</span>
+churned_users <span class="op">=</span> df.join(active_users, on<span class="op">=</span><span class="st">'user_id'</span>, how<span class="op">=</span><span class="st">'anti'</span>)
+
+<span class="cm"># Join on expression (not just column name):</span>
+df.join_where(
+    other,
+    pl.col(<span class="st">'event_ts'</span>) <span class="op">>=</span> pl.col(<span class="st">'valid_from'</span>),
+    pl.col(<span class="st">'event_ts'</span>) <span class="op"><</span>  pl.col(<span class="st">'valid_to'</span>),
+    pl.col(<span class="st">'user_id'</span>)  <span class="op">==</span> pl.col(<span class="st">'user_id'</span>),
+)
+<span class="cm"># join_where = the Polars equivalent of DuckDB's ASOF JOIN.</span>
+<span class="cm"># Use it for: exchange rate lookups, SCD2 temporal joins,
+# event-to-session matching, validity windows.</span>
+
+<span class="cm"># Cross join (cartesian product):</span>
+df.join(date_spine, how<span class="op">=</span><span class="st">'cross'</span>)  <span class="cm"># every row × every date</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Reshape — pivot, unpivot, concat</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">pivot / unpivot / concat</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># PIVOT — rows to columns (cross-tab)</span>
+df.pivot(
+    on         <span class="op">=</span> <span class="st">'status'</span>,          <span class="cm"># column whose values become headers</span>
+    index      <span class="op">=</span> <span class="st">'user_id'</span>,         <span class="cm"># row key</span>
+    values     <span class="op">=</span> <span class="st">'amount'</span>,          <span class="cm"># value to aggregate</span>
+    aggregate_function <span class="op">=</span> <span class="st">'sum'</span>,    <span class="cm"># 'sum'|'mean'|'count'|'min'|'max'|'first'</span>
+    sort_columns <span class="op">=</span> <span class="kw">True</span>,
+)
+
+<span class="cm"># UNPIVOT — columns to rows (melt / wide to long)</span>
+df.unpivot(
+    on           <span class="op">=</span> [<span class="st">'q1_revenue'</span>, <span class="st">'q2_revenue'</span>, <span class="st">'q3_revenue'</span>, <span class="st">'q4_revenue'</span>],
+    index        <span class="op">=</span> [<span class="st">'product_id'</span>, <span class="st">'region'</span>],
+    variable_name <span class="op">=</span> <span class="st">'quarter'</span>,
+    value_name   <span class="op">=</span> <span class="st">'revenue'</span>,
+)
+
+<span class="cm"># CONCAT — vertical (row) stacking</span>
+combined <span class="op">=</span> pl.concat([df_jan, df_feb, df_mar],
+    how<span class="op">=</span><span class="st">'diagonal_relaxed'</span>  <span class="cm"># handles mismatched schemas!</span>
+)
+<span class="cm"># how options:
+# 'vertical'           — same schema required
+# 'diagonal'           — fill missing columns with null
+# 'diagonal_relaxed'   — cast types where possible + fill null</span>
+
+<span class="cm"># HSTACK — column (horizontal) stacking</span>
+df_combined <span class="op">=</span> pl.concat([df_features, df_labels], how<span class="op">=</span><span class="st">'horizontal'</span>)
+
+<span class="cm"># UPDATE — pandas-style combine_first, left-wins merge:</span>
+df.update(
+    new_data,
+    on<span class="op">=</span><span class="st">'user_id'</span>,       <span class="cm"># match key</span>
+    how<span class="op">=</span><span class="st">'left'</span>,          <span class="cm"># keep all left rows</span>
+    include_nulls<span class="op">=</span><span class="kw">False</span>  <span class="cm"># don't overwrite with nulls</span>
+)</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 8: ECOSYSTEM
+══════════════════════════════════════════════ -->
+<section id="plugins">
+  <div class="section-header">
+    <div class="sh-main">
+      <div class="section-title">THE <em>ECOSYSTEM</em></div>
+      <div class="section-sub">Polars sits at the center of the modern Python data stack. It speaks Arrow to DuckDB, Parquet to the lakehouse, and Rust plugins to the performance ceiling. Here's how all three masterclass tools compose.</div>
+    </div>
+    <div class="sh-meta">
+      <div class="sh-meta-row"><div class="sh-meta-label">dbt adapter</div><div class="sh-meta-val">dbt-polars</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">DuckDB bridge</div><div class="sh-meta-val">Arrow (zero-copy)</div></div>
+      <div class="sh-meta-row"><div class="sh-meta-label">Rust UDFs</div><div class="sh-meta-val">pyo3-polars</div></div>
+    </div>
+  </div>
+
+  <div class="callout c-rust">
+    <strong>THE HOLY TRINITY STACK — How All Three Connect</strong>
+    <code>Polars</code> reads raw data from all ingress vectors and transforms it in Python with zero-copy Arrow. <code>DuckDB</code> runs SQL analytical queries on those LazyFrames directly, with no serialization. <code>dbt</code> orchestrates the pipeline, defines the schema contracts in YAML, and manages the DAG. They share the same Apache Arrow memory format — data flows between all three without a single copy.
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>The Full Stack — Production Pattern</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">tri-engine pipeline</span><span class="code-lang">python</span></div>
+        <pre><span class="py">import</span> polars <span class="py">as</span> pl
+<span class="py">import</span> duckdb
+
+<span class="cm">"""
+Ingress pattern:
+  [Kafka / S3 / Postgres / HTTP]
+         ↓ Polars (scan + transform)
+         ↓ Arrow (zero-copy)
+         ↓ DuckDB (SQL aggregation)
+         ↓ Parquet (write back to lake)
+         ↓ dbt (orchestrate, test, document)
+"""</span>
+
+<span class="cm"># Step 1: Polars reads + transforms raw ingress</span>
+events_lf <span class="op">=</span> (
+    pl.scan_ndjson(
+        <span class="st">'s3://kafka-sink/topic=events/**/*.json'</span>,
+        storage_options<span class="op">=</span>{<span class="st">'region'</span>: <span class="st">'us-east-1'</span>}
+    )
+    .with_columns([
+        pl.col(<span class="st">'event_ts'</span>).str.to_datetime(<span class="st">'%Y-%m-%dT%H:%M:%S%.fZ'</span>),
+        pl.col(<span class="st">'user_id'</span>).cast(pl.Int64),
+        pl.col(<span class="st">'amount_cents'</span>).cast(pl.Int64) <span class="op">/</span> <span class="nu">100</span>,
+        pl.col(<span class="st">'event_type'</span>).cast(pl.Categorical),
+    ])
+    .filter(pl.col(<span class="st">'event_id'</span>).is_not_null())
+    <span class="cm"># dedup: keep latest per event_id</span>
+    .sort(<span class="st">'_ingested_at'</span>, descending<span class="op">=True</span>)
+    .unique(subset<span class="op">=</span>[<span class="st">'event_id'</span>], keep<span class="op">=</span><span class="st">'first'</span>, maintain_order<span class="op">=True</span>)
+)
+
+<span class="cm"># Step 2: DuckDB runs complex SQL on the Polars LazyFrame</span>
+<span class="cm"># (zero-copy — DuckDB reads Polars' Arrow buffers directly)</span>
+con <span class="op">=</span> duckdb.connect()
+result <span class="op">=</span> con.sql(<span class="st">"""
+    SELECT
+        date_trunc('hour', event_ts) AS hour,
+        event_type,
+        count(*)                     AS event_count,
+        sum(amount_cents)            AS revenue,
+        count(DISTINCT user_id)      AS unique_users,
+        percentile_cont(0.95) WITHIN GROUP (ORDER BY amount_cents)
+                                     AS p95_amount
+    FROM events_lf
+    GROUP BY ALL
+    ORDER BY hour DESC, revenue DESC
+"""</span>).pl()  <span class="cm"># result is a Polars DataFrame</span>
+
+<span class="cm"># Step 3: Write back to lake as partitioned Parquet</span>
+<span class="cm"># (dbt can then reference this as a source)</span>
+(
+    result.lazy()
+    .with_columns([
+        pl.col(<span class="st">'hour'</span>).dt.year().alias(<span class="st">'year'</span>),
+        pl.col(<span class="st">'hour'</span>).dt.month().alias(<span class="st">'month'</span>),
+    ])
+    .sink_parquet(
+        pl.PartitionMaxSizeBytes(
+            <span class="st">'s3://lake/hourly_metrics/'</span>,
+            max_size<span class="op">=</span><span class="nu">128</span><span class="op">*</span><span class="nu">1024</span><span class="op">**</span><span class="nu">2</span>
+        )
+    )
+)</pre>
+      </div>
+    </div>
+    <div>
+      <h3>Performance Comparison</h3>
+      <div style="border:1.5px solid var(--border);padding:1.25rem;background:var(--paper2);margin-bottom:1rem">
+        <h4>Group By 100M rows (32-core machine)</h4>
+        <div class="perf-row"><div class="perf-label">Polars (lazy)</div><div class="perf-track"><div class="perf-fill" style="width:97%;background:var(--rust)"></div></div><div class="perf-val">1.1s</div></div>
+        <div class="perf-row"><div class="perf-label">DuckDB</div><div class="perf-track"><div class="perf-fill" style="width:91%;background:var(--blue)"></div></div><div class="perf-val">1.8s</div></div>
+        <div class="perf-row"><div class="perf-label">pandas</div><div class="perf-track"><div class="perf-fill" style="width:15%;background:var(--ink3)"></div></div><div class="perf-val">44s</div></div>
+        <div class="perf-row"><div class="perf-label">Spark (local)</div><div class="perf-track"><div class="perf-fill" style="width:9%;background:var(--ink4)"></div></div><div class="perf-val">72s</div></div>
+        <p style="margin-top:0.75rem;font-family:var(--mono);font-size:0.65rem;color:var(--ink4)">Representative benchmarks. Both Polars & DuckDB are in the same tier — pick by interface preference (Python vs SQL).</p>
+      </div>
+
+      <h3>Essential Ecosystem Packages</h3>
+      <table>
+        <thead><tr><th>Package</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>polars[all]</td><td>All optional extras: Arrow, XLSX, cloud, etc.</td></tr>
+          <tr><td>polars-cloud</td><td>Run Polars queries on distributed cloud infra</td></tr>
+          <tr><td>pyo3-polars</td><td>Write Rust plugin expressions (UDFs at native speed)</td></tr>
+          <tr><td>narwhals</td><td>Write pandas/polars-agnostic library code</td></tr>
+          <tr><td>ibis-polars</td><td>Ibis query API compiled to Polars</td></tr>
+          <tr><td>patito</td><td>Pydantic-style data validation for DataFrames</td></tr>
+          <tr><td>polars-ds</td><td>DataScience extensions: LSH, KNN, window features</td></tr>
+          <tr><td>hvplot / altair</td><td>Polars-native plotting</td></tr>
+          <tr><td>great-tables</td><td>Beautiful formatted tables from Polars DataFrames</td></tr>
+          <tr><td>dbt-polars</td><td>Use Polars as dbt model execution engine</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="sep sep-heavy">
+  <h3>Rust Plugin UDFs — The Performance Ceiling</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-fname">pyo3-polars — native Rust expression plugin</span><span class="code-lang">rust</span></div>
+    <pre><span class="cm">// Cargo.toml: pyo3-polars = { version = "0.x", features = ["derive"] }
+// This UDF runs INSIDE the Polars query optimizer — zero Python overhead.</span>
+
+<span class="kw">use</span> polars::prelude::<span class="op">*</span>;
+<span class="kw">use</span> pyo3_polars::derive::polars_expr;
+<span class="kw">use</span> serde::Deserialize;
+
+<span class="cm">// Define keyword arguments your Python users can pass:</span>
+#[derive(Deserialize)]
+<span class="kw">struct</span> <span class="ty">MaskEmailKwargs</span> {
+    mask_char: <span class="ty">String</span>,
+    keep_domain: <span class="ty">bool</span>,
+}
+
+<span class="cm">// The expression plugin — input Series → output Series</span>
+#[<span class="fn">polars_expr</span>(output_type = Utf8)]
+<span class="kw">fn</span> <span class="fn">mask_email</span>(inputs: &[<span class="ty">Series</span>], kwargs: <span class="ty">MaskEmailKwargs</span>) -> <span class="ty">PolarsResult</span>&lt;<span class="ty">Series</span>&gt; {
+    <span class="kw">let</span> ca: &<span class="ty">StringChunked</span> = inputs[<span class="nu">0</span>].str()?;
+    <span class="kw">let</span> mask <span class="op">=</span> kwargs.mask_char.chars().next().unwrap_or(<span class="st">'*'</span>);
+    <span class="kw">let</span> out: <span class="ty">StringChunked</span> = ca.<span class="fn">apply</span>(|opt_val| {
+        opt_val.<span class="fn">map</span>(|email| {
+            <span class="kw">let</span> parts: <span class="ty">Vec</span>&lt;&<span class="ty">str</span>&gt; <span class="op">=</span> email.<span class="fn">splitn</span>(<span class="nu">2</span>, <span class="st">'@'</span>).<span class="fn">collect</span>();
+            <span class="kw">if</span> parts.<span class="fn">len</span>() <span class="op">==</span> <span class="nu">2</span> {
+                <span class="kw">let</span> local <span class="op">=</span> &parts[<span class="nu">0</span>][..<span class="fn">parts</span>[<span class="nu">0</span>].<span class="fn">len</span>().<span class="fn">min</span>(<span class="nu">2</span>)];
+                <span class="kw">let</span> masked <span class="op">=</span> mask.<span class="fn">to_string</span>().<span class="fn">repeat</span>(<span class="nu">4</span>);
+                <span class="kw">if</span> kwargs.keep_domain { <span class="fn">format!</span>(<span class="st">"{}{}@{}"</span>, local, masked, parts[<span class="nu">1</span>]) }
+                <span class="kw">else</span> { <span class="fn">format!</span>(<span class="st">"{}{}@[redacted]"</span>, local, masked) }
+            } <span class="kw">else</span> { <span class="st">"[invalid]"</span>.<span class="fn">to_string</span>() }
+        })
+    });
+    <span class="ty">Ok</span>(out.<span class="fn">into_series</span>())
+}
+
+<span class="cm">// Python usage after maturin build:
+// from my_polars_plugin import mask_email
+// df.with_columns(
+//     mask_email(pl.col('email'), mask_char='*', keep_domain=True)
+//     .alias('email_masked')
+// )</span></pre>
+  </div>
+</section>
+
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function showTab(group, id, btn) {
+  document.querySelectorAll(`[id^="${group}-"]`).forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(`${group}-${id}`);
+  if (el) el.classList.add('active');
+  btn.classList.add('active');
+}
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.perf-fill').forEach(b => {
+        const w = b.style.width; b.style.width = '0';
+        setTimeout(() => { b.style.width = w; }, 80);
+      });
+    }
+  });
+}, {threshold: 0.3});
+document.querySelectorAll('.perf-row').forEach(r => io.observe(r));
+</script>
+</body>
+</html>

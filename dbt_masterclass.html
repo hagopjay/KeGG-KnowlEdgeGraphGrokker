@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dbt Masterclass — SQL Veteran's Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0c0c10;
+    --bg2:       #13131a;
+    --bg3:       #1a1a24;
+    --bg4:       #22222f;
+    --border:    #2a2a3a;
+    --amber:     #f59e0b;
+    --amber-dim: #78500a;
+    --cyan:      #06b6d4;
+    --cyan-dim:  #0e4f5c;
+    --green:     #22c55e;
+    --green-dim: #0f3d22;
+    --coral:     #fb7185;
+    --coral-dim: #5c1025;
+    --purple:    #a78bfa;
+    --purple-dim:#3b2878;
+    --text:      #e2e8f0;
+    --text2:     #94a3b8;
+    --text3:     #475569;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'DM Sans', sans-serif;
+    --display:   'Syne', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID LINES BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(6,182,212,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6,182,212,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(12,12,16,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+  }
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: 56px;
+  }
+  .logo {
+    font-family: var(--display);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--amber);
+    white-space: nowrap;
+  }
+  .logo span { color: var(--cyan); }
+  nav {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .nav-btn:hover { background: var(--bg3); color: var(--text); }
+  .nav-btn.active { background: var(--amber-dim); color: var(--amber); }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+  }
+  .badge-amber { background: var(--amber-dim); color: var(--amber); }
+  .badge-cyan  { background: var(--cyan-dim);  color: var(--cyan);  }
+  .badge-green { background: var(--green-dim); color: var(--green); }
+  .badge-coral { background: var(--coral-dim); color: var(--coral); }
+  .badge-purple{ background: var(--purple-dim);color: var(--purple);}
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+  section {
+    display: none;
+    animation: fadeUp 0.3s ease;
+  }
+  section.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title {
+    font-family: var(--display);
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+  .section-sub {
+    color: var(--text2);
+    font-size: 0.9rem;
+    max-width: 680px;
+  }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+  .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+  .card-title {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-sm { padding: 1rem 1.25rem; }
+
+  /* ── CODE BLOCKS ── */
+  .code-wrap {
+    background: #080810;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 1rem 0;
+    position: relative;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+  }
+  .code-filename {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text2);
+    letter-spacing: 0.04em;
+  }
+  .code-lang {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  pre {
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.7;
+    tab-size: 2;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg4) transparent;
+  }
+  pre::-webkit-scrollbar { height: 4px; }
+  pre::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+  /* ── SYNTAX COLORS ── */
+  .kw  { color: #f472b6; }  /* keywords: WITH, SELECT, FROM */
+  .fn  { color: #60a5fa; }  /* functions: ref(), source() */
+  .st  { color: #a3e635; }  /* strings */
+  .cm  { color: #4b5563; font-style: italic; }  /* comments */
+  .jj  { color: var(--amber); } /* jinja: {{ }} {% %} */
+  .nm  { color: #c084fc; }  /* names / identifiers */
+  .op  { color: var(--cyan); }   /* operators, punctuation */
+  .nu  { color: #fb923c; }  /* numbers */
+  .dc  { color: var(--green); }  /* dbt config: materialized etc */
+  .py  { color: #fbbf24; }  /* python */
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid;
+    padding: 0.75rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+  }
+  .callout-amber { border-color: var(--amber); background: rgba(245,158,11,0.07); color: var(--amber); }
+  .callout-cyan  { border-color: var(--cyan);  background: rgba(6,182,212,0.07);  color: var(--cyan); }
+  .callout-green { border-color: var(--green); background: rgba(34,197,94,0.07);  color: var(--green);}
+  .callout-coral { border-color: var(--coral); background: rgba(251,113,133,0.07);color: var(--coral);}
+  .callout strong { display: block; margin-bottom: 0.25rem; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.05em; }
+
+  /* ── TABLES ── */
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+  td code, p code, li code {
+    font-family: var(--mono);
+    font-size: 0.8em;
+    background: var(--bg3);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--cyan);
+  }
+
+  /* ── PILL TABS ── */
+  .pills {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .pill {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text2);
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .pill:hover { border-color: var(--cyan); color: var(--cyan); }
+  .pill.active { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
+
+  /* ── HERO STATS ── */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .hero-stat {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .hero-num {
+    font-family: var(--display);
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 0.67rem;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── DAG VISUAL ── */
+  .dag-container {
+    background: #080810;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+  .dag-node {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .dag-source { background: var(--cyan-dim); border: 1px solid var(--cyan); color: var(--cyan); }
+  .dag-model  { background: var(--amber-dim); border: 1px solid var(--amber); color: var(--amber); }
+  .dag-mart   { background: var(--purple-dim); border: 1px solid var(--purple); color: var(--purple); }
+  .dag-seed   { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
+  .dag-arrow  { color: var(--text3); font-family: var(--mono); font-size: 1rem; }
+  .dag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ── STRATEGY CARDS ── */
+  .strat-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .strat-card:hover { border-color: var(--amber); }
+  .strat-head {
+    background: var(--bg3);
+    padding: 0.75rem 1rem;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .strat-body { padding: 1rem; background: var(--bg2); }
+
+  /* ── SKILL BRIDGE ── */
+  .bridge-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+  }
+  .bridge-sql { color: var(--text2); font-family: var(--mono); font-size: 0.82rem; }
+  .bridge-dbt { color: var(--amber); font-family: var(--mono); font-size: 0.82rem; }
+  .bridge-arrow { color: var(--text3); text-align: center; }
+
+  /* ── PROFILE RING ── */
+  .profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .skill-bar {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+  .skill-name {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text2);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.04em;
+  }
+  .skill-track {
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .skill-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .skill-level {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text3);
+    margin-top: 0.4rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── INTERACTIVE TABS ── */
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── SCROLLBAR GLOBAL ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+  /* ── SEPARATOR ── */
+  .sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* ── PULSE DOT ── */
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .dot-amber { background: var(--amber); }
+  .dot-cyan  { background: var(--cyan); }
+  .dot-green { background: var(--green); }
+  .dot-coral { background: var(--coral); }
+
+  /* ── SPECIAL HIGHLIGHT ── */
+  .hl { color: var(--amber); font-weight: 700; }
+  .hl-cyan { color: var(--cyan); }
+  .hl-green { color: var(--green); }
+
+  p { margin-bottom: 1rem; color: var(--text2); }
+  p:last-child { margin-bottom: 0; }
+  h3 { font-family: var(--display); font-size: 1.1rem; font-weight: 700; margin: 1.5rem 0 0.5rem; color: var(--text); }
+  h4 { font-family: var(--mono); font-size: 0.85rem; color: var(--text2); margin: 1rem 0 0.5rem; letter-spacing: 0.04em; }
+  ul { padding-left: 1.5rem; color: var(--text2); }
+  ul li { margin-bottom: 0.3rem; }
+  strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">dbt<span>.</span>masterclass</div>
+    <nav id="main-nav">
+      <button class="nav-btn active" onclick="showSection('profile', this)">⬡ Profile</button>
+      <button class="nav-btn" onclick="showSection('models', this)">◈ Models</button>
+      <button class="nav-btn" onclick="showSection('jinja', this)">⟨⟩ Jinja</button>
+      <button class="nav-btn" onclick="showSection('incremental', this)">⟳ Incremental</button>
+      <button class="nav-btn" onclick="showSection('testing', this)">✓ Testing</button>
+      <button class="nav-btn" onclick="showSection('snapshots', this)">⊛ Snapshots</button>
+      <button class="nav-btn" onclick="showSection('python', this)">⌥ Python</button>
+      <button class="nav-btn" onclick="showSection('patterns', this)">⬡ Patterns</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<!-- ═══════════════════════════════════════════════
+     SECTION: PROFILE
+════════════════════════════════════════════════ -->
+<section id="profile" class="active">
+  <div class="section-header">
+    <div class="section-title">Your SQL DNA <span style="color:var(--amber)">→</span> dbt Fluency</div>
+    <div class="section-sub">You already know 80% of what dbt does. Let's map your existing mental models to dbt's paradigm — and surgically fill the gaps.</div>
+  </div>
+
+  <div class="hero-grid">
+    <div class="hero-stat"><div class="hero-num" style="color:var(--amber)">5</div><div class="hero-label">Materializations</div></div>
+    <div class="hero-stat"><div class="hero-num" style="color:var(--cyan)">∞</div><div class="hero-label">Jinja Power</div></div>
+    <div class="hero-stat"><div class="hero-num" style="color:var(--green)">DAG</div><div class="hero-label">Auto-lineage</div></div>
+    <div class="hero-stat"><div class="hero-num" style="color:var(--coral)">SCD2</div><div class="hero-label">Snapshots</div></div>
+    <div class="hero-stat"><div class="hero-num" style="color:var(--purple)">py</div><div class="hero-label">Python Models</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot dot-cyan"></span> Your Tech Profile → dbt Power Level</div>
+      <div class="profile-grid">
+        <div class="skill-bar">
+          <div class="skill-name">SQL / CTEs</div>
+          <div class="skill-track"><div class="skill-fill" style="width:95%;background:var(--amber)"></div></div>
+          <div class="skill-level">→ dbt models ARE CTEs</div>
+        </div>
+        <div class="skill-bar">
+          <div class="skill-name">NoSQL / JSON</div>
+          <div class="skill-track"><div class="skill-fill" style="width:80%;background:var(--cyan)"></div></div>
+          <div class="skill-level">→ semi-structured sources</div>
+        </div>
+        <div class="skill-bar">
+          <div class="skill-name">Docker</div>
+          <div class="skill-track"><div class="skill-fill" style="width:75%;background:var(--green)"></div></div>
+          <div class="skill-level">→ dbt Cloud / Airflow</div>
+        </div>
+        <div class="skill-bar">
+          <div class="skill-name">Cloud (AWS/GCP)</div>
+          <div class="skill-track"><div class="skill-fill" style="width:80%;background:var(--purple)"></div></div>
+          <div class="skill-level">→ BigQuery/Redshift targets</div>
+        </div>
+        <div class="skill-bar">
+          <div class="skill-name">Python</div>
+          <div class="skill-track"><div class="skill-fill" style="width:85%;background:var(--coral)"></div></div>
+          <div class="skill-level">→ Python models, macros</div>
+        </div>
+        <div class="skill-bar">
+          <div class="skill-name">dbt Core</div>
+          <div class="skill-track"><div class="skill-fill" style="width:45%;background:var(--amber)"></div></div>
+          <div class="skill-level">→ what we're fixing today</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot dot-amber"></span> SQL Veteran → dbt Translation</div>
+      <div class="bridge-row">
+        <div class="bridge-sql">CREATE OR REPLACE VIEW</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt"><code>materialized='view'</code></div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">CREATE TABLE AS SELECT</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt"><code>materialized='table'</code></div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">INSERT INTO ... WHERE date > ?</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt"><code>materialized='incremental'</code></div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">MERGE INTO (SCD Type 2)</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt"><code>snapshot</code> block</div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">SELECT * FROM schema.table</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt"><code>{{ ref('model_name') }}</code></div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">External / raw table</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt"><code>{{ source('schema','table') }}</code></div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">Stored procedure / UDF</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt">macro in <code>macros/</code></div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">Static lookup CSV</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt">seed in <code>seeds/</code></div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">WITH cte AS (SELECT ...)</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt">ephemeral model</div>
+      </div>
+      <div class="bridge-row">
+        <div class="bridge-sql">Data contract / expectation</div>
+        <div class="bridge-arrow">→</div>
+        <div class="bridge-dbt"><code>dbt test</code> schema tests</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>The dbt Project Anatomy</h3>
+  <div class="grid-3">
+    <div class="card card-sm">
+      <div class="card-title"><span class="badge badge-cyan">sources</span></div>
+      <p>Raw ingested data. You declare these in <code>schema.yml</code> files, <em>not</em> create them. Think: Fivetran landing zone, Airbyte raw tables, Kafka-to-S3 dumps.</p>
+    </div>
+    <div class="card card-sm">
+      <div class="card-title"><span class="badge badge-amber">models</span></div>
+      <p>SQL (or Python) <code>SELECT</code> statements. Each file = one relation in your warehouse. dbt resolves dependencies automatically via <code>ref()</code>.</p>
+    </div>
+    <div class="card card-sm">
+      <div class="card-title"><span class="badge badge-green">seeds</span></div>
+      <p>CSV files checked into git. <code>dbt seed</code> loads them. Perfect for country codes, category maps, static cost tables.</p>
+    </div>
+    <div class="card card-sm">
+      <div class="card-title"><span class="badge badge-purple">macros</span></div>
+      <p>Jinja functions that generate SQL. Reusable logic. Cross-project via packages. Think SQL templating on steroids.</p>
+    </div>
+    <div class="card card-sm">
+      <div class="card-title"><span class="badge badge-coral">snapshots</span></div>
+      <p>Type-2 SCDs, automated. Point at a source, define uniqueness + change detection strategy, dbt handles the <code>valid_from</code> / <code>valid_to</code> bookkeeping.</p>
+    </div>
+    <div class="card card-sm">
+      <div class="card-title"><span class="badge badge-amber">tests</span></div>
+      <p>Assertions on your data. Four built-in generic tests. Unlimited custom SQL tests. Package extensions like <code>dbt_expectations</code> give you 50+ more.</p>
+    </div>
+  </div>
+
+  <!-- DAG VISUAL -->
+  <h3>Live DAG — The Ingress Pipeline You're Building</h3>
+  <div class="dag-container">
+    <div class="dag-row">
+      <span class="dag-node dag-source">⬡ src_postgres.orders</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-model">stg_orders</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-model">int_orders_enriched</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-mart">mart_revenue</span>
+    </div>
+    <div class="dag-row">
+      <span class="dag-node dag-source">⬡ src_kafka.events</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-model">stg_events</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-model">int_orders_enriched</span>
+    </div>
+    <div class="dag-row">
+      <span class="dag-node dag-source">⬡ src_s3.customers</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-model">stg_customers</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-model">int_orders_enriched</span>
+    </div>
+    <div class="dag-row">
+      <span class="dag-node dag-seed">✦ seed: country_codes</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-model">stg_customers</span>
+    </div>
+    <div class="dag-row">
+      <span class="dag-node dag-mart">mart_revenue</span>
+      <span class="dag-arrow">──▶</span>
+      <span class="dag-node dag-mart">mart_revenue_daily</span>
+    </div>
+  </div>
+  <p style="font-size:0.8rem;font-family:var(--mono);color:var(--text3)">Each arrow is a <code>ref()</code> or <code>source()</code> call. dbt resolves execution order and builds the DAG automatically.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     SECTION: MODELS
+════════════════════════════════════════════════ -->
+<section id="models">
+  <div class="section-header">
+    <div class="section-title">Models <span style="color:var(--amber)">&</span> Materializations</div>
+    <div class="section-sub">The five materializations, when to reach for each, and the config patterns that unlock them.</div>
+  </div>
+
+  <div class="pills" id="mat-pills">
+    <button class="pill active" onclick="showTab('mat','view',this)">view</button>
+    <button class="pill" onclick="showTab('mat','table',this)">table</button>
+    <button class="pill" onclick="showTab('mat','incremental',this)">incremental</button>
+    <button class="pill" onclick="showTab('mat','ephemeral',this)">ephemeral</button>
+    <button class="pill" onclick="showTab('mat','materialized_view',this)">materialized_view</button>
+  </div>
+
+  <!-- VIEW -->
+  <div id="mat-view" class="tab-pane active">
+    <div class="grid-2">
+      <div>
+        <div class="callout callout-cyan">
+          <strong>WHEN TO USE</strong>
+          Staging models, rarely-queried transformations, alias layers. Zero storage cost. Freshest data always.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-filename">models/staging/stg_orders.sql</span>
+            <span class="code-lang">sql + jinja</span>
+          </div>
+          <pre><span class="jj">{{</span>
+  <span class="fn">config</span>(
+    <span class="dc">materialized</span> <span class="op">=</span> <span class="st">'view'</span>,
+    <span class="dc">schema</span>       <span class="op">=</span> <span class="st">'staging'</span>,
+    <span class="dc">tags</span>         <span class="op">=</span> [<span class="st">'staging'</span>, <span class="st">'orders'</span>]
+  )
+<span class="jj">}}</span>
+
+<span class="kw">with</span> source <span class="kw">as</span> (
+
+  <span class="kw">select</span> <span class="op">*</span>
+  <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">source</span>(<span class="st">'postgres'</span>, <span class="st">'orders'</span>) <span class="jj">}}</span>
+
+),
+
+renamed <span class="kw">as</span> (
+
+  <span class="kw">select</span>
+    <span class="cm">-- rename & cast at the boundary</span>
+    order_id                              <span class="kw">as</span> order_id,
+    customer_id                           <span class="kw">as</span> customer_id,
+    <span class="fn">cast</span>(created_at <span class="kw">as</span> timestamp)        <span class="kw">as</span> created_at,
+    <span class="fn">upper</span>(status)                         <span class="kw">as</span> status,
+    amount <span class="op">/</span> <span class="nu">100.0</span>                        <span class="kw">as</span> amount_dollars,
+    _fivetran_synced                      <span class="kw">as</span> _loaded_at
+
+  <span class="kw">from</span> source
+
+)
+
+<span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> renamed</pre>
+        </div>
+      </div>
+      <div>
+        <div class="callout callout-amber">
+          <strong>PRO INSIGHT: THE STAGING CONTRACT</strong>
+          Staging models are your boundary. They rename, cast, and clean — nothing else. No joins. No business logic. This keeps your raw layer queryable independently and makes upstream schema changes a one-file fix.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-filename">models/staging/schema.yml</span>
+            <span class="code-lang">yaml</span>
+          </div>
+          <pre><span class="dc">sources</span>:
+  <span class="op">-</span> <span class="dc">name</span>: <span class="st">postgres</span>
+    <span class="dc">database</span>: <span class="st">raw</span>
+    <span class="dc">schema</span>: <span class="st">public</span>
+    <span class="dc">loaded_at_field</span>: <span class="st">_fivetran_synced</span>
+    <span class="dc">freshness</span>:
+      <span class="dc">warn_after</span>: {<span class="dc">count</span>: <span class="nu">1</span>, <span class="dc">period</span>: <span class="st">hour</span>}
+      <span class="dc">error_after</span>: {<span class="dc">count</span>: <span class="nu">6</span>, <span class="dc">period</span>: <span class="st">hour</span>}
+    <span class="dc">tables</span>:
+      <span class="op">-</span> <span class="dc">name</span>: <span class="st">orders</span>
+        <span class="dc">description</span>: <span class="st">"Raw orders from Postgres via Fivetran"</span>
+        <span class="dc">columns</span>:
+          <span class="op">-</span> <span class="dc">name</span>: <span class="st">order_id</span>
+            <span class="dc">description</span>: <span class="st">"PK — UUID"</span>
+            <span class="dc">tests</span>:
+              <span class="op">-</span> <span class="st">not_null</span>
+              <span class="op">-</span> <span class="st">unique</span></pre>
+        </div>
+        <p>Run <code>dbt source freshness</code> to alert when sources go stale — critical for ingress monitoring.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div id="mat-table" class="tab-pane">
+    <div class="grid-2">
+      <div>
+        <div class="callout callout-amber">
+          <strong>WHEN TO USE</strong>
+          Heavy aggregations, mart-layer models, anything downstream dashboards hammer. Pays compute once, serves reads infinitely.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-filename">models/marts/mart_revenue.sql</span>
+            <span class="code-lang">sql + jinja</span>
+          </div>
+          <pre><span class="jj">{{</span>
+  <span class="fn">config</span>(
+    <span class="dc">materialized</span>  <span class="op">=</span> <span class="st">'table'</span>,
+    <span class="dc">schema</span>        <span class="op">=</span> <span class="st">'marts'</span>,
+    <span class="dc">dist</span>          <span class="op">=</span> <span class="st">'customer_id'</span>,  <span class="cm">-- Redshift</span>
+    <span class="dc">sort</span>          <span class="op">=</span> [<span class="st">'order_date'</span>],  <span class="cm">-- Redshift</span>
+    <span class="cm">-- BigQuery equivalent:</span>
+    <span class="dc">partition_by</span>  <span class="op">=</span> {
+      <span class="st">'field'</span>: <span class="st">'order_date'</span>,
+      <span class="st">'data_type'</span>: <span class="st">'date'</span>,
+      <span class="st">'granularity'</span>: <span class="st">'day'</span>
+    },
+    <span class="dc">cluster_by</span>    <span class="op">=</span> [<span class="st">'customer_id'</span>, <span class="st">'status'</span>]
+  )
+<span class="jj">}}</span>
+
+<span class="kw">with</span> orders <span class="kw">as</span> (
+  <span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(<span class="st">'int_orders_enriched'</span>) <span class="jj">}}</span>
+),
+
+daily_revenue <span class="kw">as</span> (
+  <span class="kw">select</span>
+    <span class="fn">date_trunc</span>(<span class="st">'day'</span>, created_at) <span class="kw">as</span> order_date,
+    customer_id,
+    status,
+    <span class="fn">count</span>(<span class="op">*</span>)                     <span class="kw">as</span> order_count,
+    <span class="fn">sum</span>(amount_dollars)           <span class="kw">as</span> gross_revenue,
+    <span class="fn">sum</span>(amount_dollars)
+      <span class="fn">filter</span> (<span class="kw">where</span> status <span class="op">=</span> <span class="st">'COMPLETED'</span>)
+                                  <span class="kw">as</span> net_revenue
+  <span class="kw">from</span> orders
+  <span class="kw">group by</span> <span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>
+)
+
+<span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> daily_revenue</pre>
+        </div>
+      </div>
+      <div>
+        <div class="callout callout-green">
+          <strong>WAREHOUSE-NATIVE OPTIMISATION</strong>
+          dbt passes <code>partition_by</code> and <code>cluster_by</code> directly to BigQuery DDL. On Redshift, <code>dist</code> and <code>sort</code> control physical layout. Know your warehouse, inject it here.
+        </div>
+        <h4>Table vs View Decision Matrix</h4>
+        <table>
+          <thead><tr><th>Factor</th><th>→ View</th><th>→ Table</th></tr></thead>
+          <tbody>
+            <tr><td>Query frequency</td><td>Low / ad-hoc</td><td>High / BI tool</td></tr>
+            <tr><td>Transform cost</td><td>Cheap scans</td><td>Expensive aggregation</td></tr>
+            <tr><td>Data freshness</td><td>Always live</td><td>As-of last <code>dbt run</code></td></tr>
+            <tr><td>Storage cost</td><td>Zero</td><td>Full duplication</td></tr>
+            <tr><td>Downstream joins</td><td>Re-compute each time</td><td>Indexes / partitions help</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- INCREMENTAL -->
+  <div id="mat-incremental" class="tab-pane">
+    <div class="callout callout-amber">
+      <strong>CLICK → Incremental section for the full deep-dive</strong>
+      This tab covers the basics. The Incremental section in the nav covers merge strategies, late-arriving data, and the <code>--full-refresh</code> escape hatch.
+    </div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-filename">models/staging/stg_events.sql</span>
+        <span class="code-lang">incremental basics</span>
+      </div>
+      <pre><span class="jj">{{</span>
+  <span class="fn">config</span>(
+    <span class="dc">materialized</span>       <span class="op">=</span> <span class="st">'incremental'</span>,
+    <span class="dc">unique_key</span>         <span class="op">=</span> <span class="st">'event_id'</span>,
+    <span class="dc">on_schema_change</span>   <span class="op">=</span> <span class="st">'sync_all_columns'</span>
+  )
+<span class="jj">}}</span>
+
+<span class="kw">select</span>
+  event_id,
+  user_id,
+  event_type,
+  event_ts,
+  properties
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">source</span>(<span class="st">'kafka'</span>, <span class="st">'events'</span>) <span class="jj">}}</span>
+
+<span class="jj">{%</span> <span class="kw">if</span> <span class="fn">is_incremental</span>() <span class="jj">%}</span>
+
+  <span class="kw">where</span> event_ts <span class="op">></span> (<span class="kw">select</span> <span class="fn">max</span>(event_ts) <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">this</span> <span class="jj">}}</span>)
+
+<span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span></pre>
+    </div>
+    <p><code>{{ this }}</code> is the relation reference to the model's own table in the warehouse — the magic that makes incremental work. <code>is_incremental()</code> returns <code>false</code> on first run (full load) and <code>true</code> on subsequent runs.</p>
+  </div>
+
+  <!-- EPHEMERAL -->
+  <div id="mat-ephemeral" class="tab-pane">
+    <div class="grid-2">
+      <div>
+        <div class="callout callout-purple">
+          <strong>EPHEMERAL = CTE-AS-A-FILE</strong>
+          Ephemeral models are inlined as CTEs into whatever model references them. They create zero warehouse objects — pure compile-time substitution. Think: shared logic extracted into its own file.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-filename">models/intermediate/_int_exchange_rates.sql</span>
+            <span class="code-lang">ephemeral</span>
+          </div>
+          <pre><span class="jj">{{</span> <span class="fn">config</span>(<span class="dc">materialized</span><span class="op">=</span><span class="st">'ephemeral'</span>) <span class="jj">}}</span>
+
+<span class="cm">-- This file creates NO table/view in the warehouse.
+-- It's inlined as a CTE wherever ref() is called.</span>
+
+<span class="kw">select</span>
+  currency_code,
+  rate_to_usd,
+  <span class="fn">date_trunc</span>(<span class="st">'day'</span>, valid_from) <span class="kw">as</span> rate_date
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(<span class="st">'stg_exchange_rates'</span>) <span class="jj">}}</span>
+<span class="kw">where</span> is_current <span class="op">=</span> <span class="kw">true</span></pre>
+        </div>
+      </div>
+      <div>
+        <h4>What dbt compiles to:</h4>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-filename">compiled SQL (auto-generated)</span><span class="code-lang">compiled</span></div>
+          <pre><span class="cm">-- dbt inlines the ephemeral as a CTE:</span>
+<span class="kw">with</span> __dbt__cte__int_exchange_rates <span class="kw">as</span> (
+
+  <span class="kw">select</span>
+    currency_code,
+    rate_to_usd,
+    <span class="fn">date_trunc</span>(<span class="st">'day'</span>, valid_from) <span class="kw">as</span> rate_date
+  <span class="kw">from</span> raw.public.exchange_rates
+  <span class="kw">where</span> is_current <span class="op">=</span> <span class="kw">true</span>
+
+),
+
+your_model_cte <span class="kw">as</span> (
+
+  <span class="kw">select</span>
+    o.amount_dollars <span class="op">*</span> fx.rate_to_usd <span class="kw">as</span> amount_usd
+  <span class="kw">from</span> orders o
+  <span class="kw">join</span> __dbt__cte__int_exchange_rates fx <span class="kw">using</span> (currency_code)
+
+)
+
+<span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> your_model_cte</pre>
+        </div>
+        <div class="callout callout-coral">
+          <strong>GOTCHA</strong>
+          Ephemeral models can't be <code>ref()</code>'d from <em>other</em> ephemeral models more than ~3 levels deep before the CTE stack explodes. Use a view instead when the chain gets long.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIALIZED VIEW -->
+  <div id="mat-materialized_view" class="tab-pane">
+    <div class="callout callout-green">
+      <strong>dbt 1.6+ — Native Materialized View Support</strong>
+      Warehouse-native MVs (BigQuery, Snowflake, Redshift, Postgres 9.3+). Automatically refreshed by the warehouse engine. dbt manages the DDL; you write the SELECT.
+    </div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-filename">models/marts/mv_active_sessions.sql</span>
+        <span class="code-lang">materialized_view</span>
+      </div>
+      <pre><span class="jj">{{</span>
+  <span class="fn">config</span>(
+    <span class="dc">materialized</span>  <span class="op">=</span> <span class="st">'materialized_view'</span>,
+    <span class="cm">-- Snowflake: target_lag controls refresh frequency</span>
+    <span class="dc">target_lag</span>    <span class="op">=</span> <span class="st">'1 minute'</span>,
+    <span class="dc">snowflake_warehouse</span> <span class="op">=</span> <span class="st">'TRANSFORMING'</span>
+  )
+<span class="jj">}}</span>
+
+<span class="cm">-- The warehouse keeps this fresh automatically.
+-- dbt run detects drift and issues ALTER/REPLACE DDL.</span>
+
+<span class="kw">select</span>
+  session_id,
+  user_id,
+  <span class="fn">max</span>(event_ts)  <span class="kw">as</span> last_activity,
+  <span class="fn">count</span>(<span class="op">*</span>)       <span class="kw">as</span> event_count
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(<span class="st">'stg_events'</span>) <span class="jj">}}</span>
+<span class="kw">where</span> event_ts <span class="op">></span> <span class="fn">current_timestamp</span>() <span class="op">-</span> <span class="fn">interval</span> <span class="st">'24 hours'</span>
+<span class="kw">group by</span> <span class="nu">1</span>, <span class="nu">2</span></pre>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     SECTION: JINJA
+════════════════════════════════════════════════ -->
+<section id="jinja">
+  <div class="section-header">
+    <div class="section-title">Jinja Macros <span style="color:var(--amber)">—</span> SQL Metaprogramming</div>
+    <div class="section-sub">Where dbt goes from "SQL runner" to "SQL compiler". Macros are Jinja functions that generate SQL — write the generator once, never write boilerplate again.</div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Anatomy of a Macro</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-filename">macros/utils/cents_to_dollars.sql</span>
+          <span class="code-lang">jinja macro</span>
+        </div>
+        <pre><span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">cents_to_dollars</span>(column_name, scale<span class="op">=</span><span class="nu">2</span>) <span class="jj">%}</span>
+  <span class="fn">round</span>(<span class="jj">{{</span> column_name <span class="jj">}}</span> <span class="op">/</span> <span class="nu">100.0</span>, <span class="jj">{{</span> scale <span class="jj">}}</span>)
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span>
+
+
+<span class="cm">-- Usage in any model:</span>
+<span class="kw">select</span>
+  order_id,
+  <span class="jj">{{</span> <span class="fn">cents_to_dollars</span>(<span class="st">'amount_cents'</span>) <span class="jj">}}</span>          <span class="kw">as</span> amount,
+  <span class="jj">{{</span> <span class="fn">cents_to_dollars</span>(<span class="st">'tax_cents'</span>, scale<span class="op">=</span><span class="nu">4</span>) <span class="jj">}}</span>  <span class="kw">as</span> tax
+
+<span class="cm">-- Compiles to:</span>
+<span class="kw">select</span>
+  order_id,
+  <span class="fn">round</span>(amount_cents <span class="op">/</span> <span class="nu">100.0</span>, <span class="nu">2</span>) <span class="kw">as</span> amount,
+  <span class="fn">round</span>(tax_cents    <span class="op">/</span> <span class="nu">100.0</span>, <span class="nu">4</span>) <span class="kw">as</span> tax</pre>
+      </div>
+
+      <h3>The Real Power: Generating Column Lists</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-filename">macros/utils/pivot_status.sql</span>
+          <span class="code-lang">advanced macro</span>
+        </div>
+        <pre><span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">pivot_status_counts</span>(statuses) <span class="jj">%}</span>
+
+  <span class="jj">{%</span> <span class="kw">for</span> status <span class="kw">in</span> statuses <span class="jj">%}</span>
+
+    <span class="fn">countif</span>(status <span class="op">=</span> <span class="st">'</span><span class="jj">{{</span> status <span class="jj">}}</span><span class="st">'</span>) <span class="kw">as</span> <span class="jj">{{</span> status | lower <span class="jj">}}</span>_count
+
+    <span class="jj">{%</span> <span class="kw">if</span> <span class="kw">not</span> loop.last <span class="jj">%}</span>,<span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span>
+
+  <span class="jj">{%</span> <span class="kw">endfor</span> <span class="jj">%}</span>
+
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span>
+
+
+<span class="cm">-- Usage:</span>
+<span class="kw">select</span>
+  customer_id,
+  <span class="jj">{{</span> <span class="fn">pivot_status_counts</span>([
+      <span class="st">'PENDING'</span>,
+      <span class="st">'COMPLETED'</span>,
+      <span class="st">'CANCELLED'</span>,
+      <span class="st">'REFUNDED'</span>
+  ]) <span class="jj">}}</span>
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(<span class="st">'stg_orders'</span>) <span class="jj">}}</span>
+<span class="kw">group by</span> <span class="nu">1</span></pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Introspecting the Warehouse</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-filename">macros/utils/get_column_names.sql</span>
+          <span class="code-lang">introspection macro</span>
+        </div>
+        <pre><span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">get_column_names</span>(model) <span class="jj">%}</span>
+
+  <span class="jj">{%</span> set relation <span class="op">=</span> <span class="fn">ref</span>(model) <span class="jj">%}</span>
+  <span class="jj">{%</span> set columns  <span class="op">=</span> <span class="fn">adapter.get_columns_in_relation</span>(relation) <span class="jj">%}</span>
+
+  <span class="jj">{{</span> <span class="fn">log</span>(<span class="st">"Columns in "</span> <span class="op">~</span> model <span class="op">~</span> <span class="st">":"</span>, info<span class="op">=</span><span class="kw">true</span>) <span class="jj">}}</span>
+  <span class="jj">{%</span> <span class="kw">for</span> col <span class="kw">in</span> columns <span class="jj">%}</span>
+    <span class="jj">{{</span> <span class="fn">log</span>(col.name <span class="op">~</span> <span class="st">" ("</span> <span class="op">~</span> col.dtype <span class="op">~</span> <span class="st">")"</span>, info<span class="op">=</span><span class="kw">true</span>) <span class="jj">}}</span>
+  <span class="jj">{%</span> <span class="kw">endfor</span> <span class="jj">%}</span>
+
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span>
+
+
+<span class="cm">-- A model that auto-selects all non-PII columns:</span>
+<span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">select_non_pii</span>(model, pii_columns) <span class="jj">%}</span>
+
+  <span class="jj">{%</span> set relation <span class="op">=</span> <span class="fn">ref</span>(model) <span class="jj">%}</span>
+  <span class="jj">{%</span> set all_cols  <span class="op">=</span> <span class="fn">adapter.get_columns_in_relation</span>(relation) <span class="jj">%}</span>
+
+  <span class="kw">select</span>
+  <span class="jj">{%</span> <span class="kw">for</span> col <span class="kw">in</span> all_cols <span class="jj">%}</span>
+    <span class="jj">{%</span> <span class="kw">if</span> col.name <span class="kw">not in</span> pii_columns <span class="jj">%}</span>
+      <span class="jj">{{</span> col.name <span class="jj">}}</span><span class="jj">{%</span> <span class="kw">if</span> <span class="kw">not</span> loop.last <span class="jj">%}</span>,<span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span>
+    <span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span>
+  <span class="jj">{%</span> <span class="kw">endfor</span> <span class="jj">%}</span>
+  <span class="kw">from</span> <span class="jj">{{</span> relation <span class="jj">}}</span>
+
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span></pre>
+      </div>
+
+      <div class="callout callout-amber">
+        <strong>ADAPTER METHODS — YOUR SECRET WEAPONS</strong>
+        <code>adapter.get_columns_in_relation()</code>, <code>adapter.get_relation()</code>, <code>adapter.already_exists()</code> — these are warehouse-introspection calls inside Jinja. Most senior dbt engineers never use them. You should.
+      </div>
+
+      <h3>run_query — Execute SQL, Use the Result</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-filename">macros/utils/dynamic_date_spine.sql</span>
+          <span class="code-lang">run_query</span>
+        </div>
+        <pre><span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">get_max_date</span>(model, column) <span class="jj">%}</span>
+
+  <span class="jj">{%</span> set query <span class="jj">%}</span>
+    <span class="kw">select max</span>(<span class="jj">{{</span> column <span class="jj">}}</span>) <span class="kw">as</span> max_date
+    <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(model) <span class="jj">}}</span>
+  <span class="jj">{%</span> endset <span class="jj">%}</span>
+
+  <span class="jj">{%</span> set result <span class="op">=</span> <span class="fn">run_query</span>(query) <span class="jj">%}</span>
+
+  <span class="jj">{%</span> <span class="kw">if</span> <span class="fn">execute</span> <span class="jj">%}</span>
+    <span class="jj">{%</span> set max_date <span class="op">=</span> result.columns[<span class="nu">0</span>].values()[<span class="nu">0</span>] <span class="jj">%}</span>
+    <span class="jj">{{</span> <span class="kw">return</span>(max_date) <span class="jj">}}</span>
+  <span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span>
+
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span>
+
+<span class="cm">-- Usage: dynamically backfill from last loaded date</span>
+<span class="jj">{%</span> set cutoff <span class="op">=</span> <span class="fn">get_max_date</span>(<span class="st">'stg_orders'</span>, <span class="st">'created_at'</span>) <span class="jj">%}</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>Cross-Database Dispatch: Write Once, Run Everywhere</h3>
+  <div class="code-wrap">
+    <div class="code-header">
+      <span class="code-filename">macros/utils/safe_divide.sql</span>
+      <span class="code-lang">dispatch macro</span>
+    </div>
+    <pre><span class="cm">-- Base macro — defines the interface</span>
+<span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">safe_divide</span>(numerator, denominator) <span class="jj">%}</span>
+  <span class="jj">{{</span> <span class="fn">return</span>(<span class="fn">adapter.dispatch</span>(<span class="st">'safe_divide'</span>)(numerator, denominator)) <span class="jj">}}</span>
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span>
+
+<span class="cm">-- BigQuery implementation</span>
+<span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">bigquery__safe_divide</span>(numerator, denominator) <span class="jj">%}</span>
+  <span class="fn">safe_divide</span>(<span class="jj">{{</span> numerator <span class="jj">}}</span>, <span class="jj">{{</span> denominator <span class="jj">}}</span>)
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span>
+
+<span class="cm">-- Snowflake / Postgres fallback</span>
+<span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">default__safe_divide</span>(numerator, denominator) <span class="jj">%}</span>
+  <span class="kw">case when</span> <span class="jj">{{</span> denominator <span class="jj">}}</span> <span class="op">=</span> <span class="nu">0</span> <span class="kw">then null</span>
+       <span class="kw">else</span> <span class="jj">{{</span> numerator <span class="jj">}}</span> <span class="op">/</span> <span class="fn">nullif</span>(<span class="jj">{{</span> denominator <span class="jj">}}</span>, <span class="nu">0</span>)
+  <span class="kw">end</span>
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span>
+
+<span class="cm">-- Usage in any model — dbt picks the right implementation:</span>
+<span class="kw">select</span>
+  <span class="jj">{{</span> <span class="fn">safe_divide</span>(<span class="st">'net_revenue'</span>, <span class="st">'order_count'</span>) <span class="jj">}}</span> <span class="kw">as</span> avg_order_value</pre>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     SECTION: INCREMENTAL
+════════════════════════════════════════════════ -->
+<section id="incremental">
+  <div class="section-header">
+    <div class="section-title">Incremental Models <span style="color:var(--amber)">—</span> The Full Arsenal</div>
+    <div class="section-sub">Four strategies, late-arriving data, schema evolution, and the decisions that separate a $100/month pipeline from a $10,000/month one.</div>
+  </div>
+
+  <h3>Strategy 1: append</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">append — immutable event streams</span><span class="code-lang">incremental</span></div>
+    <pre><span class="jj">{{</span> <span class="fn">config</span>(
+  <span class="dc">materialized</span>  <span class="op">=</span> <span class="st">'incremental'</span>,
+  <span class="dc">incremental_strategy</span> <span class="op">=</span> <span class="st">'append'</span>   <span class="cm">-- INSERT only, never touch existing rows</span>
+) <span class="jj">}}</span>
+
+<span class="cm">-- Perfect for: event logs, audit trails, append-only Kafka topics.
+-- Danger: if your source replays events, you'll get duplicates.
+-- Guard with: unique_key at the warehouse level or a dedupe downstream.</span>
+
+<span class="kw">select</span> event_id, user_id, event_ts, payload
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">source</span>(<span class="st">'kafka'</span>, <span class="st">'raw_events'</span>) <span class="jj">}}</span>
+<span class="jj">{%</span> <span class="kw">if</span> <span class="fn">is_incremental</span>() <span class="jj">%}</span>
+  <span class="kw">where</span> event_ts <span class="op">></span> (<span class="kw">select</span> <span class="fn">max</span>(event_ts) <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">this</span> <span class="jj">}}</span>)
+<span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span></pre>
+  </div>
+
+  <h3>Strategy 2: delete+insert (Snowflake default)</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">delete+insert — partition replacement</span><span class="code-lang">incremental</span></div>
+    <pre><span class="jj">{{</span> <span class="fn">config</span>(
+  <span class="dc">materialized</span>         <span class="op">=</span> <span class="st">'incremental'</span>,
+  <span class="dc">incremental_strategy</span> <span class="op">=</span> <span class="st">'delete+insert'</span>,
+  <span class="dc">unique_key</span>           <span class="op">=</span> <span class="st">'order_id'</span>,        <span class="cm">-- DELETE matching rows first</span>
+  <span class="dc">on_schema_change</span>     <span class="op">=</span> <span class="st">'append_new_columns'</span>
+) <span class="jj">}}</span>
+
+<span class="cm">-- dbt executes:
+--   DELETE FROM target WHERE order_id IN (SELECT order_id FROM new_data)
+--   INSERT INTO target SELECT * FROM new_data
+--
+-- Great for: mutable source records (orders that update status)
+-- Cheaper than MERGE for most warehouses — no row-by-row comparison.</span>
+
+<span class="kw">select</span>
+  order_id,
+  status,
+  updated_at,
+  amount_dollars
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">source</span>(<span class="st">'postgres'</span>, <span class="st">'orders'</span>) <span class="jj">}}</span>
+<span class="jj">{%</span> <span class="kw">if</span> <span class="fn">is_incremental</span>() <span class="jj">%}</span>
+  <span class="kw">where</span> updated_at <span class="op">></span> (<span class="kw">select</span> <span class="fn">max</span>(updated_at) <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">this</span> <span class="jj">}}</span>)
+<span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span></pre>
+  </div>
+
+  <h3>Strategy 3: merge (the full UPSERT)</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">merge — fine-grained control</span><span class="code-lang">incremental</span></div>
+    <pre><span class="jj">{{</span> <span class="fn">config</span>(
+  <span class="dc">materialized</span>         <span class="op">=</span> <span class="st">'incremental'</span>,
+  <span class="dc">incremental_strategy</span> <span class="op">=</span> <span class="st">'merge'</span>,
+  <span class="dc">unique_key</span>           <span class="op">=</span> [<span class="st">'order_id'</span>, <span class="st">'order_date'</span>],  <span class="cm">-- composite key</span>
+  <span class="dc">merge_exclude_columns</span><span class="op">=</span> [<span class="st">'created_at'</span>],              <span class="cm">-- never overwrite these</span>
+  <span class="dc">merge_update_columns</span> <span class="op">=</span> [<span class="st">'status'</span>, <span class="st">'updated_at'</span>]   <span class="cm">-- only update these</span>
+) <span class="jj">}}</span>
+
+<span class="cm">-- MERGE INTO target t
+-- USING new_data s ON t.order_id = s.order_id AND t.order_date = s.order_date
+-- WHEN MATCHED THEN UPDATE SET t.status = s.status, t.updated_at = s.updated_at
+-- WHEN NOT MATCHED THEN INSERT (...)
+--
+-- merge_update_columns is your surgical scalpel.
+-- Prevents accidentally overwriting audit fields.</span></pre>
+  </div>
+
+  <h3>Strategy 4: microbatch (dbt 1.9+) — The Kafka-Native Pattern</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">microbatch — event_time partitioned processing</span><span class="code-lang">incremental</span></div>
+    <pre><span class="jj">{{</span> <span class="fn">config</span>(
+  <span class="dc">materialized</span>         <span class="op">=</span> <span class="st">'incremental'</span>,
+  <span class="dc">incremental_strategy</span> <span class="op">=</span> <span class="st">'microbatch'</span>,
+  <span class="dc">event_time</span>           <span class="op">=</span> <span class="st">'event_ts'</span>,       <span class="cm">-- partition axis</span>
+  <span class="dc">begin</span>                <span class="op">=</span> <span class="st">'2024-01-01'</span>,    <span class="cm">-- backfill start</span>
+  <span class="dc">batch_size</span>           <span class="op">=</span> <span class="st">'day'</span>,            <span class="cm">-- hour | day | month</span>
+  <span class="dc">lookback</span>             <span class="op">=</span> <span class="nu">3</span>                 <span class="cm">-- reprocess last 3 batches</span>
+) <span class="jj">}}</span>
+
+<span class="cm">-- dbt injects {{ start_ts }} and {{ end_ts }} automatically per batch.
+-- Perfect for: all-vector ingress (Kafka, S3, API) where data arrives late.
+-- lookback=3 handles the "data arrives 2 days late" problem elegantly.
+-- Run in parallel: dbt run --threads 8 processes 8 daily batches simultaneously.</span>
+
+<span class="kw">select</span>
+  event_id,
+  event_ts,
+  event_type,
+  user_id,
+  <span class="fn">json_extract_scalar</span>(payload, <span class="st">'$.session_id'</span>) <span class="kw">as</span> session_id
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">source</span>(<span class="st">'kafka'</span>, <span class="st">'events'</span>) <span class="jj">}}</span>
+<span class="cm">-- microbatch auto-injects the WHERE — you don't write it:</span>
+<span class="cm">-- WHERE event_ts >= '2024-01-15 00:00:00' AND event_ts < '2024-01-16 00:00:00'</span></pre>
+  </div>
+
+  <div class="callout callout-coral">
+    <strong>LATE-ARRIVING DATA — THE INGRESS ENGINEER'S NIGHTMARE</strong>
+    Microbatch's <code>lookback</code> parameter is how dbt handles late data. Set <code>lookback=3</code> on a daily batch = dbt re-processes the last 3 days on every run. Your Kafka consumer was 47 hours behind? <code>lookback=3</code> catches it automatically. Combine with <code>unique_key</code> to avoid duplicates.
+  </div>
+
+  <h3>Late Data + Schema Evolution Patterns</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">on_schema_change — handling source drift</span><span class="code-lang">config options</span></div>
+    <pre><span class="cm">-- on_schema_change options — choose your poison:</span>
+
+<span class="dc">on_schema_change</span> <span class="op">=</span> <span class="st">'ignore'</span>
+<span class="cm">-- Default. New columns in source? Silently ignored.
+-- Safest. Your downstream won't break. But you miss new data.</span>
+
+<span class="dc">on_schema_change</span> <span class="op">=</span> <span class="st">'fail'</span>
+<span class="cm">-- Raises an error if source schema changes. Forces you to deal with it.
+-- Good in production where silent data loss is worse than a failed run.</span>
+
+<span class="dc">on_schema_change</span> <span class="op">=</span> <span class="st">'append_new_columns'</span>
+<span class="cm">-- Adds new columns to the target; fills existing rows with NULL.
+-- Good for: append-only schema evolution (new event properties).</span>
+
+<span class="dc">on_schema_change</span> <span class="op">=</span> <span class="st">'sync_all_columns'</span>
+<span class="cm">-- Adds new, drops removed columns. Full sync with source.
+-- WARNING: drops columns = data loss. Only use if you OWN the source schema.</span></pre>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     SECTION: TESTING
+════════════════════════════════════════════════ -->
+<section id="testing">
+  <div class="section-header">
+    <div class="section-title">Testing Arsenal <span style="color:var(--amber)">—</span> Data Contracts in Code</div>
+    <div class="section-sub">dbt tests are assertions. They run SQL against your data. Fail = pipeline should stop. Your SQL background makes you dangerous here.</div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>The Four Built-in Generic Tests</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">models/staging/schema.yml</span><span class="code-lang">schema tests</span></div>
+        <pre><span class="dc">models</span>:
+  <span class="op">-</span> <span class="dc">name</span>: <span class="st">stg_orders</span>
+    <span class="dc">columns</span>:
+      <span class="op">-</span> <span class="dc">name</span>: <span class="st">order_id</span>
+        <span class="dc">tests</span>:
+          <span class="op">-</span> <span class="st">unique</span>                <span class="cm"># SELECT count(*) WHERE count > 1</span>
+          <span class="op">-</span> <span class="st">not_null</span>             <span class="cm"># SELECT count(*) WHERE col IS NULL</span>
+
+      <span class="op">-</span> <span class="dc">name</span>: <span class="st">status</span>
+        <span class="dc">tests</span>:
+          <span class="op">-</span> <span class="st">accepted_values</span>:     <span class="cm"># SELECT ... WHERE NOT IN (values)</span>
+              <span class="dc">values</span>: [<span class="st">PENDING</span>, <span class="st">COMPLETED</span>, <span class="st">CANCELLED</span>, <span class="st">REFUNDED</span>]
+              <span class="dc">quote</span>: <span class="kw">false</span>
+
+      <span class="op">-</span> <span class="dc">name</span>: <span class="st">customer_id</span>
+        <span class="dc">tests</span>:
+          <span class="op">-</span> <span class="st">relationships</span>:       <span class="cm"># referential integrity</span>
+              <span class="dc">to</span>: <span class="fn">ref</span>(<span class="st">'stg_customers'</span>)
+              <span class="dc">field</span>: <span class="st">customer_id</span>
+
+      <span class="op">-</span> <span class="dc">name</span>: <span class="st">amount_dollars</span>
+        <span class="dc">tests</span>:
+          <span class="op">-</span> <span class="st">dbt_expectations.expect_column_values_to_be_between</span>:
+              <span class="dc">min_value</span>: <span class="nu">0</span>
+              <span class="dc">max_value</span>: <span class="nu">100000</span>
+              <span class="dc">strictly</span>: <span class="kw">true</span></pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Custom Singular Tests — Pure SQL</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">tests/assert_revenue_positive.sql</span><span class="code-lang">singular test</span></div>
+        <pre><span class="cm">-- ANY ROW RETURNED = TEST FAILS.
+-- dbt expects zero rows from a passing test.
+-- This is pure SQL — use everything you know.</span>
+
+<span class="kw">with</span> revenue_check <span class="kw">as</span> (
+
+  <span class="kw">select</span>
+    order_date,
+    <span class="fn">sum</span>(net_revenue)  <span class="kw">as</span> daily_revenue,
+    <span class="fn">count</span>(<span class="op">*</span>)          <span class="kw">as</span> order_count
+
+  <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(<span class="st">'mart_revenue'</span>) <span class="jj">}}</span>
+  <span class="kw">group by</span> <span class="nu">1</span>
+
+)
+
+<span class="cm">-- Return rows where revenue is IMPOSSIBLE</span>
+<span class="kw">select</span> <span class="op">*</span>
+<span class="kw">from</span> revenue_check
+<span class="kw">where</span>
+  daily_revenue <span class="op"><</span> <span class="nu">0</span>                    <span class="cm">-- negative revenue</span>
+  <span class="kw">or</span> order_count <span class="op">></span> <span class="nu">1000000</span>            <span class="cm">-- astronomical count</span>
+  <span class="kw">or</span> daily_revenue <span class="op">/</span> order_count <span class="op">></span> <span class="nu">50000</span> <span class="cm">-- avg order > $50k</span></pre>
+      </div>
+
+      <h3>Custom Generic Tests (Reusable Assertions)</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">macros/tests/test_not_future_date.sql</span><span class="code-lang">generic test</span></div>
+        <pre><span class="jj">{%</span> <span class="kw">test</span> <span class="fn">not_future_date</span>(model, column_name, tolerance_days<span class="op">=</span><span class="nu">1</span>) <span class="jj">%}</span>
+
+  <span class="cm">-- Reusable: call from schema.yml on any date column.
+  -- tolerance_days handles timezone skew.</span>
+
+  <span class="kw">select</span>
+    <span class="jj">{{</span> column_name <span class="jj">}}</span>  <span class="kw">as</span> bad_date,
+    <span class="fn">current_timestamp</span>() <span class="kw">as</span> checked_at
+  <span class="kw">from</span> <span class="jj">{{</span> model <span class="jj">}}</span>
+  <span class="kw">where</span>
+    <span class="jj">{{</span> column_name <span class="jj">}}</span> <span class="op">></span>
+    <span class="fn">current_timestamp</span>() <span class="op">+</span> <span class="fn">interval</span> <span class="st">'</span><span class="jj">{{</span> tolerance_days <span class="jj">}}</span><span class="st"> days'</span>
+
+<span class="jj">{%</span> <span class="kw">endtest</span> <span class="jj">%}</span>
+
+<span class="cm">-- Usage in schema.yml:</span>
+<span class="cm">-- tests:</span>
+<span class="cm">--   - not_future_date:</span>
+<span class="cm">--       column_name: created_at</span>
+<span class="cm">--       tolerance_days: 2</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>Test Severity — Warn vs Error</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">severity + store_failures = production-grade testing</span><span class="code-lang">advanced config</span></div>
+    <pre><span class="dc">models</span>:
+  <span class="op">-</span> <span class="dc">name</span>: <span class="st">mart_revenue</span>
+    <span class="dc">tests</span>:
+      <span class="cm">## Model-level test — freshness check</span>
+      <span class="op">-</span> <span class="st">dbt_utils.recency</span>:
+          <span class="dc">datepart</span>: <span class="st">hour</span>
+          <span class="dc">field</span>: <span class="st">order_date</span>
+          <span class="dc">interval</span>: <span class="nu">25</span>
+          <span class="dc">severity</span>: <span class="st">warn</span>        <span class="cm"># warn doesn't fail the pipeline</span>
+          <span class="dc">config</span>:
+            <span class="dc">store_failures</span>: <span class="kw">true</span> <span class="cm"># persist failing rows to a table</span>
+            <span class="dc">where</span>: <span class="st">"order_date > current_date - 7"</span>
+
+    <span class="dc">columns</span>:
+      <span class="op">-</span> <span class="dc">name</span>: <span class="st">gross_revenue</span>
+        <span class="dc">tests</span>:
+          <span class="op">-</span> <span class="st">not_null</span>:
+              <span class="dc">severity</span>: <span class="st">error</span>    <span class="cm"># hard fail — halt the pipeline</span>
+          <span class="op">-</span> <span class="st">dbt_expectations.expect_column_sum_to_be_between</span>:
+              <span class="dc">min_value</span>: <span class="nu">1000</span>
+              <span class="dc">max_value</span>: <span class="nu">10000000</span>
+              <span class="dc">severity</span>: <span class="st">warn</span>     <span class="cm"># alerts team, doesn't block</span>
+
+<span class="cm">-- store_failures=true creates:  [schema].[test_mart_revenue_recency_...]
+-- Query it to debug: SELECT * FROM dbt_test__audit.mart_revenue_recency_order_date_25</span></pre>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     SECTION: SNAPSHOTS
+════════════════════════════════════════════════ -->
+<section id="snapshots">
+  <div class="section-header">
+    <div class="section-title">Snapshots <span style="color:var(--amber)">—</span> Automated SCD Type 2</div>
+    <div class="section-sub">Point dbt at a mutable source. It handles <code>valid_from</code>, <code>valid_to</code>, <code>dbt_scd_id</code>, and the entire historical record. The MERGE statement you've been writing for years — automated.</div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Timestamp Strategy</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">snapshots/customers_snapshot.sql</span><span class="code-lang">snapshot</span></div>
+        <pre><span class="jj">{%</span> snapshot customers_snapshot <span class="jj">%}</span>
+
+<span class="jj">{{</span>
+  <span class="fn">config</span>(
+    <span class="dc">target_schema</span>  <span class="op">=</span> <span class="st">'snapshots'</span>,
+    <span class="dc">unique_key</span>     <span class="op">=</span> <span class="st">'customer_id'</span>,
+    <span class="dc">strategy</span>       <span class="op">=</span> <span class="st">'timestamp'</span>,
+    <span class="dc">updated_at</span>     <span class="op">=</span> <span class="st">'updated_at'</span>   <span class="cm">-- change detector</span>
+  )
+<span class="jj">}}</span>
+
+<span class="kw">select</span> <span class="op">*</span>
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">source</span>(<span class="st">'postgres'</span>, <span class="st">'customers'</span>) <span class="jj">}}</span>
+
+<span class="jj">{%</span> endsnapshot <span class="jj">%}</span>
+
+<span class="cm">-- dbt adds these columns automatically:
+-- dbt_scd_id     UUID for each version row
+-- dbt_updated_at timestamp this version was captured
+-- dbt_valid_from when this version became active
+-- dbt_valid_to   NULL = current version, else end timestamp</span></pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Check Strategy (no updated_at column?)</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">snapshots/products_snapshot.sql</span><span class="code-lang">snapshot</span></div>
+        <pre><span class="jj">{%</span> snapshot products_snapshot <span class="jj">%}</span>
+
+<span class="jj">{{</span>
+  <span class="fn">config</span>(
+    <span class="dc">target_schema</span> <span class="op">=</span> <span class="st">'snapshots'</span>,
+    <span class="dc">unique_key</span>    <span class="op">=</span> <span class="st">'product_id'</span>,
+    <span class="dc">strategy</span>      <span class="op">=</span> <span class="st">'check'</span>,
+    <span class="dc">check_cols</span>    <span class="op">=</span> [<span class="st">'price'</span>, <span class="st">'category'</span>, <span class="st">'is_active'</span>]
+    <span class="cm">-- dbt hashes these cols and detects any change</span>
+    <span class="cm">-- check_cols = 'all' hashes every column</span>
+  )
+<span class="jj">}}</span>
+
+<span class="kw">select</span> <span class="op">*</span>
+<span class="kw">from</span> <span class="jj">{{</span> <span class="fn">source</span>(<span class="st">'postgres'</span>, <span class="st">'products'</span>) <span class="jj">}}</span>
+
+<span class="jj">{%</span> endsnapshot <span class="jj">%}</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Querying Snapshot History — Point-in-Time Lookups</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">models/intermediate/int_customer_at_order_time.sql</span><span class="code-lang">SCD2 join</span></div>
+    <pre><span class="cm">-- The classic SCD2 join — what was the customer's plan when they placed the order?
+-- This is where snapshot data pays dividends for historical analysis.</span>
+
+<span class="kw">with</span> orders <span class="kw">as</span> (
+  <span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(<span class="st">'stg_orders'</span>) <span class="jj">}}</span>
+),
+
+customers_history <span class="kw">as</span> (
+  <span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(<span class="st">'customers_snapshot'</span>) <span class="jj">}}</span>
+)
+
+<span class="kw">select</span>
+  o.order_id,
+  o.created_at                    <span class="kw">as</span> order_date,
+  o.amount_dollars,
+  c.customer_id,
+  c.subscription_plan             <span class="kw">as</span> plan_at_order_time,
+  c.country                       <span class="kw">as</span> country_at_order_time,
+  c.dbt_valid_from,
+  c.dbt_valid_to
+
+<span class="kw">from</span> orders o
+<span class="kw">left join</span> customers_history c
+  <span class="kw">on</span>  o.customer_id  <span class="op">=</span> c.customer_id
+  <span class="kw">and</span> o.created_at  <span class="op">>=</span> c.dbt_valid_from
+  <span class="kw">and</span> (
+    o.created_at <span class="op"><</span> c.dbt_valid_to
+    <span class="kw">or</span> c.dbt_valid_to <span class="kw">is null</span>  <span class="cm">-- current version</span>
+  )</pre>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     SECTION: PYTHON MODELS
+════════════════════════════════════════════════ -->
+<section id="python">
+  <div class="section-header">
+    <div class="section-title">Python Models <span style="color:var(--amber)">—</span> dbt 1.3+</div>
+    <div class="section-sub">When SQL isn't enough: ML inference, complex transformations, pandas operations, Spark. Python models run on Snowpark, BigQuery Dataproc, or Databricks.</div>
+  </div>
+
+  <div class="callout callout-amber">
+    <strong>INGRESS RELEVANCE</strong>
+    Python models unlock: Snowpark ML for anomaly detection on event streams, pandas for complex JSON unnesting, PySpark for Databricks-native transformations, and HTTP calls to external APIs — all within the dbt DAG.
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>The model() Function Signature</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">models/ml/predict_churn.py</span><span class="code-lang">python model</span></div>
+        <pre><span class="cm"># Python models must define a model(dbt, session) function.
+# dbt.ref() and dbt.source() return DataFrames.</span>
+
+<span class="py">import</span> pandas <span class="py">as</span> pd
+<span class="py">from</span> sklearn.ensemble <span class="py">import</span> RandomForestClassifier
+<span class="py">from</span> sklearn.preprocessing <span class="py">import</span> LabelEncoder
+
+<span class="py">def</span> <span class="fn">model</span>(dbt, session):
+
+    <span class="cm"># Config lives in the function body</span>
+    dbt.config(
+        materialized<span class="op">=</span><span class="st">'table'</span>,
+        packages<span class="op">=</span>[<span class="st">"scikit-learn"</span>, <span class="st">"pandas"</span>]
+    )
+
+    <span class="cm"># ref() returns a Snowpark / Spark DataFrame</span>
+    features_df <span class="op">=</span> dbt.ref(<span class="st">'int_churn_features'</span>)
+    labels_df   <span class="op">=</span> dbt.ref(<span class="st">'mart_churn_labels'</span>)
+
+    <span class="cm"># Convert to pandas (Snowpark / BQ Dataproc)</span>
+    features <span class="op">=</span> features_df.to_pandas()
+    labels   <span class="op">=</span> labels_df.to_pandas()
+
+    X_train <span class="op">=</span> features[[<span class="st">'days_since_login'</span>, <span class="st">'order_count_30d'</span>,
+                         <span class="st">'support_tickets'</span>, <span class="st">'plan_tier'</span>]]
+    y_train <span class="op">=</span> labels[<span class="st">'churned'</span>]
+
+    clf <span class="op">=</span> RandomForestClassifier(n_estimators<span class="op">=</span><span class="nu">100</span>, random_state<span class="op">=</span><span class="nu">42</span>)
+    clf.fit(X_train, y_train)
+
+    <span class="cm"># Score production data</span>
+    prod_df <span class="op">=</span> dbt.ref(<span class="st">'int_current_customers'</span>).to_pandas()
+    prod_df[<span class="st">'churn_probability'</span>] <span class="op">=</span> clf.predict_proba(
+        prod_df[[<span class="st">'days_since_login'</span>, <span class="st">'order_count_30d'</span>,
+                 <span class="st">'support_tickets'</span>, <span class="st">'plan_tier'</span>]]
+    )[:, <span class="nu">1</span>]
+
+    <span class="cm"># Return a DataFrame — dbt persists it as a table</span>
+    <span class="py">return</span> prod_df[[<span class="st">'customer_id'</span>, <span class="st">'churn_probability'</span>]]</pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Spark (Databricks) — Native DataFrame API</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">models/ingress/parse_kafka_avro.py</span><span class="code-lang">python + spark</span></div>
+        <pre><span class="py">from</span> pyspark.sql <span class="py">import</span> functions <span class="py">as</span> F
+<span class="py">from</span> pyspark.sql.types <span class="py">import</span> StructType, StringType
+
+<span class="py">def</span> <span class="fn">model</span>(dbt, spark):
+
+    dbt.config(
+        materialized<span class="op">=</span><span class="st">'incremental'</span>,
+        incremental_strategy<span class="op">=</span><span class="st">'merge'</span>,
+        unique_key<span class="op">=</span><span class="st">'event_id'</span>,
+        file_format<span class="op">=</span><span class="st">'delta'</span>         <span class="cm"># Delta Lake!</span>
+    )
+
+    <span class="cm"># dbt.ref() returns a Spark DataFrame</span>
+    raw <span class="op">=</span> dbt.source(<span class="st">'kafka'</span>, <span class="st">'raw_avro_events'</span>)
+
+    parsed <span class="op">=</span> (
+        raw
+        .withColumn(<span class="st">'payload'</span>, F.from_json(
+            F.col(<span class="st">'value'</span>),
+            <span class="st">'struct&lt;event_id:string, user_id:string, ts:long&gt;'</span>
+        ))
+        .select(
+            F.col(<span class="st">'payload.event_id'</span>).alias(<span class="st">'event_id'</span>),
+            F.col(<span class="st">'payload.user_id'</span>).alias(<span class="st">'user_id'</span>),
+            F.to_timestamp(F.col(<span class="st">'payload.ts'</span>) <span class="op">/</span> <span class="nu">1000</span>).alias(<span class="st">'event_ts'</span>),
+            F.col(<span class="st">'partition'</span>).alias(<span class="st">'kafka_partition'</span>),
+            F.col(<span class="st">'offset'</span>).alias(<span class="st">'kafka_offset'</span>)
+        )
+        .filter(F.col(<span class="st">'event_id'</span>).isNotNull())
+    )
+
+    <span class="py">if</span> dbt.is_incremental:
+        max_ts <span class="op">=</span> spark.sql(<span class="st">f"SELECT max(event_ts) FROM {dbt.this}"</span>)
+        cutoff <span class="op">=</span> max_ts.collect()[<span class="nu">0</span>][<span class="nu">0</span>]
+        parsed <span class="op">=</span> parsed.filter(F.col(<span class="st">'event_ts'</span>) <span class="op">></span> cutoff)
+
+    <span class="py">return</span> parsed</pre>
+      </div>
+
+      <div class="callout callout-green">
+        <strong>DELTA LAKE + dbt = LAKEHOUSE INGRESS</strong>
+        <code>file_format='delta'</code> turns your Python model into a Delta Lake table. Combine with Databricks Auto Loader as a source and you have a full streaming ingress pipeline fully managed in dbt's DAG. No Airflow required.
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     SECTION: ADVANCED PATTERNS
+════════════════════════════════════════════════ -->
+<section id="patterns">
+  <div class="section-header">
+    <div class="section-title">Advanced Patterns <span style="color:var(--amber)">—</span> Senior Engineer Moves</div>
+    <div class="section-sub">The things that separate a dbt project that scales from one that becomes a liability. Custom schema naming, hooks, meta-driven models, and packages.</div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>generate_schema_name — Multi-Env Schema Control</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">macros/get_custom_schema.sql</span><span class="code-lang">schema override</span></div>
+        <pre><span class="jj">{%</span> <span class="kw">macro</span> <span class="fn">generate_schema_name</span>(custom_schema_name, node) <span class="jj">%}</span>
+
+  <span class="jj">{%</span> set default_schema <span class="op">=</span> target.schema <span class="jj">%}</span>
+
+  <span class="jj">{%</span> <span class="kw">if</span> target.name <span class="op">==</span> <span class="st">'prod'</span> <span class="jj">%}</span>
+
+    <span class="cm">-- In prod: use EXACTLY the custom_schema_name you set.
+    -- stg_orders → analytics.staging (not analytics_staging)</span>
+    <span class="jj">{%</span> <span class="kw">if</span> custom_schema_name <span class="kw">is not none</span> <span class="jj">%}</span>
+      <span class="jj">{{</span> custom_schema_name | trim <span class="jj">}}</span>
+    <span class="jj">{%</span> <span class="kw">else</span> <span class="jj">%}</span>
+      <span class="jj">{{</span> default_schema | trim <span class="jj">}}</span>
+    <span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span>
+
+  <span class="jj">{%</span> <span class="kw">else</span> <span class="jj">%}</span>
+
+    <span class="cm">-- In dev: prefix with user target schema.
+    -- avoids dev engineers stomping on each other.</span>
+    <span class="jj">{%</span> <span class="kw">if</span> custom_schema_name <span class="kw">is not none</span> <span class="jj">%}</span>
+      <span class="jj">{{</span> default_schema <span class="jj">}}</span>_<span class="jj">{{</span> custom_schema_name | trim <span class="jj">}}</span>
+    <span class="jj">{%</span> <span class="kw">else</span> <span class="jj">%}</span>
+      <span class="jj">{{</span> default_schema | trim <span class="jj">}}</span>
+    <span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span>
+
+  <span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span>
+
+<span class="jj">{%</span> <span class="kw">endmacro</span> <span class="jj">%}</span></pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Pre/Post Hooks — DDL Around Your Models</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-filename">models/marts/mart_revenue.sql (with hooks)</span><span class="code-lang">hooks</span></div>
+        <pre><span class="jj">{{</span>
+  <span class="fn">config</span>(
+    <span class="dc">materialized</span> <span class="op">=</span> <span class="st">'table'</span>,
+    <span class="dc">pre_hook</span>     <span class="op">=</span> [
+      <span class="st">"CALL analytics.lock_table('{{ this }}')"</span>,
+      <span class="st">"{{ log('Starting mart_revenue build', info=True) }}"</span>
+    ],
+    <span class="dc">post_hook</span>    <span class="op">=</span> [
+      <span class="cm">-- Grant access to BI roles after build</span>
+      <span class="st">"GRANT SELECT ON {{ this }} TO ROLE REPORTER"</span>,
+      <span class="cm">-- Analyze table for query planner</span>
+      <span class="st">"ANALYZE {{ this }}"</span>,
+      <span class="cm">-- Custom audit log</span>
+      <span class="st">"""
+        INSERT INTO analytics.build_audit
+        SELECT '{{ this }}', current_timestamp, '{{ invocation_id }}'
+      """</span>
+    ]
+  )
+<span class="jj">}}</span>
+
+<span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">ref</span>(<span class="st">'int_orders_enriched'</span>) <span class="jj">}}</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>Meta-Driven Models — The Configuration-as-Data Pattern</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">models/intermediate/int_multi_source_unioned.sql</span><span class="code-lang">meta-driven</span></div>
+    <pre><span class="cm">-- Define sources in YAML, generate the UNION ALL in Jinja.
+-- Add a new source: edit YAML, zero SQL changes.</span>
+
+<span class="jj">{%</span> set event_sources <span class="op">=</span> [
+  { <span class="st">'name'</span>: <span class="st">'kafka_events'</span>,    <span class="st">'source'</span>: (<span class="st">'kafka'</span>,   <span class="st">'events'</span>),   <span class="st">'platform'</span>: <span class="st">'mobile'</span> },
+  { <span class="st">'name'</span>: <span class="st">'web_events'</span>,      <span class="st">'source'</span>: (<span class="st">'segment'</span>, <span class="st">'web'</span>),      <span class="st">'platform'</span>: <span class="st">'web'</span>    },
+  { <span class="st">'name'</span>: <span class="st">'backend_events'</span>,  <span class="st">'source'</span>: (<span class="st">'postgres'</span>,<span class="st">'api_logs'</span>), <span class="st">'platform'</span>: <span class="st">'api'</span>    }
+] <span class="jj">%}</span>
+
+<span class="jj">{%</span> <span class="kw">for</span> src <span class="kw">in</span> event_sources <span class="jj">%}</span>
+
+  <span class="kw">select</span>
+    event_id,
+    user_id,
+    event_ts,
+    event_type,
+    <span class="st">'</span><span class="jj">{{</span> src.platform <span class="jj">}}</span><span class="st">'</span>  <span class="kw">as</span> platform
+  <span class="kw">from</span> <span class="jj">{{</span> <span class="fn">source</span>(src.source[<span class="nu">0</span>], src.source[<span class="nu">1</span>]) <span class="jj">}}</span>
+
+  <span class="jj">{%</span> <span class="kw">if</span> <span class="kw">not</span> loop.last <span class="jj">%}</span>
+  <span class="kw">union all</span>
+  <span class="jj">{%</span> <span class="kw">endif</span> <span class="jj">%}</span>
+
+<span class="jj">{%</span> <span class="kw">endfor</span> <span class="jj">%}</span></pre>
+  </div>
+
+  <h3>dbt_utils Package — The Standard Library</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">packages.yml + usage examples</span><span class="code-lang">packages</span></div>
+    <pre><span class="cm"># packages.yml</span>
+<span class="dc">packages</span>:
+  <span class="op">-</span> <span class="dc">package</span>: <span class="st">dbt-labs/dbt_utils</span>
+    <span class="dc">version</span>: [<span class="st">">=1.1.0"</span>, <span class="st">"<2.0.0"</span>]
+  <span class="op">-</span> <span class="dc">package</span>: <span class="st">calogica/dbt_expectations</span>
+    <span class="dc">version</span>: [<span class="st">">=0.10.0"</span>]
+  <span class="op">-</span> <span class="dc">package</span>: <span class="st">dbt-labs/audit_helper</span>
+    <span class="dc">version</span>: [<span class="st">">=0.9.0"</span>]
+
+<span class="cm">-- ── dbt_utils HITS ──────────────────────────────────
+
+-- 1. Star (exclude audit columns from SELECT *):</span>
+<span class="jj">{{</span> <span class="fn">dbt_utils.star</span>(
+  <span class="fn">ref</span>(<span class="st">'stg_orders'</span>),
+  except<span class="op">=</span>[<span class="st">'_fivetran_deleted'</span>, <span class="st">'_fivetran_synced'</span>]
+) <span class="jj">}}</span>
+
+<span class="cm">-- 2. Generate surrogate key:</span>
+<span class="jj">{{</span> <span class="fn">dbt_utils.generate_surrogate_key</span>([<span class="st">'order_id'</span>, <span class="st">'product_id'</span>]) <span class="jj">}}</span> <span class="kw">as</span> order_line_key
+
+<span class="cm">-- 3. Date spine (fill gaps in time series):</span>
+<span class="jj">{{</span> <span class="fn">dbt_utils.date_spine</span>(
+  datepart<span class="op">=</span><span class="st">'day'</span>,
+  start_date<span class="op">=</span><span class="st">"'2024-01-01'"</span>,
+  end_date<span class="op">=</span><span class="st">"current_date"</span>
+) <span class="jj">}}</span>
+
+<span class="cm">-- 4. Pivot:</span>
+<span class="jj">{{</span> <span class="fn">dbt_utils.pivot</span>(
+  column<span class="op">=</span><span class="st">'status'</span>,
+  values<span class="op">=</span>[<span class="st">'PENDING'</span>, <span class="st">'COMPLETED'</span>, <span class="st">'CANCELLED'</span>],
+  agg<span class="op">=</span><span class="st">'count'</span>,
+  then_value<span class="op">=</span><span class="st">'order_id'</span>
+) <span class="jj">}}</span>
+
+<span class="cm">-- 5. Union relations (same schema, different partitions):</span>
+<span class="jj">{{</span> <span class="fn">dbt_utils.union_relations</span>(
+  relations<span class="op">=</span>[
+    <span class="fn">ref</span>(<span class="st">'stg_events_2023'</span>),
+    <span class="fn">ref</span>(<span class="st">'stg_events_2024'</span>)
+  ]
+) <span class="jj">}}</span></pre>
+  </div>
+
+  <hr class="sep">
+  <h3>Selectors — Surgical DAG Execution</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-filename">CLI — dbt's graph selector syntax</span><span class="code-lang">bash</span></div>
+    <pre><span class="cm"># Run a single model</span>
+dbt run --select stg_orders
+
+<span class="cm"># Run + all upstream dependencies</span>
+dbt run --select +stg_orders
+
+<span class="cm"># Run + all downstream dependents</span>
+dbt run --select stg_orders+
+
+<span class="cm"># Run everything 2 hops upstream</span>
+dbt run --select 2+stg_orders
+
+<span class="cm"># Run all models tagged 'ingress'</span>
+dbt run --select tag:ingress
+
+<span class="cm"># Run all models in a directory</span>
+dbt run --select models/staging
+
+<span class="cm"># Run modified + their downstream (git diff)</span>
+dbt run --select state:modified+
+
+<span class="cm"># Test ONLY the marts layer</span>
+dbt test --select models/marts
+
+<span class="cm"># Exclude snapshots from a run</span>
+dbt run --exclude resource_type:snapshot
+
+<span class="cm"># Run incrementals with a full refresh (rebuild from scratch)</span>
+dbt run --full-refresh --select tag:incremental
+
+<span class="cm"># Microbatch: reprocess a specific date range</span>
+dbt run --select stg_events \
+  --event-time-start "2024-01-01" \
+  --event-time-end   "2024-01-15"</pre>
+  </div>
+</section>
+
+</div><!-- /wrapper -->
+
+<script>
+function showSection(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showTab(group, id, btn) {
+  const panes = document.querySelectorAll('#mat-' + '*');
+  document.querySelectorAll(`[id^="mat-"]`).forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(group + '-' + id);
+  if (el) el.classList.add('active');
+  btn.classList.add('active');
+}
+
+// Animate skill bars on load
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.querySelectorAll('.skill-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { bar.style.width = w; });
+      });
+    });
+  }, 100);
+});
+</script>
+
+</body>
+</html>
