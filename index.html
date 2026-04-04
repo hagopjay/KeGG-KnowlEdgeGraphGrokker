@@ -1,477 +1,80 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Wowza Demo — Interactive Landing</title>
-  <meta name="description" content="Standalone interactive demo for GitHub Pages: animated orb, starfield, controls, and code preview." />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Simple Wowza Demo</title>
   <style>
-    /* ---------- Theme & Layout ---------- */
-    :root{
-      --bg:#030417;
-      --panel:#071028;
-      --muted:#9aa4b2;
-      --accent:#38bdf8;
-      --accent-2:#a855f7;
-      --glass: rgba(255,255,255,0.04);
-      --radius:16px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: radial-gradient(1200px 600px at 10% 10%, rgba(58,66,86,0.12), transparent 10%),
-                  linear-gradient(180deg,#020617 0%, #000 60%);
-      color:#e6eef8;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:28px;
-    }
-
-    /* ---------- Canvas & Background ---------- */
-    canvas#bgCanvas{
-      position:fixed;
-      inset:0;
-      z-index:0;
-      display:block;
-      pointer-events:none;
-    }
-    .bg-orbit{
-      position:fixed;
-      right:-160px;
-      top:-160px;
-      width:520px;
-      height:520px;
-      border-radius:50%;
-      background:conic-gradient(from 200deg, rgba(56,189,248,0.12), rgba(168,85,247,0.12), rgba(249,115,22,0.08));
-      filter:blur(48px);
-      z-index:0;
-      opacity:0.9;
-      transform:rotate(0deg);
-      animation:slow-rotate 28s linear infinite;
-    }
-    @keyframes slow-rotate{to{transform:rotate(360deg)}}
-
-    /* ---------- Shell ---------- */
-    .container{
-      position:relative;
-      z-index:2;
-      width:100%;
-      max-width:1100px;
-      display:grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap:24px;
-      align-items:stretch;
-    }
-    @media (max-width:880px){
-      .container{grid-template-columns:1fr}
-    }
-
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:var(--radius);
-      padding:20px;
-      border:1px solid rgba(255,255,255,0.04);
-      box-shadow: 0 10px 30px rgba(2,6,23,0.6);
-      backdrop-filter: blur(8px);
-    }
-
-    /* ---------- Left panel (info) ---------- */
-    .hero h1{
-      font-size:clamp(26px,4vw,36px);
-      margin:0 0 8px 0;
-      line-height:1.05;
-    }
-    .gradient-text{
-      background:linear-gradient(90deg,var(--accent),var(--accent-2));
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-    }
-    .hero p{color:var(--muted); margin:0 0 14px 0; max-width:48ch}
-    .controls{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
-    .btn{
-      border-radius:999px;
-      padding:8px 14px;
-      font-weight:600;
-      font-size:13px;
-      cursor:pointer;
-      border:1px solid rgba(255,255,255,0.04);
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      color:inherit;
-    }
-    .btn.primary{background:linear-gradient(90deg,var(--accent),#0ea5e9); color:#041022; box-shadow:0 10px 30px rgba(56,189,248,0.12)}
-    .meta{display:flex; gap:12px; margin-top:16px; color:var(--muted); font-size:13px}
-
-    /* ---------- Right panel (playground) ---------- */
-    .play{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      min-height:360px;
-    }
-    .play .topbar{display:flex; justify-content:space-between; align-items:center; gap:10px}
-    .window-dots{display:flex; gap:6px}
-    .dot{width:10px;height:10px;border-radius:50%;background:#4b5563}
-    .dot.red{background:#ff6b6b}
-    .dot.yellow{background:#ffd166}
-    .dot.green{background:#6ee7b7}
-
-    .play-grid{
-      display:grid;
-      grid-template-columns:1fr 360px;
-      gap:12px;
-      align-items:stretch;
-      flex:1;
-    }
-    @media (max-width:880px){ .play-grid{grid-template-columns:1fr} .preview-panel{order:2} }
-
-    .preview{
-      border-radius:12px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
-      border:1px solid rgba(255,255,255,0.03);
-      padding:12px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:220px;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .stage{
-      width:100%;
-      height:220px;
-      border-radius:10px;
-      background: radial-gradient(circle at 20% 10%, rgba(29,78,216,0.12), rgba(2,6,23,0.6));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .orb{
-      width:120px;
-      height:120px;
-      border-radius:50%;
-      background: radial-gradient(circle at 30% 20%, #fff, rgba(56,189,248,0.9) 35%, rgba(15,23,42,0.9) 80%);
-      box-shadow: 0 0 40px rgba(56,189,248,0.6), 0 0 80px rgba(168,85,247,0.18);
-      transform-style:preserve-3d;
-      transition:transform 120ms linear;
-      will-change:transform, box-shadow;
-    }
-
-    .orb-label{position:absolute; left:12px; bottom:12px; font-size:12px; color:var(--muted); background:var(--glass); padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.02)}
-
-    .controls-panel{
-      border-radius:10px;
-      padding:10px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
-      border:1px solid rgba(255,255,255,0.02);
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      min-width:220px;
-    }
-
-    .row{display:flex; align-items:center; gap:8px; justify-content:space-between}
-    label{font-size:13px; color:var(--muted)}
-    input[type=range]{width:140px}
-
-    pre.code{
-      font-family:var(--mono);
-      font-size:12px;
-      background:rgba(2,6,23,0.6);
-      padding:10px;
-      border-radius:8px;
-      color:#dbeafe;
-      overflow:auto;
-      max-height:220px;
-      border:1px solid rgba(255,255,255,0.02);
-    }
-
-    footer.note{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    a.link{color:var(--accent); text-decoration:none}
-    a.link:hover{text-decoration:underline}
+    :root{--bg:#071026;--accent:#38bdf8;--muted:#9aa4b2}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--bg),#000);color:#e6eef8}
+    .card{padding:20px;border-radius:12px;background:rgba(255,255,255,0.02);text-align:center;max-width:720px}
+    h1{margin:0 0 8px;font-size:clamp(20px,4vw,28px)}
+    p{margin:0 0 14px;color:var(--muted)}
+    .orb{width:120px;height:120px;border-radius:50%;margin:18px auto;background:radial-gradient(circle at 30% 20%,#fff,var(--accent) 35%,#071026 80%);box-shadow:0 0 30px rgba(56,189,248,0.35)}
+    .controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    button{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit;cursor:pointer}
+    small{display:block;margin-top:12px;color:var(--muted)}
   </style>
 </head>
 <body>
-  <canvas id="bgCanvas" aria-hidden="true"></canvas>
-  <div class="bg-orbit" aria-hidden="true"></div>
+  <main class="card" role="main" aria-live="polite">
+    <h1>Simple Wowza Demo</h1>
+    <p>Drop this file as <strong>index.html</strong> at the repo root and enable GitHub Pages</p>
 
-  <main class="container" role="main" aria-labelledby="pageTitle">
-    <!-- Left: Info -->
-    <section class="card hero" aria-labelledby="pageTitle">
-      <div>
-        <h1 id="pageTitle">Dress up your <span class="gradient-text">GitHub Pages</span> with a Wowza demo</h1>
-        <p>Single-file, no build step. Interactive orb, responsive starfield, accessible controls, and a copyable code snippet. Drop this as <strong>index.html</strong> and enable Pages.</p>
-        <div class="controls" role="toolbar" aria-label="Primary actions">
-          <button class="btn primary" id="randomizeBtn">Randomize</button>
-          <button class="btn" id="resetBtn">Reset</button>
-          <button class="btn" id="copyHtmlBtn">Copy HTML</button>
-        </div>
-        <div class="meta" aria-hidden="true">
-          <div>Frames: <strong id="frames">0</strong></div>
-          <div>Stars: <strong id="starCount">0</strong></div>
-          <div>Tilt: <strong id="tiltVal">0°</strong></div>
-        </div>
-      </div>
-    </section>
+    <div class="orb" id="orb" aria-hidden="true"></div>
 
-    <!-- Right: Playground -->
-    <aside class="card play" aria-label="Playground">
-      <div class="topbar">
-        <div class="window-dots" aria-hidden="true">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
-        <div style="color:var(--muted);font-size:13px">Press <kbd style="background:rgba(255,255,255,0.03);padding:3px 6px;border-radius:6px">Space</kbd> to randomize</div>
-      </div>
+    <div class="controls">
+      <button id="rand">Randomize</button>
+      <button id="reset">Reset</button>
+      <button id="copy">Copy HTML</button>
+    </div>
 
-      <div class="play-grid" role="region" aria-label="Interactive preview and controls">
-        <div class="preview" aria-live="polite">
-          <div class="stage" id="stage" role="img" aria-label="Interactive orb preview">
-            <div class="orb" id="orb" aria-hidden="true"></div>
-            <div class="orb-label" id="orbLabel">Move pointer to interact</div>
-          </div>
-          <div style="width:100%;display:flex;gap:8px;align-items:center;justify-content:space-between">
-            <div style="display:flex;gap:8px;align-items:center">
-              <label for="glow">Glow</label>
-              <input id="glow" type="range" min="0" max="100" value="60" />
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <label for="speed">Orbit</label>
-              <input id="speed" type="range" min="4" max="32" value="18" />
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <label for="density">Stars</label>
-              <input id="density" type="range" min="40" max="260" value="140" />
-            </div>
-          </div>
-        </div>
-
-        <div class="controls-panel" aria-hidden="false">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <label style="font-weight:600">Live JS snippet</label>
-            <button class="btn" id="copyJsBtn">Copy JS</button>
-          </div>
-          <pre class="code" id="codeBlock" tabindex="0" aria-label="JavaScript snippet">
-// Orb tilt + auto-orbit
-const orb = document.getElementById('orb');
-let tiltX=0, tiltY=0, tx=0, ty=0;
-let auto=true, angle=0, speed=18;
-function update(){
-  if(auto){ angle += speed*0.002; tx = Math.sin(angle)*26; ty = Math.cos(angle*1.2)*18; }
-  tiltX += (tx-tiltX)*0.08; tiltY += (ty-tiltY)*0.08;
-  orb.style.transform = `rotateX(${tiltY.toFixed(2)}deg) rotateY(${tiltX.toFixed(2)}deg)`;
-  requestAnimationFrame(update);
-}
-update();
-          </pre>
-
-          <footer class="note" aria-hidden="true">
-            <span>Single-file demo — no external libs</span>
-            <span><a class="link" href="#" id="openDocs">Docs</a></span>
-          </footer>
-        </div>
-      </div>
-    </aside>
+    <small id="status">Press Space to randomize</small>
   </main>
 
   <script>
-    /* ---------- Utilities ---------- */
-    const $ = sel => document.querySelector(sel);
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    // Minimal interactive behavior, no external libs
+    const orb = document.getElementById('orb');
+    const rand = document.getElementById('rand');
+    const reset = document.getElementById('reset');
+    const copy = document.getElementById('copy');
+    const status = document.getElementById('status');
 
-    /* ---------- Elements ---------- */
-    const canvas = $('#bgCanvas');
-    const ctx = canvas.getContext('2d', { alpha: true });
-    const orb = $('#orb');
-    const stage = $('#stage');
-    const glowInput = $('#glow');
-    const speedInput = $('#speed');
-    const densityInput = $('#density');
-    const framesEl = $('#frames');
-    const starCountEl = $('#starCount');
-    const tiltEl = $('#tiltVal');
-    const randomizeBtn = $('#randomizeBtn');
-    const resetBtn = $('#resetBtn');
-    const copyHtmlBtn = $('#copyHtmlBtn');
-    const copyJsBtn = $('#copyJsBtn');
-    const codeBlock = $('#codeBlock');
-    const orbLabel = $('#orbLabel');
-
-    /* ---------- Responsive canvas ---------- */
-    let W = innerWidth, H = innerHeight;
-    function resize(){
-      W = innerWidth; H = innerHeight;
-      canvas.width = W; canvas.height = H;
-      createStars();
-    }
-    addEventListener('resize', debounce(resize, 120));
-    resize();
-
-    /* ---------- Starfield model ---------- */
-    let stars = [];
-    function createStars(){
-      const count = parseInt(densityInput.value,10) || 140;
-      stars = new Array(count).fill(0).map(()=>({
-        x: Math.random()*W,
-        y: Math.random()*H,
-        r: Math.random()*1.6 + 0.3,
-        tw: Math.random()*Math.PI*2,
-        speed: Math.random()*0.6 + 0.05
-      }));
-      starCountEl.textContent = stars.length;
+    function setGlow(size, color) {
+      orb.style.boxShadow = `0 0 ${size}px ${color}, 0 0 ${Math.round(size*1.6)}px rgba(0,0,0,0.25)`;
+      orb.style.transform = `scale(${1 + size/300})`;
     }
 
-    function drawStars(t){
-      ctx.clearRect(0,0,W,H);
-      for(const s of stars){
-        s.tw += s.speed * 0.02;
-        const tw = 0.5 + Math.sin(s.tw)*0.5;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r * (0.6 + tw), 0, Math.PI*2);
-        ctx.fillStyle = `rgba(180,200,220,${0.18 + tw*0.6})`;
-        ctx.fill();
+    rand.addEventListener('click', () => {
+      const size = Math.floor(Math.random()*60) + 20;
+      const hue = Math.floor(Math.random()*360);
+      setGlow(size, `hsla(${hue},85%,60%,0.6)`);
+      status.textContent = 'Randomized';
+    });
+
+    reset.addEventListener('click', () => {
+      setGlow(30, 'rgba(56,189,248,0.35)');
+      orb.style.transform = 'scale(1)';
+      status.textContent = 'Reset';
+    });
+
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(document.documentElement.outerHTML);
+        status.textContent = 'HTML copied to clipboard';
+      } catch {
+        status.textContent = 'Copy failed';
       }
-    }
-
-    /* ---------- Orb physics model ---------- */
-    let tiltX = 0, tiltY = 0, targetX = 0, targetY = 0;
-    let autoOrbit = true, orbitAngle = 0;
-    function updateOrb(){
-      const speed = parseFloat(speedInput.value);
-      if(autoOrbit){
-        orbitAngle += speed * 0.002;
-        targetX = Math.sin(orbitAngle) * 26;
-        targetY = Math.cos(orbitAngle * 1.2) * 18;
-      }
-      tiltX += (targetX - tiltX) * 0.08;
-      tiltY += (targetY - tiltY) * 0.08;
-      orb.style.transform = `rotateX(${tiltY.toFixed(2)}deg) rotateY(${tiltX.toFixed(2)}deg)`;
-      tiltEl.textContent = Math.round(tiltX) + '°';
-    }
-
-    function updateGlow(){
-      const g = clamp(parseInt(glowInput.value,10),0,100);
-      const base = 30 + g*0.6;
-      const spread = 60 + g*1.2;
-      orb.style.boxShadow = `0 0 ${base}px rgba(56,189,248,0.9), 0 0 ${spread}px rgba(168,85,247,0.18)`;
-    }
-
-    /* ---------- Interaction ---------- */
-    function onPointerMove(e){
-      const rect = stage.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 1;
-      const y = ((e.clientY - rect.top) / rect.height - 0.5) * -1;
-      targetX = x * 40;
-      targetY = y * 40;
-      autoOrbit = false;
-      orbLabel.textContent = 'Interactive mode';
-    }
-    function onPointerLeave(){
-      autoOrbit = true;
-      orbLabel.textContent = 'Auto-orbiting — move pointer to take over';
-    }
-    stage.addEventListener('pointermove', onPointerMove);
-    stage.addEventListener('pointerleave', onPointerLeave);
-
-    /* ---------- Animation loop ---------- */
-    let frame = 0;
-    function rafLoop(ts){
-      frame++;
-      if(frame % 6 === 0) framesEl.textContent = frame.toLocaleString();
-      drawStars(ts);
-      updateOrb();
-      requestAnimationFrame(rafLoop);
-    }
-    requestAnimationFrame(rafLoop);
-
-    /* ---------- Controls ---------- */
-    randomizeBtn.addEventListener('click', ()=>{
-      glowInput.value = Math.floor(Math.random()*50)+40;
-      speedInput.value = Math.floor(Math.random()*24)+6;
-      densityInput.value = Math.floor(Math.random()*180)+60;
-      createStars();
-      updateGlow();
-      orbLabel.textContent = 'Randomized';
     });
 
-    resetBtn.addEventListener('click', ()=>{
-      glowInput.value = 60;
-      speedInput.value = 18;
-      densityInput.value = 140;
-      createStars();
-      updateGlow();
-      orbLabel.textContent = 'Reset';
-      autoOrbit = true;
-      targetX = targetY = 0;
+    // keyboard shortcut
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') { e.preventDefault(); rand.click(); }
     });
 
-    glowInput.addEventListener('input', updateGlow);
-    speedInput.addEventListener('input', ()=>{ /* speed read in updateOrb */ });
-    densityInput.addEventListener('input', createStars);
-
-    /* ---------- Copy helpers ---------- */
-    copyJsBtn.addEventListener('click', async ()=>{
-      try{
-        await navigator.clipboard.writeText(codeBlock.innerText.trim());
-        copyJsBtn.textContent = 'Copied';
-        setTimeout(()=>copyJsBtn.textContent='Copy JS',900);
-      }catch(e){ console.warn('copy failed',e) }
-    });
-
-    copyHtmlBtn.addEventListener('click', async ()=>{
-      try{
-        const html = document.documentElement.outerHTML;
-        await navigator.clipboard.writeText(html);
-        copyHtmlBtn.textContent = 'Copied';
-        setTimeout(()=>copyHtmlBtn.textContent='Copy HTML',900);
-      }catch(e){ console.warn('copy failed',e) }
-    });
-
-    /* ---------- Keyboard shortcuts ---------- */
-    addEventListener('keydown', (e)=>{
-      if(e.code === 'Space'){ e.preventDefault(); randomizeBtn.click(); }
-      if(e.key === 'g'){ glowInput.focus(); }
-    });
-
-    /* ---------- Debounce util ---------- */
-    function debounce(fn, wait=100){
-      let t;
-      return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
-    }
-
-    /* ---------- Initialize visuals ---------- */
-    function init(){
-      createStars();
-      updateGlow();
-      // small initial random motion for life
-      orbitAngle = Math.random()*Math.PI*2;
-    }
-    init();
-
-    /* ---------- Accessibility: expose star count updates ---------- */
-    const starObserver = new MutationObserver(()=>{ /* placeholder if needed */ });
-    starObserver.observe(starCountEl, { childList:true, subtree:true });
-
-    /* ---------- Minimal background resize handling ---------- */
-    // Keep canvas responsive and efficient
-    let resizeTimer;
-    addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer = setTimeout(()=>{ resize(); }, 120); });
-
-    /* ---------- End of script ---------- */
+    // initial state
+    setGlow(30, 'rgba(56,189,248,0.35)');
   </script>
 </body>
 </html>
