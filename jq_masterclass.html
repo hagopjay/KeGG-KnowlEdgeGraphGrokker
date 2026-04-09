@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>jq Masterclass — JSON Surgery at the Command Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Source+Code+Pro:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Barlow+Condensed:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:     #07040f;
+  --void2:    #0c0818;
+  --void3:    #110d20;
+  --void4:    #181228;
+  --void5:    #201830;
+  --mag:      #ff0090;
+  --mag2:     #cc0070;
+  --mag3:     #ff44aa;
+  --mag-dim:  #2a0018;
+  --cyan:     #00f0ff;
+  --cyan2:    #00c0cc;
+  --cyn-dim:  #00202a;
+  --lime:     #aaff00;
+  --lime-dim: #162200;
+  --gold:     #ffd700;
+  --gold-dim: #2a2000;
+  --violet:   #bb88ff;
+  --vio-dim:  #1a0840;
+  --coral:    #ff6644;
+  --cor-dim:  #2a0f08;
+  --border:   rgba(255,0,144,0.18);
+  --border2:  rgba(255,0,144,0.07);
+  --text:     #e0d0f0;
+  --text2:    #8070a0;
+  --text3:    #3a2850;
+  --mono:     'Source Code Pro', monospace;
+  --sans:     'Barlow Condensed', sans-serif;
+  --display:  'Orbitron', sans-serif;
+  --glow-mag: 0 0 20px rgba(255,0,144,0.35);
+  --glow-cyn: 0 0 16px rgba(0,240,255,0.3);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── VOID BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,0,144,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 0% 100%, rgba(0,240,255,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 30% at 100% 50%, rgba(187,136,255,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,0,144,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px, 80px 80px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(7,4,15,0.96);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 1500px; margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex; align-items: center; gap: 2rem; height: 54px;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0; padding-right: 2rem;
+  border-right: 1px solid var(--border);
+}
+.logo-jq {
+  font-family: var(--display);
+  font-size: 1.6rem; font-weight: 900;
+  color: var(--mag);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: var(--glow-mag);
+}
+.logo-dot { color: var(--cyan); }
+.logo-sub {
+  font-family: var(--display); font-size: 0.5rem;
+  color: var(--text3); letter-spacing: 0.2em; text-transform: uppercase;
+  line-height: 1.4;
+}
+nav {
+  display: flex; align-items: stretch; overflow-x: auto;
+  scrollbar-width: none; flex: 1; gap: 0;
+}
+nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  background: none; border: none;
+  border-right: 1px solid var(--border2);
+  color: var(--text3);
+  font-family: var(--display); font-size: 0.55rem;
+  letter-spacing: 0.12em; padding: 0 1.1rem;
+  cursor: pointer; white-space: nowrap;
+  height: 54px; transition: all 0.12s;
+  text-transform: uppercase; position: relative;
+}
+.nav-btn::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: var(--mag); transform: scaleX(0); transition: transform 0.15s;
+  box-shadow: var(--glow-mag);
+}
+.nav-btn:hover { color: var(--mag3); }
+.nav-btn:hover::after { transform: scaleX(1); }
+.nav-btn.active { color: var(--mag); background: var(--mag-dim); }
+.nav-btn.active::after { transform: scaleX(1); }
+.hdr-right {
+  flex-shrink: 0; border-left: 1px solid var(--border);
+  padding-left: 1.5rem;
+  font-family: var(--display); font-size: 0.55rem;
+  color: var(--cyan); letter-spacing: 0.1em;
+}
+
+/* ── LAYOUT ── */
+.wrapper { max-width: 1500px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+section { display: none; animation: fadeIn 0.2s ease; }
+section.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)} }
+
+/* ── SECTION HEADER ── */
+.section-header { margin-bottom: 2rem; }
+.section-eyebrow {
+  font-family: var(--display); font-size: 0.55rem;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--mag); margin-bottom: 0.4rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.section-eyebrow::before { content: ''; width: 30px; height: 1px; background: var(--mag); box-shadow: var(--glow-mag); }
+.section-title {
+  font-family: var(--display); font-size: 2.8rem;
+  font-weight: 900; letter-spacing: 0.08em; line-height: 1;
+  color: var(--text); margin-bottom: 0.6rem;
+}
+.section-title em { color: var(--mag); font-style: normal; text-shadow: var(--glow-mag); }
+.section-sub { color: var(--text2); font-size: 0.88rem; max-width: 780px; line-height: 1.75; font-family: var(--sans); font-weight: 300; }
+.section-rule { height: 1px; margin: 1.25rem 0 2rem; background: linear-gradient(90deg, var(--mag), rgba(255,0,144,0.1), transparent); box-shadow: var(--glow-mag); }
+
+/* ── GRIDS ── */
+.g2  { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+.g3  { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem; }
+.g12 { display:grid; grid-template-columns:1fr 2fr; gap:1.5rem; }
+.g21 { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; }
+@media(max-width:960px){.g2,.g3,.g12,.g21{grid-template-columns:1fr}}
+
+/* ── CARDS ── */
+.card {
+  background: var(--void2); border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem; position: relative;
+  transition: border-color 0.15s;
+}
+.card:hover { border-color: rgba(255,0,144,0.35); }
+.card-label {
+  font-family: var(--display); font-size: 0.52rem;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--mag); margin-bottom: 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.card-label::before { content: '//'; color: var(--text3); }
+
+/* ── THE JQ REPL PANE ── */
+.jq-repl {
+  background: rgba(0,0,0,0.7); border: 1px solid var(--border);
+  overflow: hidden; margin: 1rem 0;
+}
+.jq-repl-bar {
+  background: var(--void3); border-bottom: 1px solid var(--border);
+  padding: 0.4rem 1rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.jq-repl-dot { width: 8px; height: 8px; border-radius: 50%; }
+.jrd-red    { background: #ff5f56; }
+.jrd-yellow { background: #ffbd2e; }
+.jrd-green  { background: #27c93f; }
+.jq-repl-title {
+  font-family: var(--display); font-size: 0.52rem;
+  color: var(--text3); letter-spacing: 0.12em; margin-left: auto; margin-right: auto;
+}
+.jq-io { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.jq-col { padding: 1rem 1.25rem; font-family: var(--mono); font-size: 0.79rem; line-height: 1.8; }
+.jq-col-in  { border-right: 1px solid var(--border); background: rgba(0,0,0,0.3); }
+.jq-col-out { background: rgba(255,0,144,0.03); }
+.jq-col-label {
+  font-family: var(--display); font-size: 0.5rem; letter-spacing: 0.15em;
+  text-transform: uppercase; margin-bottom: 0.5rem; padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border2);
+}
+.jq-col-in .jq-col-label  { color: var(--cyan); }
+.jq-col-out .jq-col-label { color: var(--mag); }
+.jq-filter-line {
+  background: var(--void3); border-top: 1px solid var(--border);
+  padding: 0.5rem 1.25rem;
+  font-family: var(--mono); font-size: 0.82rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.jq-prompt { color: var(--text3); }
+.jq-filter { color: var(--gold); font-weight: 600; }
+
+/* ── CODE BLOCKS ── */
+.code-wrap { background: rgba(0,0,0,0.6); border: 1px solid var(--border); margin: 1rem 0; overflow: hidden; }
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--void3); border-bottom: 1px solid var(--border);
+  padding: 0.38rem 1rem;
+}
+.code-fname { font-family: var(--display); font-size: 0.52rem; color: var(--text2); letter-spacing: 0.08em; }
+.code-lang {
+  font-family: var(--display); font-size: 0.5rem; color: var(--mag3);
+  background: var(--mag-dim); border: 1px solid rgba(255,0,144,0.2);
+  padding: 1px 8px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+pre {
+  padding: 1rem 1.25rem; overflow-x: auto;
+  font-family: var(--mono); font-size: 0.8rem; line-height: 1.85;
+  color: var(--text); tab-size: 2;
+  scrollbar-width: thin; scrollbar-color: var(--void4) transparent;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--void4); }
+
+/* JSON Colors */
+.jk  { color: var(--cyan);   }   /* json key   */
+.js  { color: var(--lime);   }   /* json string value */
+.jn  { color: var(--gold);   }   /* json number */
+.jb  { color: var(--violet); }   /* json bool/null */
+.jp  { color: var(--text3);  }   /* json punctuation { } [ ] , : */
+/* jq Filter Colors */
+.ff  { color: var(--mag);    font-weight: 600; }  /* filter function */
+.fp  { color: var(--gold);   }   /* path/key accessor */
+.fo  { color: var(--cyan);   }   /* operator | , // */
+.fs  { color: var(--lime);   }   /* string literal */
+.fn2 { color: #ffaa44;       }   /* number literal */
+.fc  { color: var(--text3);  font-style: italic; }  /* comment */
+.fv  { color: var(--violet); }   /* variable $x */
+.fk  { color: var(--mag3);   font-weight: 700; }    /* keyword if/then/else/reduce */
+/* Shell */
+.sh  { color: var(--text2);  }
+.shc { color: var(--lime);   }
+.shf { color: var(--gold);   }
+.she { color: var(--mag3);   }
+
+/* ── CALLOUTS ── */
+.callout { border-left: 2px solid; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.87rem; line-height: 1.65; font-family: var(--sans); font-weight: 400; }
+.callout strong { display: block; font-family: var(--display); font-size: 0.6rem; letter-spacing: 0.14em; margin-bottom: 0.3rem; }
+.c-mag   { border-color: var(--mag2);  background: rgba(255,0,144,0.06);  color: var(--mag3);   }
+.c-cyan  { border-color: var(--cyan2); background: rgba(0,240,255,0.06);  color: var(--cyan);   }
+.c-lime  { border-color: var(--lime);  background: rgba(170,255,0,0.06);  color: var(--lime);   }
+.c-gold  { border-color: var(--gold);  background: rgba(255,215,0,0.06);  color: var(--gold);   }
+.c-vio   { border-color: var(--violet);background: rgba(187,136,255,0.06);color: var(--violet); }
+.c-coral { border-color: var(--coral); background: rgba(255,102,68,0.06); color: var(--coral);  }
+
+/* ── STAT STRIP ── */
+.stat-strip {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(110px,1fr));
+  border: 1px solid var(--border); margin-bottom: 2rem; background: var(--void2);
+}
+.stat { padding: 1rem; text-align: center; border-right: 1px solid var(--border); transition: background 0.12s; }
+.stat:last-child { border-right: none; }
+.stat:hover { background: var(--void3); }
+.stat-num { font-family: var(--display); font-size: 1.9rem; font-weight: 900; line-height: 1; margin-bottom: 0.2rem; }
+.stat-label { font-family: var(--display); font-size: 0.48rem; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* ── PILLS / TABS ── */
+.pills { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.pill {
+  font-family: var(--display); font-size: 0.5rem; padding: 0.3rem 0.9rem;
+  cursor: pointer; border: 1px solid var(--border);
+  background: none; color: var(--text3);
+  transition: all 0.12s; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.pill:hover { border-color: var(--mag); color: var(--mag3); }
+.pill.active { background: var(--mag-dim); border-color: var(--mag); color: var(--mag3); box-shadow: var(--glow-mag); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── TABLES ── */
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+th {
+  font-family: var(--display); font-size: 0.52rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--mag3);
+  border-bottom: 1px solid var(--border); padding: 0.45rem 0.85rem;
+  text-align: left; background: var(--void3);
+}
+td { padding: 0.5rem 0.85rem; border-bottom: 1px solid var(--border2); color: var(--text2); font-family: var(--sans); font-size: 0.87rem; }
+tr:last-child td { border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(255,0,144,0.04); }
+td:first-child { color: var(--text); font-family: var(--mono); font-size: 0.8rem; font-weight: 600; }
+td code, p code, li code, span code {
+  font-family: var(--mono); font-size: 0.8em;
+  background: var(--void3); border: 1px solid var(--border);
+  padding: 0 4px; color: var(--mag3);
+}
+
+/* ── FILTER ANATOMY ── */
+.filter-anatomy {
+  background: rgba(0,0,0,0.6); border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem; margin: 1rem 0;
+  font-family: var(--mono); font-size: 0.85rem; line-height: 2;
+}
+.fa-filter {
+  font-size: 1.2rem; letter-spacing: 0.05em;
+  display: block; margin-bottom: 0.75rem; padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border2);
+}
+.fa-part { position: relative; display: inline-block; }
+.fa-under {
+  position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 2px; border-radius: 1px;
+}
+.fa-label {
+  font-family: var(--display); font-size: 0.5rem; letter-spacing: 0.1em;
+  margin-top: 2px; display: block; text-align: center;
+}
+.fa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 0.75rem; margin-top: 0.75rem; }
+.fa-item { border-left: 2px solid; padding: 0.4rem 0.6rem; }
+.fa-item code { font-family: var(--mono); font-size: 0.82rem; font-weight: 700; }
+.fa-item p { font-family: var(--sans); font-size: 0.82rem; color: var(--text2); margin: 0; }
+
+/* ── SEP ── */
+.sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+/* ── TEXT ── */
+p { margin-bottom: 0.85rem; color: var(--text2); font-family: var(--sans); font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+h3 { font-family: var(--display); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.08em; color: var(--text); margin: 1.75rem 0 0.6rem; }
+h3:first-child { margin-top: 0; }
+h4 { font-family: var(--display); font-size: 0.6rem; color: var(--text3); letter-spacing: 0.16em; text-transform: uppercase; margin: 1.2rem 0 0.5rem; }
+ul,ol { padding-left: 1.5rem; color: var(--text2); font-family: var(--sans); font-weight: 300; }
+li { margin-bottom: 0.35rem; }
+strong { color: var(--text); font-weight: 600; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--void2); }
+::-webkit-scrollbar-thumb { background: var(--void4); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div>
+        <div class="logo-jq">jq<span class="logo-dot">.</span></div>
+        <div class="logo-sub">JSON Surgery<br>Command Line</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="show('orient',this)">ORIENT</button>
+      <button class="nav-btn" onclick="show('basics',this)">BASICS</button>
+      <button class="nav-btn" onclick="show('filters',this)">FILTERS</button>
+      <button class="nav-btn" onclick="show('transforms',this)">TRANSFORMS</button>
+      <button class="nav-btn" onclick="show('strings',this)">STRINGS</button>
+      <button class="nav-btn" onclick="show('advanced',this)">ADVANCED</button>
+      <button class="nav-btn" onclick="show('programs',this)">PROGRAMS</button>
+      <button class="nav-btn" onclick="show('realworld',this)">REAL WORLD</button>
+    </nav>
+    <div class="hdr-right">v1.7.1 STABLE</div>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<!-- ══════════════════════════════════════
+     ORIENT
+══════════════════════════════════════ -->
+<section id="orient" class="active">
+  <div class="section-header">
+    <div class="section-eyebrow">What Is jq</div>
+    <div class="section-title">JSON <em>SURGERY</em></div>
+    <div class="section-sub">jq is a lightweight, zero-dependency command-line JSON processor written in C. It does for JSON what sed and awk do for text — but with a full query language, type system, recursive descent, and functional programming primitives. In 2026, every API response, every agent output, every log stream is JSON. jq is how you interrogate all of it.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="stat-strip">
+    <div class="stat"><div class="stat-num" style="color:var(--mag)">0</div><div class="stat-label">Dependencies</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--cyan)">C</div><div class="stat-label">Language</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--lime)">stdin</div><div class="stat-label">Input</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--gold)">stdout</div><div class="stat-label">Output</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--violet)">∞</div><div class="stat-label">Composability</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--coral)">NDJSON</div><div class="stat-label">Streaming Mode</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>The Mental Model</h3>
+      <p>jq reads JSON and applies a <strong>filter</strong> to it. A filter takes JSON in and produces JSON out. Filters compose with the pipe operator <code>|</code>. The simplest filter is <code>.</code> — identity, returns whatever it receives. Everything else builds on this.</p>
+
+      <!-- Anatomy of a jq command -->
+      <div class="filter-anatomy">
+        <span class="fa-filter">
+          <span style="color:var(--text3)">$ </span>
+          <span style="color:var(--she)">curl</span>
+          <span style="color:var(--shf)"> api.example.com/users</span>
+          <span style="color:var(--text2)"> | </span>
+          <span style="color:var(--shc)">jq</span>
+          <span style="color:var(--shf)"> </span>
+          <span style="color:var(--gold)">'</span><span class="ff">.</span><span class="fp">users</span><span class="fo">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(</span><span class="ff">.</span><span class="fp">active</span><span class="fo">)</span> <span class="fo">|</span> <span class="fp">{</span><span class="jk">name</span><span class="fo">:</span> <span class="ff">.</span><span class="fp">name</span><span class="fo">,</span> <span class="jk">email</span><span class="fo">:</span> <span class="ff">.</span><span class="fp">email</span><span class="fp">}</span><span style="color:var(--gold)">'</span>
+        </span>
+        <div class="fa-grid">
+          <div class="fa-item" style="border-color:var(--she)">
+            <code style="color:var(--she)">jq</code>
+            <p>The program. Reads stdin (or files), applies filter, writes to stdout</p>
+          </div>
+          <div class="fa-item" style="border-color:var(--gold)">
+            <code style="color:var(--gold)">'...'</code>
+            <p>Single-quoted filter string (prevents shell interpolation)</p>
+          </div>
+          <div class="fa-item" style="border-color:var(--mag)">
+            <code style="color:var(--mag)">.users[]</code>
+            <p>Path expression: get <code>users</code> key, iterate array</p>
+          </div>
+          <div class="fa-item" style="border-color:var(--cyan)">
+            <code style="color:var(--cyan)">| select(.active)</code>
+            <p>Pipe to filter: keep only where <code>active</code> is truthy</p>
+          </div>
+          <div class="fa-item" style="border-color:var(--lime)">
+            <code style="color:var(--lime)">{name, email}</code>
+            <p>Object construction: build a new JSON object</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout c-mag">
+        <strong>THE PIPE PHILOSOPHY</strong>
+        jq is a Unix pipe citizen. It reads from stdin, writes to stdout. Chain it: <code>curl api | jq '.items[]' | jq 'select(.price &gt; 100)'</code>. Or chain inside one jq filter with <code>|</code>. The pipe is the unit of composition — everything is a transformation of JSON flowing through.
+      </div>
+    </div>
+
+    <div>
+      <h3>First 10 Filters — Zero to Useful</h3>
+      <div class="jq-repl">
+        <div class="jq-repl-bar">
+          <div class="jq-repl-dot jrd-red"></div>
+          <div class="jq-repl-dot jrd-yellow"></div>
+          <div class="jq-repl-dot jrd-green"></div>
+          <div class="jq-repl-title">JQ REPL</div>
+        </div>
+        <div class="jq-io">
+          <div class="jq-col jq-col-in">
+            <div class="jq-col-label">INPUT JSON</div>
+<span class="jp">{</span>
+  <span class="jk">"name"</span><span class="jp">:</span> <span class="js">"Alice"</span><span class="jp">,</span>
+  <span class="jk">"age"</span><span class="jp">:</span> <span class="jn">32</span><span class="jp">,</span>
+  <span class="jk">"active"</span><span class="jp">:</span> <span class="jb">true</span><span class="jp">,</span>
+  <span class="jk">"scores"</span><span class="jp">:</span> <span class="jp">[</span><span class="jn">88</span><span class="jp">,</span><span class="jn">92</span><span class="jp">,</span><span class="jn">76</span><span class="jp">]</span><span class="jp">,</span>
+  <span class="jk">"meta"</span><span class="jp">:</span> <span class="jp">{</span>
+    <span class="jk">"role"</span><span class="jp">:</span> <span class="js">"admin"</span><span class="jp">,</span>
+    <span class="jk">"dept"</span><span class="jp">:</span> <span class="js">"eng"</span>
+  <span class="jp">}</span>
+<span class="jp">}</span>
+          </div>
+          <div class="jq-col jq-col-out">
+            <div class="jq-col-label">OUTPUTS</div>
+<span class="fc">. → identity (pretty-print)</span>
+<span class="fc">.name → "Alice"</span>
+<span class="fc">.age → 32</span>
+<span class="fc">.active → true</span>
+<span class="fc">.scores[0] → 88</span>
+<span class="fc">.scores[-1] → 76</span>
+<span class="fc">.scores[1:3] → [92,76]</span>
+<span class="fc">.meta.role → "admin"</span>
+<span class="fc">.scores | length → 3</span>
+<span class="fc">.scores | add → 256</span>
+<span class="fc">keys → ["active","age","meta","name","scores"]</span>
+<span class="fc">values → [true,32,{...},"Alice",[...]]</span>
+<span class="fc">type → "object"</span>
+<span class="fc">has("age") → true</span>
+          </div>
+        </div>
+        <div class="jq-filter-line">
+          <span class="jq-prompt">jq</span>
+          <span class="jq-filter">'. | {n: .name, avg: (.scores | add / length)}'</span>
+          <span style="color:var(--text3)">→</span>
+          <span style="color:var(--lime)">{"n": "Alice", "avg": 85.33}</span>
+        </div>
+      </div>
+
+      <h3>Essential CLI Flags</h3>
+      <table>
+        <thead><tr><th>Flag</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>-r</td><td>Raw output — strings without quotes (for shell use)</td></tr>
+          <tr><td>-c</td><td>Compact output — one JSON value per line (NDJSON)</td></tr>
+          <tr><td>-n</td><td>Null input — no stdin; use <code>null</code> as input</td></tr>
+          <tr><td>-s</td><td>Slurp — read all inputs into one array</td></tr>
+          <tr><td>-R</td><td>Raw input — read lines as strings (not JSON)</td></tr>
+          <tr><td>-e</td><td>Exit status 1 if output is false/null</td></tr>
+          <tr><td>--arg k v</td><td>Bind shell variable as <code>$k</code> string in filter</td></tr>
+          <tr><td>--argjson k v</td><td>Bind shell variable as <code>$k</code> JSON in filter</td></tr>
+          <tr><td>--slurpfile k f</td><td>Load JSON file as <code>$k</code> array</td></tr>
+          <tr><td>--rawfile k f</td><td>Load text file as <code>$k</code> string</td></tr>
+          <tr><td>--args</td><td>Remaining args become <code>$ARGS.positional</code> array</td></tr>
+          <tr><td>--tab</td><td>Tab-indented output</td></tr>
+          <tr><td>--indent N</td><td>N-space indented output (default 2)</td></tr>
+          <tr><td>-f file</td><td>Read filter from file instead of argument</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     BASICS
+══════════════════════════════════════ -->
+<section id="basics">
+  <div class="section-header">
+    <div class="section-eyebrow">Core Language</div>
+    <div class="section-title">PATH <em>EXPRESSIONS</em></div>
+    <div class="section-sub">Path expressions are the atoms of jq. Everything else — select, map, reduce — composes on top of these. Get the path language completely wired in your muscle memory first.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Path expressions — complete reference</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># ── IDENTITY & RECURSION ──────────────────────────────</span>
+<span class="ff">.</span>                   <span class="fc"># identity — pass input unchanged</span>
+<span class="ff">..</span>                  <span class="fc"># recursive descent — every value in tree</span>
+<span class="ff">.[</span><span class="fs">]</span>                 <span class="fc"># iterate — outputs each element separately</span>
+
+<span class="fc"># ── OBJECT FIELD ACCESS ───────────────────────────────</span>
+<span class="ff">.</span><span class="fp">name</span>               <span class="fc"># field by name (fails if not object)</span>
+<span class="ff">.</span><span class="fp">name</span><span class="fo">?</span>              <span class="fc"># optional: no error if .name doesn't exist</span>
+<span class="ff">.[</span><span class="fs">"field-name"</span><span class="ff">]</span>     <span class="fc"># bracket syntax — needed for special chars</span>
+<span class="ff">.</span><span class="fp">a</span><span class="ff">.</span><span class="fp">b</span><span class="ff">.</span><span class="fp">c</span>              <span class="fc"># chain — equivalent to .a | .b | .c</span>
+<span class="ff">.</span><span class="fp">a</span><span class="ff">.</span><span class="fp">b</span><span class="fo">?</span>              <span class="fc"># optional at any level — suppress errors</span>
+
+<span class="fc"># ── ARRAY INDEX & SLICING ─────────────────────────────</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[</span><span class="fn2">0</span><span class="ff">]</span>           <span class="fc"># first element</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[-</span><span class="fn2">1</span><span class="ff">]</span>          <span class="fc"># last element</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[</span><span class="fn2">2</span><span class="fo">:</span><span class="fn2">5</span><span class="ff">]</span>         <span class="fc"># slice [2,5) — elements at index 2, 3, 4</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[</span><span class="fn2">2</span><span class="fo">:</span><span class="ff">]</span>           <span class="fc"># from index 2 to end</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[:</span><span class="fn2">3</span><span class="ff">]</span>           <span class="fc"># first 3 elements</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span>            <span class="fc"># iterate: outputs each element individually</span>
+
+<span class="fc"># ── THE COMMA OPERATOR ────────────────────────────────</span>
+<span class="ff">.</span><span class="fp">a</span><span class="fo">,</span> <span class="ff">.</span><span class="fp">b</span>              <span class="fc"># outputs .a then .b as separate values</span>
+<span class="ff">.</span><span class="fp">users</span><span class="ff">[]</span><span class="fo">.</span><span class="fp">name</span><span class="fo">,</span>
+<span class="ff">.</span><span class="fp">users</span><span class="ff">[]</span><span class="fo">.</span><span class="fp">email</span>     <span class="fc"># outputs all names then all emails</span>
+
+<span class="fc"># ── PIPE ──────────────────────────────────────────────</span>
+<span class="ff">.</span><span class="fp">users</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">.</span><span class="fp">name</span>   <span class="fc"># iterate users, get name of each</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">length</span>          <span class="fc"># pipe identity into length</span>
+
+<span class="fc"># ── OBJECT CONSTRUCTION ───────────────────────────────</span>
+<span class="fp">{</span><span class="jk">name</span><span class="fo">:</span> <span class="ff">.</span><span class="fp">name</span><span class="fp">}</span>       <span class="fc"># build new object</span>
+<span class="fp">{</span><span class="jk">name</span><span class="fp">}</span>              <span class="fc"># shorthand: key = name, value = .name</span>
+<span class="fp">{</span><span class="jk">name</span><span class="fo">:</span> <span class="ff">.</span><span class="fp">first</span><span class="fo">,</span>
+ <span class="jk">score</span><span class="fo">:</span> <span class="ff">.</span><span class="fp">scores</span><span class="ff">[</span><span class="fn2">0</span><span class="ff">]</span><span class="fp">}</span>
+
+<span class="fc"># Dynamic keys:</span>
+<span class="fp">{</span><span class="fo">(</span><span class="ff">.</span><span class="fp">key</span><span class="fo">)</span><span class="fo">:</span> <span class="ff">.</span><span class="fp">value</span><span class="fp">}</span>    <span class="fc"># key is a computed expression</span>
+
+<span class="fc"># ── ARRAY CONSTRUCTION ────────────────────────────────</span>
+<span class="fp">[</span><span class="ff">.</span><span class="fp">a</span><span class="fo">,</span> <span class="ff">.</span><span class="fp">b</span><span class="fo">,</span> <span class="ff">.</span><span class="fp">c</span><span class="fp">]</span>        <span class="fc"># build array from 3 values</span>
+<span class="fp">[</span><span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span><span class="fp">]</span>          <span class="fc"># collect iterated values into array</span>
+<span class="fp">[</span><span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">.</span><span class="fp">name</span><span class="fp">]</span> <span class="fc"># map names → array</span>
+<span class="fp">[</span><span class="ff">range(</span><span class="fn2">5</span><span class="ff">)</span><span class="fp">]</span>          <span class="fc"># [0,1,2,3,4]</span></pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Optional Operator & Error Suppression</h3>
+      <div class="callout c-gold">
+        <strong>? IS YOUR BEST FRIEND</strong>
+        Appending <code>?</code> to any expression suppresses errors and just produces no output instead. Essential for heterogeneous JSON where not every object has the same keys. Without <code>?</code>, accessing a missing key on a non-object type throws a fatal error and stops processing.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Optional operator patterns</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># Without ?: blows up if any item isn't an object</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span><span class="fo">.</span><span class="fp">name</span>      <span class="fc"># ERROR if any item is a string/number</span>
+
+<span class="fc"># With ?: silently skips non-objects</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span><span class="fo">.</span><span class="fp">name</span><span class="fo">?</span>     <span class="fc"># safe — only outputs where .name exists</span>
+
+<span class="fc"># Try-catch for controlled error handling:</span>
+<span class="fk">try</span> <span class="ff">.</span><span class="fp">name</span> <span class="fk">catch</span> <span class="fs">"N/A"</span>
+
+<span class="fc"># Alternative operator // (like null-coalescing ??)</span>
+<span class="ff">.</span><span class="fp">name</span> <span class="fo">//</span> <span class="fs">"unknown"</span>  <span class="fc"># if .name is null/false, use "unknown"</span>
+<span class="ff">.</span><span class="fp">count</span> <span class="fo">//</span> <span class="fn2">0</span>          <span class="fc"># default numeric fallback</span>
+<span class="ff">.</span><span class="fp">tags</span> <span class="fo">//</span> <span class="fp">[]</span>          <span class="fc"># default empty array</span>
+
+<span class="fc"># CRITICAL: // is not the same as ?
+# .x? → suppress error, produce nothing
+# .x // "default" → produce "default" if null/false
+# .x? // "default" → suppress error AND default if null</span>
+
+<span class="fc"># Real-world: safe deep access</span>
+<span class="ff">.</span><span class="fp">user</span><span class="fo">?</span><span class="fo">.</span><span class="fp">address</span><span class="fo">?</span><span class="fo">.</span><span class="fp">city</span><span class="fo">?</span> <span class="fo">//</span> <span class="fs">"unknown"</span></pre>
+      </div>
+
+      <h3>Types and Type Testing</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Type system</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># jq types: null, boolean, number, string, array, object</span>
+<span class="ff">type</span>                  <span class="fc"># → "object", "array", "string", etc.</span>
+
+<span class="fc"># Test type:</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">type</span> <span class="fo">==</span> <span class="fs">"array"</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">arrays</span>            <span class="fc"># pass-through only if input is array</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">objects</span>           <span class="fc"># pass-through only if input is object</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">strings</span>           <span class="fc"># pass-through only if string</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">numbers</span>           <span class="fc"># pass-through only if number</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">booleans</span>          <span class="fc"># pass-through only if bool</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">nulls</span>             <span class="fc"># pass-through only if null</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">scalars</span>           <span class="fc"># pass-through if not array/object</span>
+<span class="ff">.</span> <span class="fo">|</span> <span class="ff">iterables</span>         <span class="fc"># pass-through if array or object</span>
+
+<span class="fc"># Type coercion:</span>
+<span class="ff">tostring</span>              <span class="fc"># any → "string"</span>
+<span class="ff">tonumber</span>              <span class="fc"># "42" → 42</span>
+<span class="ff">ascii_downcase</span>        <span class="fc"># string → lowercase</span>
+<span class="ff">ascii_upcase</span>          <span class="fc"># string → UPPERCASE</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     FILTERS
+══════════════════════════════════════ -->
+<section id="filters">
+  <div class="section-header">
+    <div class="section-eyebrow">Selection & Iteration</div>
+    <div class="section-title">FILTERS <em>& MAPS</em></div>
+    <div class="section-sub">select, map, map_values, any, all, limit — these are the workhorses of day-to-day jq. Master these and you can handle 90% of real-world JSON manipulation tasks.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="pills" id="fl-pills">
+    <button class="pill active" onclick="showTab('fl','select',this)">select</button>
+    <button class="pill" onclick="showTab('fl','map',this)">map / map_values</button>
+    <button class="pill" onclick="showTab('fl','arrays',this)">Array Builtins</button>
+    <button class="pill" onclick="showTab('fl','objects',this)">Object Builtins</button>
+    <button class="pill" onclick="showTab('fl','cond',this)">Conditionals</button>
+  </div>
+
+  <!-- SELECT -->
+  <div id="fl-select" class="tab-pane active">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">select — the jq WHERE clause</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># select(cond): pass through if cond is true, produce nothing if false
+# It is the jq equivalent of SQL WHERE.</span>
+
+<span class="fc"># Basic:</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span><span class="fo">)</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">price</span> <span class="fo">></span> <span class="fn2">100</span><span class="fo">)</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">status</span> <span class="fo">==</span> <span class="fs">"active"</span><span class="fo">)</span>
+
+<span class="fc"># String matching:</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">name</span> <span class="fo">|</span> <span class="ff">startswith</span><span class="fo">(</span><span class="fs">"Alice"</span><span class="fo">))</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">email</span> <span class="fo">|</span> <span class="ff">endswith</span><span class="fo">(</span><span class="fs">".com"</span><span class="fo">))</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">url</span> <span class="fo">|</span> <span class="ff">contains</span><span class="fo">(</span><span class="fs">"github"</span><span class="fo">))</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">name</span> <span class="fo">|</span> <span class="ff">test</span><span class="fo">(</span><span class="fs">"^[Aa]"</span><span class="fo">))</span>  <span class="fc"># regex</span>
+
+<span class="fc"># Boolean combinators:</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span> <span class="fo">and</span> <span class="fo">.</span><span class="fp">verified</span><span class="fo">)</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span> <span class="fo">or</span> <span class="fo">.</span><span class="fp">legacy</span><span class="fo">)</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span> <span class="fo">|</span> <span class="fo">not</span><span class="fo">)</span>
+
+<span class="fc"># Membership test:</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">role</span> <span class="fo">|</span> <span class="ff">IN</span><span class="fo">(</span><span class="fs">"admin"</span><span class="fo">,</span><span class="fs">"owner"</span><span class="fo">))</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">id</span> <span class="fo">|</span> <span class="ff">IN</span><span class="fo">(</span><span class="fv">$ids</span><span class="ff">[]</span><span class="fo">))</span>   <span class="fc"># --argjson ids '[1,2,3]'</span>
+
+<span class="fc"># Null guard:</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">name</span> <span class="fo">!=</span> <span class="jb">null</span><span class="fo">)</span>
+<span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">price</span> <span class="fo">|</span> <span class="ff">numbers</span><span class="fo">)</span>  <span class="fc"># type-safe select</span>
+
+<span class="fc"># Collect results back into array (select inside []):</span>
+<span class="fp">[</span><span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">price</span> <span class="fo">></span> <span class="fn2">100</span><span class="fo">)</span><span class="fp">]</span>
+<span class="fc"># ↑ equivalent to: .items | map(select(.price > 100))</span></pre>
+      </div>
+      <div>
+        <div class="callout c-cyan">
+          <strong>select vs map(select(...))</strong>
+          <code>.items[] | select(...)</code> outputs filtered values as separate items. Wrap in <code>[...]</code> to collect: <code>[.items[] | select(...)]</code>. Or use <code>.items | map(select(...))</code> — identical result, different readability. Choose based on what comes next: piping onward → bare iterate; building a JSON array → wrap in <code>[]</code>.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">select with shell args</span><span class="code-lang">bash</span></div>
+          <pre><span class="fc"># Pass shell variables safely with --arg and --argjson:</span>
+STATUS<span class="op">=</span>"active"
+<span class="shc">jq</span> <span class="shf">--arg</span> status <span class="fs">"$STATUS"</span> \
+   <span class="fs">'[.[] | select(.status == $status)]'</span> data.json
+
+<span class="fc"># Numeric comparison with --argjson:</span>
+MIN_PRICE<span class="op">=</span>100
+<span class="shc">jq</span> <span class="shf">--argjson</span> min <span class="fs">"$MIN_PRICE"</span> \
+   <span class="fs">'[.[] | select(.price > $min)]'</span> data.json
+
+<span class="fc"># Pass an array for IN() test:</span>
+IDS<span class="op">=</span>'[1,2,3,4]'
+<span class="shc">jq</span> <span class="shf">--argjson</span> ids <span class="fs">"$IDS"</span> \
+   <span class="fs">'[.[] | select(.id | IN($ids[]))]'</span> data.json</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="fl-map" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">map and map_values — array/object transform</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># map(f): apply f to each element of array
+# Equivalent to: [.[] | f]</span>
+
+<span class="ff">map</span><span class="fo">(.</span><span class="fp">name</span><span class="fo">)</span>               <span class="fc"># extract name from each object</span>
+<span class="ff">map</span><span class="fo">(.</span><span class="fp">price</span> <span class="fo">*</span> <span class="fn2">1.2</span><span class="fo">)</span>        <span class="fc"># multiply each price by 1.2</span>
+<span class="ff">map</span><span class="fo">(</span><span class="ff">tostring</span><span class="fo">)</span>            <span class="fc"># convert each element to string</span>
+<span class="ff">map</span><span class="fo">(</span><span class="ff">ascii_downcase</span><span class="fo">)</span>     <span class="fc"># lowercase each string</span>
+<span class="ff">map</span><span class="fo">({</span><span class="jk">name</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">name</span><span class="fo">,</span> <span class="jk">id</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">id</span><span class="fo">})</span> <span class="fc"># reshape each object</span>
+
+<span class="fc"># map(select(...)): filter an array (most common pattern!)</span>
+<span class="ff">map</span><span class="fo">(</span><span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span><span class="fo">))</span>     <span class="fc"># keep active items</span>
+<span class="ff">map</span><span class="fo">(</span><span class="ff">select</span><span class="fo">(.</span><span class="fp">price</span> <span class="fo">></span> <span class="fn2">10</span><span class="fo">))</span> <span class="fc"># keep items where price > 10</span>
+
+<span class="fc"># Chain map and select:</span>
+<span class="ff">map</span><span class="fo">(</span><span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span><span class="fo">))</span>
+<span class="fo">|</span> <span class="ff">map</span><span class="fo">({</span><span class="jk">name</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">name</span><span class="fo">,</span> <span class="jk">email</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">email</span><span class="fo">})</span>
+<span class="fo">|</span> <span class="ff">sort_by</span><span class="fo">(.</span><span class="fp">name</span><span class="fo">)</span>
+
+<span class="fc"># ──────────────────────────────────────────────────────
+# map_values(f): apply f to each VALUE in object or array
+# For objects: preserves keys, transforms values
+# For arrays: same as map()</span>
+
+<span class="fp">{</span><span class="jk">a</span><span class="fo">:</span> <span class="fn2">1</span><span class="fo">,</span> <span class="jk">b</span><span class="fo">:</span> <span class="fn2">2</span><span class="fo">,</span> <span class="jk">c</span><span class="fo">:</span> <span class="fn2">3</span><span class="fp">}</span> <span class="fo">|</span> <span class="ff">map_values</span><span class="fo">(.</span> <span class="fo">*</span> <span class="fn2">10</span><span class="fo">)</span>
+<span class="fc"># → {"a":10,"b":20,"c":30}</span>
+
+<span class="ff">map_values</span><span class="fo">(.</span> <span class="fo">//</span> <span class="fs">"N/A"</span><span class="fo">)</span>  <span class="fc"># replace nulls with "N/A" in all values</span>
+<span class="ff">map_values</span><span class="fo">(</span><span class="ff">tostring</span><span class="fo">)</span>   <span class="fc"># stringify every value in object</span>
+<span class="ff">map_values</span><span class="fo">(</span><span class="fk">if</span> <span class="fo">.</span> <span class="fo">==</span> <span class="jb">null</span> <span class="fk">then</span> <span class="jb">empty</span> <span class="fk">else</span> <span class="fo">.</span> <span class="fk">end</span><span class="fo">)</span>  <span class="fc"># remove null values</span>
+
+<span class="fc"># del: remove keys</span>
+<span class="ff">del</span><span class="fo">(.</span><span class="fp">password</span><span class="fo">)</span>          <span class="fc"># remove one key</span>
+<span class="ff">del</span><span class="fo">(.</span><span class="fp">password</span><span class="fo">,</span> <span class="fo">.</span><span class="fp">ssn</span><span class="fo">,</span> <span class="fo">.</span><span class="fp">token</span><span class="fo">)</span> <span class="fc"># remove multiple</span>
+<span class="ff">del</span><span class="fo">(.</span><span class="fp">items</span><span class="ff">[]</span><span class="fo">.</span><span class="fp">internal</span><span class="fo">)</span> <span class="fc"># remove key from each item</span>
+<span class="ff">del</span><span class="fo">(.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span> <span class="fo">|</span> <span class="fo">not</span><span class="fo">))</span>  <span class="fc"># remove inactive items</span></pre>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Update operator |= — in-place modification</span><span class="code-lang">jq</span></div>
+          <pre><span class="fc"># |= : update operator. Read as "update with".
+# Takes the current value, applies the expression, stores result.</span>
+
+<span class="fo">.</span><span class="fp">price</span> <span class="fo">|=</span> <span class="fo">.</span> <span class="fo">*</span> <span class="fn2">1.1</span>          <span class="fc"># add 10% to price</span>
+<span class="fo">.</span><span class="fp">name</span>  <span class="fo">|=</span> <span class="ff">ascii_upcase</span>    <span class="fc"># uppercase the name</span>
+<span class="fo">.</span><span class="fp">tags</span>  <span class="fo">|=</span> <span class="fo">.</span> <span class="fo">+</span> <span class="fp">[</span><span class="fs">"new-tag"</span><span class="fp">]</span>  <span class="fc"># append to array</span>
+<span class="fo">.</span><span class="fp">count</span> <span class="fo">|=</span> <span class="fo">.</span> <span class="fo">+</span> <span class="fn2">1</span>             <span class="fc"># increment counter</span>
+<span class="fo">.</span><span class="fp">items</span><span class="ff">[]</span><span class="fo">.</span><span class="fp">price</span> <span class="fo">|=</span> <span class="fo">.</span> <span class="fo">*</span> <span class="fn2">0.9</span>  <span class="fc"># 10% discount on all items</span>
+
+<span class="fc"># += shorthand (equivalent to |= . + x):</span>
+<span class="fo">.</span><span class="fp">count</span> <span class="fo">+=</span> <span class="fn2">1</span>
+<span class="fo">.</span><span class="fp">tags</span>  <span class="fo">+=</span> <span class="fp">[</span><span class="fs">"extra"</span><span class="fp">]</span>
+<span class="fo">.</span><span class="fp">price</span> <span class="fo">*=</span> <span class="fn2">1.1</span>
+<span class="fo">.</span><span class="fp">name</span>  <span class="fo">//=</span> <span class="fs">"anonymous"</span>   <span class="fc"># set if null</span>
+
+<span class="fc"># Set a key that might not exist:</span>
+<span class="fo">.</span><span class="fp">meta</span><span class="fo">.</span><span class="fp">processed</span> <span class="fo">=</span> <span class="jb">true</span>   <span class="fc"># creates path if needed</span>
+<span class="fo">.</span><span class="fp">meta</span> <span class="fo">+= {</span><span class="jk">ts</span><span class="fo">:</span> <span class="fs">"2026-04-05"</span><span class="fo">}</span>  <span class="fc"># merge into existing object</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARRAYS -->
+  <div id="fl-arrays" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Array builtins — the complete set</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># ── REDUCTION ─────────────────────────────────────────</span>
+<span class="ff">length</span>                 <span class="fc"># array: count; string: chars; object: keys</span>
+<span class="ff">add</span>                    <span class="fc"># sum numbers, concat strings/arrays, merge objects</span>
+<span class="ff">any</span>                    <span class="fc"># true if any element is truthy</span>
+<span class="ff">all</span>                    <span class="fc"># true if all elements are truthy</span>
+<span class="ff">any</span><span class="fo">(.</span> <span class="fo">></span> <span class="fn2">10</span><span class="fo">)</span>           <span class="fc"># true if any element > 10</span>
+<span class="ff">all</span><span class="fo">(.</span><span class="fp">active</span><span class="fo">)</span>           <span class="fc"># true if all objects have active=true</span>
+<span class="ff">first</span>                  <span class="fc"># first element</span>
+<span class="ff">last</span>                   <span class="fc"># last element</span>
+<span class="ff">first</span><span class="fo">(</span><span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span><span class="fo">))</span>  <span class="fc"># first active item</span>
+<span class="ff">nth</span><span class="fo">(</span><span class="fn2">2</span><span class="fo">;</span> <span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span><span class="fo">)</span>       <span class="fc"># 3rd item (0-indexed)</span>
+<span class="ff">min</span> <span class="fo">|</span> <span class="ff">max</span>              <span class="fc"># min/max of number array</span>
+<span class="ff">min_by</span><span class="fo">(.</span><span class="fp">price</span><span class="fo">)</span>        <span class="fc"># object with lowest price</span>
+<span class="ff">max_by</span><span class="fo">(.</span><span class="fp">score</span><span class="fo">)</span>        <span class="fc"># object with highest score</span>
+
+<span class="fc"># ── SORTING ───────────────────────────────────────────</span>
+<span class="ff">sort</span>                   <span class="fc"># sort array of scalars</span>
+<span class="ff">sort_by</span><span class="fo">(.</span><span class="fp">name</span><span class="fo">)</span>        <span class="fc"># sort objects by field</span>
+<span class="ff">sort_by</span><span class="fo">(.</span><span class="fp">name</span><span class="fo">,</span><span class="fo">.</span><span class="fp">age</span><span class="fo">)</span>  <span class="fc"># multi-key sort</span>
+<span class="ff">reverse</span>                <span class="fc"># reverse array</span>
+<span class="ff">sort_by</span><span class="fo">(.</span><span class="fp">price</span><span class="fo">)</span> <span class="fo">|</span> <span class="ff">reverse</span>   <span class="fc"># descending sort</span>
+
+<span class="fc"># ── DEDUPLICATION ─────────────────────────────────────</span>
+<span class="ff">unique</span>                 <span class="fc"># deduplicate (sorts first)</span>
+<span class="ff">unique_by</span><span class="fo">(.</span><span class="fp">id</span><span class="fo">)</span>        <span class="fc"># deduplicate by field (keep first seen)</span>
+<span class="ff">unique_by</span><span class="fo">(.</span><span class="fp">email</span> <span class="fo">|</span> <span class="ff">ascii_downcase</span><span class="fo">)</span>  <span class="fc"># case-insensitive dedup</span>
+
+<span class="fc"># ── SET OPERATIONS ────────────────────────────────────</span>
+<span class="ff">a</span> <span class="fo">|</span> <span class="ff">inside</span><span class="fo">(</span><span class="ff">b</span><span class="fo">)</span>         <span class="fc"># true if a is a subset of b</span>
+<span class="ff">contains</span><span class="fo">(</span><span class="fp">[</span><span class="fn2">1</span><span class="fo">,</span><span class="fn2">2</span><span class="fp">]</span><span class="fo">)</span>       <span class="fc"># true if array contains [1,2] as subset</span>
+<span class="ff">flatten</span>                <span class="fc"># fully flatten nested arrays</span>
+<span class="ff">flatten</span><span class="fo">(</span><span class="fn2">1</span><span class="fo">)</span>            <span class="fc"># flatten one level deep only</span>
+<span class="ff">indices</span><span class="fo">(</span><span class="fs">"x"</span><span class="fo">)</span>          <span class="fc"># array of indices where "x" appears</span>
+<span class="ff">index</span><span class="fo">(</span><span class="fs">"x"</span><span class="fo">)</span>            <span class="fc"># first index of "x"</span>
+<span class="ff">rindex</span><span class="fo">(</span><span class="fs">"x"</span><span class="fo">)</span>           <span class="fc"># last index</span>
+<span class="ff">zip</span>                    <span class="fc"># transpose: [[a,b],[c,d]] → [[a,c],[b,d]]</span>
+<span class="ff">transpose</span>              <span class="fc"># alias for zip</span>
+<span class="ff">combinations</span>          <span class="fc"># cartesian product: [[a,b],[c,d]] → [a,c],[a,d],[b,c]...</span>
+<span class="ff">range</span><span class="fo">(</span><span class="fn2">5</span><span class="fo">)</span>              <span class="fc"># 0,1,2,3,4 (as separate outputs)</span>
+<span class="ff">range</span><span class="fo">(</span><span class="fn2">2</span><span class="fo">;</span><span class="fn2">10</span><span class="fo">;</span><span class="fn2">2</span><span class="fo">)</span>        <span class="fc"># 2,4,6,8 (start;end;step)</span>
+<span class="fp">[</span><span class="ff">range</span><span class="fo">(</span><span class="fn2">5</span><span class="fo">)</span><span class="fp">]</span>             <span class="fc"># collect into array: [0,1,2,3,4]</span></pre>
+      </div>
+      <div>
+        <div class="callout c-lime">
+          <strong>group_by — the jq GROUP BY</strong>
+          <code>group_by(.field)</code> sorts the array then groups into sub-arrays of objects with the same field value. It returns an array of arrays. Combine with <code>map</code> to aggregate each group.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">group_by — SQL GROUP BY equivalent</span><span class="code-lang">jq</span></div>
+          <pre><span class="fc"># group_by(.field): sort + partition by field value</span>
+<span class="ff">group_by</span><span class="fo">(.</span><span class="fp">status</span><span class="fo">)</span>
+<span class="fc"># → [[{status:"a",...},{status:"a",...}],[{status:"b",...}]]</span>
+
+<span class="fc"># Count per group (like COUNT(*) GROUP BY):</span>
+<span class="ff">group_by</span><span class="fo">(.</span><span class="fp">status</span><span class="fo">)</span> <span class="fo">|</span>
+<span class="ff">map</span><span class="fo">({</span>
+  <span class="jk">status</span><span class="fo">:</span> <span class="ff">first</span><span class="fo">.</span><span class="fp">status</span><span class="fo">,</span>
+  <span class="jk">count</span><span class="fo">:</span>  <span class="ff">length</span>
+<span class="fo">})</span>
+
+<span class="fc"># Sum per group (like SUM(amount) GROUP BY status):</span>
+<span class="ff">group_by</span><span class="fo">(.</span><span class="fp">status</span><span class="fo">)</span> <span class="fo">|</span>
+<span class="ff">map</span><span class="fo">({</span>
+  <span class="jk">status</span><span class="fo">:</span> <span class="ff">first</span><span class="fo">.</span><span class="fp">status</span><span class="fo">,</span>
+  <span class="jk">total</span><span class="fo">:</span>  <span class="ff">map</span><span class="fo">(.</span><span class="fp">amount</span><span class="fo">) |</span> <span class="ff">add</span><span class="fo">,</span>
+  <span class="jk">avg</span><span class="fo">:</span>    <span class="fo">(</span><span class="ff">map</span><span class="fo">(.</span><span class="fp">amount</span><span class="fo">) |</span> <span class="ff">add</span><span class="fo">) /</span> <span class="ff">length</span>
+<span class="fo">})</span>
+
+<span class="fc"># Multi-key grouping:</span>
+<span class="ff">group_by</span><span class="fo">(</span><span class="fp">[</span><span class="fo">.</span><span class="fp">status</span><span class="fo">,</span> <span class="fo">.</span><span class="fp">region</span><span class="fp">]</span><span class="fo">)</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OBJECTS -->
+  <div id="fl-objects" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Object builtins + to_entries / from_entries</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># ── INTROSPECTION ────────────────────────────────────</span>
+<span class="ff">keys</span>                   <span class="fc"># sorted array of object keys</span>
+<span class="ff">keys_unsorted</span>          <span class="fc"># keys in insertion order</span>
+<span class="ff">values</span>                 <span class="fc"># array of values (in key order)</span>
+<span class="ff">has</span><span class="fo">(</span><span class="fs">"key"</span><span class="fo">)</span>            <span class="fc"># true if key exists (even if value is null)</span>
+<span class="ff">in</span><span class="fo">(</span><span class="fp">{</span><span class="jk">a</span><span class="fo">:</span><span class="fn2">1</span><span class="fp">}</span><span class="fo">)</span>             <span class="fc"># true if input key exists in given object</span>
+<span class="ff">length</span>                 <span class="fc"># number of keys in object</span>
+
+<span class="fc"># ── MERGING ──────────────────────────────────────────</span>
+<span class="fo">{</span><span class="jk">a</span><span class="fo">:</span><span class="fn2">1</span><span class="fo">}</span> <span class="fo">+</span> <span class="fo">{</span><span class="jk">b</span><span class="fo">:</span><span class="fn2">2</span><span class="fo">}</span>          <span class="fc"># → {a:1, b:2} (right overwrites left)</span>
+<span class="ff">. + {</span><span class="jk">extra</span><span class="fo">:</span> <span class="fs">"field"</span><span class="ff">}</span>  <span class="fc"># add field to existing object</span>
+
+<span class="fc"># ── to_entries / from_entries / with_entries ─────────
+# to_entries: object → [{key,value}]</span>
+<span class="fp">{</span><span class="jk">a</span><span class="fo">:</span><span class="fn2">1</span><span class="fo">,</span><span class="jk">b</span><span class="fo">:</span><span class="fn2">2</span><span class="fp">}</span> <span class="fo">|</span> <span class="ff">to_entries</span>
+<span class="fc"># → [{"key":"a","value":1},{"key":"b","value":2}]</span>
+
+<span class="fc"># from_entries: [{key,value}] → object</span>
+<span class="fp">[{</span><span class="jk">key</span><span class="fo">:</span><span class="fs">"x"</span><span class="fo">,</span><span class="jk">value</span><span class="fo">:</span><span class="fn2">99</span><span class="fp">}]</span> <span class="fo">|</span> <span class="ff">from_entries</span>
+<span class="fc"># → {"x": 99}
+# Also accepts: {name,value} and {k,v} instead of {key,value}</span>
+
+<span class="fc"># with_entries(f): to_entries | map(f) | from_entries
+# The POWER move: transform keys or values of an object</span>
+<span class="ff">with_entries</span><span class="fo">(.</span><span class="fp">key</span> <span class="fo">|=</span> <span class="ff">ascii_upcase</span><span class="fo">)</span>
+<span class="fc"># → all keys uppercased</span>
+
+<span class="ff">with_entries</span><span class="fo">(.</span><span class="fp">value</span> <span class="fo">|=</span> <span class="ff">tostring</span><span class="fo">)</span>
+<span class="fc"># → all values stringified</span>
+
+<span class="ff">with_entries</span><span class="fo">(</span><span class="ff">select</span><span class="fo">(.</span><span class="fp">value</span> <span class="fo">!=</span> <span class="jb">null</span><span class="fo">))</span>
+<span class="fc"># → remove null-valued keys</span>
+
+<span class="ff">with_entries</span><span class="fo">(</span><span class="ff">select</span><span class="fo">(.</span><span class="fp">key</span> <span class="fo">|</span> <span class="ff">startswith</span><span class="fo">(</span><span class="fs">"_"</span><span class="fo">)</span> <span class="fo">|</span> <span class="fo">not</span><span class="fo">))</span>
+<span class="fc"># → remove all keys starting with underscore (strip private fields)</span>
+
+<span class="fc"># Rename a key:</span>
+<span class="ff">with_entries</span><span class="fo">(</span><span class="fk">if</span> <span class="fo">.</span><span class="fp">key</span> <span class="fo">==</span> <span class="fs">"old_name"</span> <span class="fk">then</span> <span class="fo">.</span><span class="fp">key</span> <span class="fo">=</span> <span class="fs">"new_name"</span> <span class="fk">else</span> <span class="fo">.</span> <span class="fk">end</span><span class="fo">)</span></pre>
+      </div>
+      <div>
+        <div class="callout c-vio">
+          <strong>with_entries — The Most Underused Power Move</strong>
+          <code>with_entries(f)</code> is jq's secret weapon for object manipulation. It converts an object to key-value pairs, applies a filter to each pair, then rebuilds. This lets you filter, rename, and transform keys AND values simultaneously — in one expression. Most jq beginners use <code>to_entries | map(...) | from_entries</code>; power users use <code>with_entries</code>.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Object construction patterns</span><span class="code-lang">jq</span></div>
+          <pre><span class="fc"># Build object from array (INDEX — like a hash map):</span>
+<span class="ff">INDEX</span><span class="fo">(.</span><span class="fp">items</span><span class="ff">[]</span><span class="fo">;</span> <span class="fo">.</span><span class="fp">id</span><span class="fo">)</span>
+<span class="fc"># → {"id1":{...}, "id2":{...}} — keyed by id</span>
+
+<span class="ff">INDEX</span><span class="fo">(.</span><span class="fp">items</span><span class="ff">[]</span><span class="fo">;</span> <span class="fo">.</span><span class="fp">email</span><span class="fo">)</span>
+<span class="fc"># Lookup table: O(1) access by email</span>
+
+<span class="fc"># IN() — membership test (complement to INDEX):</span>
+<span class="fv">$lookup</span> <span class="fo">|</span> <span class="ff">IN</span><span class="fo">(</span><span class="ff">keys</span><span class="ff">[]</span><span class="fo">)</span>
+
+<span class="fc"># Zip two arrays into key-value pairs:</span>
+<span class="fp">[</span><span class="fs">"a"</span><span class="fo">,</span><span class="fs">"b"</span><span class="fp">]</span> <span class="fo">as</span> <span class="fv">$keys</span> <span class="fo">|</span>
+<span class="fp">[</span><span class="fn2">1</span><span class="fo">,</span><span class="fn2">2</span><span class="fp">]</span>    <span class="fo">as</span> <span class="fv">$vals</span> <span class="fo">|</span>
+<span class="fp">[</span><span class="fv">$keys</span><span class="fp">[</span><span class="ff">]</span><span class="fo">,</span> <span class="fv">$vals</span><span class="fp">[]</span><span class="fp">]</span> <span class="fo">|</span> <span class="ff">from_entries</span>
+<span class="fc"># → {"a":1,"b":2}</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONDITIONALS -->
+  <div id="fl-cond" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">if / then / else / elif — full syntax</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># Basic if/then/else — ALWAYS needs else in jq</span>
+<span class="fk">if</span> <span class="fo">.</span><span class="fp">active</span> <span class="fk">then</span> <span class="fs">"active"</span> <span class="fk">else</span> <span class="fs">"inactive"</span> <span class="fk">end</span>
+
+<span class="fc"># Multiple branches with elif:</span>
+<span class="fk">if</span>   <span class="fo">.</span><span class="fp">score</span> <span class="fo">>=</span> <span class="fn2">90</span> <span class="fk">then</span> <span class="fs">"A"</span>
+<span class="fk">elif</span> <span class="fo">.</span><span class="fp">score</span> <span class="fo">>=</span> <span class="fn2">80</span> <span class="fk">then</span> <span class="fs">"B"</span>
+<span class="fk">elif</span> <span class="fo">.</span><span class="fp">score</span> <span class="fo">>=</span> <span class="fn2">70</span> <span class="fk">then</span> <span class="fs">"C"</span>
+<span class="fk">else</span> <span class="fs">"F"</span> <span class="fk">end</span>
+
+<span class="fc"># Inside map/select:</span>
+<span class="ff">map</span><span class="fo">(.</span><span class="fp">price</span> <span class="fo">|=</span> <span class="fk">if</span> <span class="fo">.</span> <span class="fo">></span> <span class="fn2">100</span> <span class="fk">then</span> <span class="fo">.</span> <span class="fo">*</span> <span class="fn2">0.9</span> <span class="fk">else</span> <span class="fo">.</span> <span class="fk">end</span><span class="fo">)</span>
+<span class="fc"># 10% discount on items over $100</span>
+
+<span class="fc"># jq has NO switch/case — use if/elif chains
+# Or use a lookup object:</span>
+<span class="fp">{</span>
+  <span class="jk">"pending"</span><span class="fo">:</span>   <span class="jn">0</span><span class="fo">,</span>
+  <span class="jk">"active"</span><span class="fo">:</span>    <span class="jn">1</span><span class="fo">,</span>
+  <span class="jk">"cancelled"</span><span class="fo">:</span> <span class="jn">-1</span>
+<span class="fp">}</span><span class="ff">[.</span><span class="fp">status</span><span class="ff">]</span> <span class="fo">//</span> <span class="fn2">99</span>       <span class="fc"># lookup with default</span>
+
+<span class="fc"># empty — produce no output (useful in conditionals):</span>
+<span class="fk">if</span> <span class="fo">.</span><span class="fp">active</span> <span class="fk">then</span> <span class="fo">.</span> <span class="fk">else</span> <span class="ff">empty</span> <span class="fk">end</span>
+<span class="fc"># equivalent to: select(.active)</span>
+
+<span class="fc"># error — throw a custom error:</span>
+<span class="fk">if</span> <span class="fo">.</span><span class="fp">id</span> <span class="fo">|</span> <span class="fo">not</span> <span class="fk">then</span> <span class="ff">error</span><span class="fo">(</span><span class="fs">"id required"</span><span class="fo">)</span> <span class="fk">else</span> <span class="fo">.</span> <span class="fk">end</span></pre>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">try / catch — error handling</span><span class="code-lang">jq</span></div>
+          <pre><span class="fc"># try/catch: handle errors gracefully</span>
+<span class="fk">try</span> <span class="ff">.</span><span class="fp">name</span> <span class="fk">catch</span> <span class="jb">null</span>          <span class="fc"># null on error</span>
+<span class="fk">try</span> <span class="ff">tonumber</span> <span class="fk">catch</span> <span class="fn2">0</span>          <span class="fc"># 0 if not a number</span>
+<span class="fk">try</span> <span class="fo">(</span><span class="fo">.</span> <span class="fo">|</span> <span class="ff">fromjson</span><span class="fo">)</span> <span class="fk">catch</span> <span class="fo">.</span>   <span class="fc"># return original if not valid JSON</span>
+
+<span class="fc"># The error message is available in catch:</span>
+<span class="fk">try</span> <span class="ff">.</span><span class="fp">a</span><span class="fo">.</span><span class="fp">b</span><span class="fo">.</span><span class="fp">c</span> <span class="fk">catch</span> <span class="fo">{</span><span class="jk">error</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">,</span> <span class="jk">input</span><span class="fo">:</span> <span class="fv">$__loc__</span><span class="fo">}</span>
+
+<span class="fc"># try without catch: suppress all errors (like ? but for expressions)</span>
+<span class="fk">try</span> <span class="fo">(.</span><span class="fp">data</span> <span class="fo">|</span> <span class="ff">fromjson</span> <span class="fo">|</span> <span class="ff">.</span><span class="fp">result</span><span class="fo">)</span>
+
+<span class="fc"># Practical: parse JSON strings safely in a stream:</span>
+<span class="ff">.</span><span class="fp">events</span><span class="ff">[]</span> <span class="fo">|</span> <span class="fk">try</span> <span class="fo">(.</span><span class="fp">payload</span> <span class="fo">|</span> <span class="ff">fromjson</span><span class="fo">)</span>
+<span class="fc"># silently skips events with non-JSON payloads</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     TRANSFORMS
+══════════════════════════════════════ -->
+<section id="transforms">
+  <div class="section-header">
+    <div class="section-eyebrow">Shape Shifting</div>
+    <div class="section-title">DATA <em>TRANSFORMS</em></div>
+    <div class="section-sub">Reshaping JSON — pivoting, flattening, indexing, walking recursive trees. These patterns handle the gnarly real-world JSON structures that APIs return when they think they're being clever.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <h3>Recursive Descent — Walking Deep Trees</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">.. and walk — recursive operations</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># .. recursive descent: outputs EVERY value in the tree
+# (all scalars, all sub-objects, all sub-arrays)</span>
+
+<span class="fc"># Find all strings anywhere in a deep JSON tree:</span>
+<span class="ff">..</span> <span class="fo">|</span> <span class="ff">strings</span>
+
+<span class="fc"># Find all numbers:</span>
+<span class="ff">..</span> <span class="fo">|</span> <span class="ff">numbers</span>
+
+<span class="fc"># Find any value matching a condition (anywhere in tree):</span>
+<span class="ff">..</span> <span class="fo">|</span> <span class="ff">objects</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(</span><span class="ff">has</span><span class="fo">(</span><span class="fs">"error"</span><span class="fo">))</span>
+<span class="fc"># → find all objects at any depth that have an "error" key</span>
+
+<span class="fc"># Extract all values for a key anywhere in deep JSON:</span>
+<span class="ff">..</span> <span class="fo">|</span> <span class="ff">objects</span> <span class="fo">|</span> <span class="ff">.</span><span class="fp">id</span><span class="fo">?</span>
+<span class="fc"># → all "id" values, at any nesting depth</span>
+
+<span class="fc"># Extract all error messages from a complex API response:</span>
+<span class="ff">..</span> <span class="fo">|</span> <span class="ff">strings</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(</span><span class="ff">test</span><span class="fo">(</span><span class="fs">"error|Error|ERROR"</span><span class="fo">))</span>
+
+<span class="fc"># walk(f): applies f bottom-up to every node in tree
+# Useful for: type coercion, normalization, transformation</span>
+
+<span class="fc"># Stringify all numbers in any JSON structure:</span>
+<span class="ff">walk</span><span class="fo">(</span><span class="fk">if</span> <span class="ff">type</span> <span class="fo">==</span> <span class="fs">"number"</span> <span class="fk">then</span> <span class="ff">tostring</span> <span class="fk">else</span> <span class="fo">.</span> <span class="fk">end</span><span class="fo">)</span>
+
+<span class="fc"># Remove all null values recursively:</span>
+<span class="ff">walk</span><span class="fo">(</span>
+  <span class="fk">if</span> <span class="ff">type</span> <span class="fo">==</span> <span class="fs">"object"</span> <span class="fk">then</span>
+    <span class="ff">with_entries</span><span class="fo">(</span><span class="ff">select</span><span class="fo">(.</span><span class="fp">value</span> <span class="fo">!=</span> <span class="jb">null</span><span class="fo">))</span>
+  <span class="fk">else</span> <span class="fo">.</span>
+  <span class="fk">end</span>
+<span class="fo">)</span>
+
+<span class="fc"># Normalize all keys to snake_case (simplified):</span>
+<span class="ff">walk</span><span class="fo">(</span>
+  <span class="fk">if</span> <span class="ff">type</span> <span class="fo">==</span> <span class="fs">"object"</span> <span class="fk">then</span>
+    <span class="ff">with_entries</span><span class="fo">(</span>
+      <span class="fo">.</span><span class="fp">key</span> <span class="fo">|=</span> <span class="ff">gsub</span><span class="fo">(</span><span class="fs">"(?&lt;=.)(?=[A-Z])"</span><span class="fo">;</span> <span class="fs">"_"</span><span class="fo">)</span>
+           <span class="fo">|</span> <span class="ff">ascii_downcase</span>
+    <span class="fo">)</span>
+  <span class="fk">else</span> <span class="fo">.</span> <span class="fk">end</span>
+<span class="fo">)</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3>paths — structural introspection</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">paths / getpath / setpath / delpaths</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># paths: emit all path arrays to leaf values</span>
+<span class="fp">{</span><span class="jk">a</span><span class="fo">:</span><span class="fp">{</span><span class="jk">b</span><span class="fo">:</span><span class="fn2">1</span><span class="fp">}</span><span class="fo">,</span><span class="jk">c</span><span class="fo">:</span><span class="fn2">2</span><span class="fp">}</span> <span class="fo">|</span> <span class="ff">paths</span>
+<span class="fc"># → ["a","b"]
+#    ["c"]</span>
+
+<span class="fc"># paths(filter): only paths to values matching filter</span>
+<span class="ff">paths</span><span class="fo">(</span><span class="ff">numbers</span><span class="fo">)</span>           <span class="fc"># paths to numeric values only</span>
+<span class="ff">paths</span><span class="fo">(</span><span class="ff">strings</span><span class="fo">)</span>           <span class="fc"># paths to string values</span>
+<span class="ff">paths</span><span class="fo">(</span><span class="ff">type</span> <span class="fo">==</span> <span class="fs">"null"</span><span class="fo">)</span>  <span class="fc"># paths to null values</span>
+
+<span class="fc"># leaf_paths: paths to scalar (non-container) values</span>
+<span class="ff">leaf_paths</span>
+
+<span class="fc"># getpath / setpath — dynamic path access:</span>
+<span class="ff">getpath</span><span class="fo">([</span><span class="fs">"a"</span><span class="fo">,</span><span class="fs">"b"</span><span class="fo">])</span>        <span class="fc"># same as .a.b</span>
+<span class="ff">setpath</span><span class="fo">([</span><span class="fs">"a"</span><span class="fo">,</span><span class="fs">"b"</span><span class="fo">];</span> <span class="fn2">99</span><span class="fo">)</span>   <span class="fc"># set .a.b = 99</span>
+<span class="ff">delpaths</span><span class="fo">([[</span><span class="fs">"a"</span><span class="fo">,</span><span class="fs">"b"</span><span class="fo">]])</span>    <span class="fc"># delete .a.b</span>
+
+<span class="fc"># Dynamic path from string — parse "a.b.c" to ["a","b","c"]:</span>
+<span class="fs">"user.address.city"</span> <span class="fo">|</span> <span class="ff">split</span><span class="fo">(</span><span class="fs">"."</span><span class="fo">)</span> <span class="fo">|</span> <span class="ff">getpath</span><span class="fo">(</span><span class="fo">.</span><span class="fo">;</span> <span class="fv">$data</span><span class="fo">)</span>
+
+<span class="fc"># Find and replace at all matching paths:</span>
+<span class="fo">[</span><span class="ff">paths</span><span class="fo">(</span><span class="ff">type</span> <span class="fo">==</span> <span class="fs">"string"</span><span class="fo">)]</span> <span class="fo">|</span>
+<span class="ff">reduce</span> <span class="ff">.</span><span class="fp">[]</span> <span class="fo">as</span> <span class="fv">$p</span> <span class="fo">(</span><span class="fv">$data</span><span class="fo">;</span>
+  <span class="ff">setpath</span><span class="fo">(</span><span class="fv">$p</span><span class="fo">;</span> <span class="ff">getpath</span><span class="fo">(</span><span class="fv">$p</span><span class="fo">) |</span> <span class="ff">ascii_downcase</span><span class="fo">)</span>
+<span class="fo">)</span>
+<span class="fc"># Lowercase every string value in entire document</span></pre>
+      </div>
+      <div class="callout c-coral">
+        <strong>env — Access Environment Variables</strong>
+        <code>env</code> returns the entire process environment as a JSON object. <code>env.HOME</code> gives <code>$HOME</code>. <code>$ENV</code> is an alias. This lets jq filters read env vars without needing <code>--arg</code>, which is powerful for config-driven filters in scripts.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">env + $ENV in filters</span><span class="code-lang">jq</span></div>
+        <pre><span class="ff">env</span><span class="fo">.</span><span class="fp">HOME</span>               <span class="fc"># → "/home/alice"</span>
+<span class="ff">env</span><span class="fo">.</span><span class="fp">OPENAI_API_KEY</span>    <span class="fc"># → "sk-proj-..."</span>
+<span class="fv">$ENV</span><span class="fo">.</span><span class="fp">LOG_LEVEL</span>        <span class="fc"># same as env.LOG_LEVEL</span>
+
+<span class="fc"># Filter only keys matching a prefix:</span>
+<span class="ff">env</span> <span class="fo">|</span> <span class="ff">with_entries</span><span class="fo">(</span><span class="ff">select</span><span class="fo">(.</span><span class="fp">key</span> <span class="fo">|</span> <span class="ff">startswith</span><span class="fo">(</span><span class="fs">"AWS_"</span><span class="fo">)))</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     STRINGS
+══════════════════════════════════════ -->
+<section id="strings">
+  <div class="section-header">
+    <div class="section-eyebrow">String Manipulation</div>
+    <div class="section-title">STRINGS <em>& FORMAT</em></div>
+    <div class="section-sub">jq has a rich string toolkit: interpolation, regex, splitting, joining, and format strings that produce CSV, TSV, HTML, URI-encoded output. All PCRE-compatible regex.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">String operations — complete reference</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># ── INTERPOLATION ─────────────────────────────────────</span>
+<span class="fs">"Hello, \(</span><span class="ff">.</span><span class="fp">name</span><span class="fs">)!"</span>      <span class="fc"># string interpolation with \(expr)</span>
+<span class="fs">"\(</span><span class="ff">.</span><span class="fp">first</span><span class="fs">) \(</span><span class="ff">.</span><span class="fp">last</span><span class="fs">)"</span>  <span class="fc"># combine fields</span>
+<span class="fs">"Score: \(</span><span class="ff">.</span><span class="fp">score</span><span class="fo">*</span><span class="fn2">100</span><span class="fo">|</span><span class="ff">floor</span><span class="fs">)%"</span>  <span class="fc"># expressions inside</span>
+<span class="fs">"\(</span><span class="ff">.</span><span class="fp">items</span><span class="fo">|</span><span class="ff">length</span><span class="fs">) items found"</span>
+
+<span class="fc"># ── BASIC OPERATIONS ──────────────────────────────────</span>
+<span class="ff">length</span>                   <span class="fc"># character count</span>
+<span class="ff">ltrimstr</span><span class="fo">(</span><span class="fs">"prefix"</span><span class="fo">)</span>    <span class="fc"># remove prefix if present</span>
+<span class="ff">rtrimstr</span><span class="fo">(</span><span class="fs">".json"</span><span class="fo">)</span>     <span class="fc"># remove suffix if present</span>
+<span class="ff">startswith</span><span class="fo">(</span><span class="fs">"http"</span><span class="fo">)</span>    <span class="fc"># boolean</span>
+<span class="ff">endswith</span><span class="fo">(</span><span class="fs">".com"</span><span class="fo">)</span>       <span class="fc"># boolean</span>
+<span class="ff">ascii_downcase</span>          <span class="fc"># lowercase</span>
+<span class="ff">ascii_upcase</span>            <span class="fc"># UPPERCASE</span>
+<span class="ff">explode</span>                 <span class="fc"># string → [codepoints]</span>
+<span class="ff">implode</span>                 <span class="fc"># [codepoints] → string</span>
+<span class="ff">split</span><span class="fo">(</span><span class="fs">","</span><span class="fo">)</span>              <span class="fc"># → array of strings</span>
+<span class="ff">join</span><span class="fo">(</span><span class="fs">","</span><span class="fo">)</span>               <span class="fc"># array → join with separator</span>
+
+<span class="fc"># ── REGEX (PCRE) ──────────────────────────────────────</span>
+<span class="ff">test</span><span class="fo">(</span><span class="fs">"pattern"</span><span class="fo">)</span>        <span class="fc"># boolean: does string match?</span>
+<span class="ff">test</span><span class="fo">(</span><span class="fs">"pattern"</span><span class="fo">;</span><span class="fs">"gi"</span><span class="fo">)</span>  <span class="fc"># with flags: g=global, i=ignorecase, x=extended</span>
+<span class="ff">match</span><span class="fo">(</span><span class="fs">"(\\w+)@(\\w+)"</span><span class="fo">)</span>  <span class="fc"># first match with captures</span>
+<span class="ff">capture</span><span class="fo">(</span><span class="fs">"(?&lt;user&gt;\\w+)@(?&lt;domain&gt;\\w+)"</span><span class="fo">)</span>
+<span class="fc"># → {"user":"alice","domain":"example"}</span>
+<span class="ff">scan</span><span class="fo">(</span><span class="fs">"\\d+"</span><span class="fo">)</span>           <span class="fc"># all non-overlapping matches</span>
+<span class="ff">sub</span><span class="fo">(</span><span class="fs">"foo"</span><span class="fo">;</span><span class="fs">"bar"</span><span class="fo">)</span>      <span class="fc"># replace first</span>
+<span class="ff">gsub</span><span class="fo">(</span><span class="fs">"foo"</span><span class="fo">;</span><span class="fs">"bar"</span><span class="fo">)</span>     <span class="fc"># replace all</span>
+<span class="ff">gsub</span><span class="fo">(</span><span class="fs">"(?&lt;n&gt;\\d+)"</span><span class="fo">;</span> <span class="fo">(</span><span class="ff">.</span><span class="fp">n</span><span class="fo">|</span><span class="ff">tonumber</span><span class="fo">*</span><span class="fn2">2</span><span class="fo">|</span><span class="ff">tostring</span><span class="fo">))</span>
+<span class="fc"># Double every number in a string — captures as named group</span>
+
+<span class="ff">splits</span><span class="fo">(</span><span class="fs">"[,;|]"</span><span class="fo">)</span>         <span class="fc"># split on any of: comma, semicolon, pipe</span>
+<span class="ff">scan</span><span class="fo">(</span><span class="fs">"\\b\\w+\\b"</span><span class="fo">)</span>     <span class="fc"># extract all words</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Format Strings — @base64, @csv, @tsv, @uri, @html, @json, @sh</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Format strings — output encoding</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># Format strings: @format applied to string interpolations</span>
+
+<span class="fc"># @base64 — encode/decode</span>
+<span class="fs">"hello world"</span> <span class="fo">|</span> <span class="ff">@base64</span>      <span class="fc"># → "aGVsbG8gd29ybGQ="</span>
+<span class="fs">"aGVsbG8="</span> <span class="fo">|</span> <span class="ff">@base64d</span>        <span class="fc"># → "hello"</span>
+
+<span class="fc"># @uri — URL encode</span>
+<span class="fs">"hello world/foo"</span> <span class="fo">|</span> <span class="ff">@uri</span>     <span class="fc"># → "hello%20world%2Ffoo"</span>
+<span class="fs">"@uri "\(.name)/\(.id)""</span>      <span class="fc"># encode in a template</span>
+
+<span class="fc"># @html — escape HTML</span>
+<span class="fs">"&lt;b&gt;bold&lt;/b&gt;"</span> <span class="fo">|</span> <span class="ff">@html</span>       <span class="fc"># → "&amp;lt;b&amp;gt;bold&amp;lt;/b&amp;gt;"</span>
+
+<span class="fc"># @csv — format array as CSV line</span>
+<span class="fp">[</span><span class="fs">"Alice"</span><span class="fo">,</span><span class="fn2">32</span><span class="fo">,</span><span class="jb">true</span><span class="fp">]</span> <span class="fo">|</span> <span class="ff">@csv</span>     <span class="fc"># → "\"Alice\",32,true"</span>
+<span class="fc"># Combine with map for multi-line CSV:</span>
+<span class="ff">.</span><span class="fp">users</span><span class="ff">[]</span> <span class="fo">|</span> <span class="fp">[</span><span class="fo">.</span><span class="fp">name</span><span class="fo">,</span><span class="fo">.</span><span class="fp">age</span><span class="fo">,</span><span class="fo">.</span><span class="fp">email</span><span class="fp">]</span> <span class="fo">|</span> <span class="ff">@csv</span>
+
+<span class="fc"># @tsv — tab-separated (better for shell pipelines)</span>
+<span class="fp">[</span><span class="fs">"Alice"</span><span class="fo">,</span><span class="fn2">32</span><span class="fp">]</span> <span class="fo">|</span> <span class="ff">@tsv</span>           <span class="fc"># → "Alice\t32"</span>
+
+<span class="fc"># @json — embed JSON inside a string</span>
+<span class="fp">{</span><span class="jk">a</span><span class="fo">:</span><span class="fn2">1</span><span class="fp">}</span> <span class="fo">|</span> <span class="ff">@json</span>                  <span class="fc"># → "{\"a\":1}"</span>
+<span class="fc"># Useful for: putting JSON in a JSON string field</span>
+<span class="fp">{</span><span class="jk">payload</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">data</span> <span class="fo">|</span> <span class="ff">@json</span><span class="fp">}</span>
+
+<span class="fc"># @sh — shell-safe quoting</span>
+<span class="fs">"user's data"</span> <span class="fo">|</span> <span class="ff">@sh</span>           <span class="fc"># → "'user'\\''s data'"</span>
+<span class="fc"># Use with -r to produce safe shell arguments:</span>
+<span class="fc"># jq -r '.[] | @sh' | xargs curl</span>
+
+<span class="fc"># @text — identity (default format)</span>
+
+<span class="fc"># FORMAT INTERPOLATION — combine with \():</span>
+<span class="ff">@uri</span> <span class="fs">"https://api.com/user/\(</span><span class="ff">.</span><span class="fp">id</span><span class="fs">)?key=\(</span><span class="ff">.</span><span class="fp">key</span><span class="fs">)"</span>
+<span class="fc"># → URL with both values properly encoded</span>
+
+<span class="ff">@html</span> <span class="fs">"&lt;td&gt;\(</span><span class="ff">.</span><span class="fp">name</span><span class="fs">)&lt;/td&gt;"</span>
+<span class="fc"># → HTML with name safely escaped</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     ADVANCED
+══════════════════════════════════════ -->
+<section id="advanced">
+  <div class="section-header">
+    <div class="section-eyebrow">Power Features</div>
+    <div class="section-title">ADVANCED <em>PATTERNS</em></div>
+    <div class="section-sub">reduce, label-break, limit, until, foreach — the functional programming core of jq that handles stateful iteration, early termination, and streaming. This is where jq stops feeling like a query tool and starts feeling like a language.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">reduce — stateful fold</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># reduce expr as $var (init; update):
+# Like Array.reduce() in JS or functools.reduce() in Python.
+# Most powerful when add/map aren't expressive enough.</span>
+
+<span class="fc"># Sum an array (same as add, but explicit):</span>
+<span class="ff">reduce</span> <span class="ff">.</span><span class="fp">[]</span> <span class="fo">as</span> <span class="fv">$x</span> <span class="fo">(</span><span class="fn2">0</span><span class="fo">;</span> <span class="fo">.</span> <span class="fo">+</span> <span class="fv">$x</span><span class="fo">)</span>
+
+<span class="fc"># Build an object from an array:</span>
+<span class="ff">reduce</span> <span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">as</span> <span class="fv">$item</span> <span class="fo">({}</span><span class="fo">;</span>
+  <span class="fo">.</span> <span class="fo">+</span> <span class="fp">{</span><span class="fo">(</span><span class="fv">$item</span><span class="fo">.</span><span class="fp">id</span><span class="fo">|</span><span class="ff">tostring</span><span class="fo">)</span><span class="fo">:</span> <span class="fv">$item</span><span class="fo">.</span><span class="fp">name</span><span class="fp">}</span>
+<span class="fo">)</span>
+<span class="fc"># → {"1":"Alice","2":"Bob",...}</span>
+
+<span class="fc"># Running totals (build array of cumulative sums):</span>
+<span class="ff">reduce</span> <span class="ff">.</span><span class="fp">values</span><span class="ff">[]</span> <span class="fo">as</span> <span class="fv">$v</span> <span class="fo">([[],</span><span class="fn2">0</span><span class="fo">];</span>
+  <span class="fo">[</span><span class="ff">first</span> <span class="fo">+</span> <span class="fp">[</span><span class="ff">last</span> <span class="fo">+</span> <span class="fv">$v</span><span class="fp">]</span><span class="fo">,</span> <span class="ff">last</span> <span class="fo">+</span> <span class="fv">$v</span><span class="fo">]</span>
+<span class="fo">) |</span> <span class="ff">first</span>
+<span class="fc"># → [v1, v1+v2, v1+v2+v3, ...]</span>
+
+<span class="fc"># Word frequency count from array of strings:</span>
+<span class="ff">reduce</span> <span class="ff">.</span><span class="fp">words</span><span class="ff">[]</span> <span class="fo">as</span> <span class="fv">$w</span> <span class="fo">({}</span><span class="fo">;</span>
+  <span class="fo">.</span><span class="fp">[</span><span class="fv">$w</span><span class="fp">]</span> <span class="fo">+=</span> <span class="fn2">1</span>
+<span class="fo">)</span>
+
+<span class="fc"># Merge array of objects, later values win:</span>
+<span class="ff">reduce</span> <span class="ff">.</span><span class="fp">patches</span><span class="ff">[]</span> <span class="fo">as</span> <span class="fv">$p</span> <span class="fo">(.</span><span class="fp">base</span><span class="fo">;</span> <span class="fo">.</span> <span class="fo">*</span> <span class="fv">$p</span><span class="fo">)</span>
+<span class="fc"># * (multiply) on objects = recursive merge</span>
+
+<span class="fc"># Deep merge (objects: right wins, arrays: concatenate):</span>
+<span class="kw">def</span> <span class="ff">merge</span><span class="fo">(</span><span class="fv">$a</span><span class="fo">;</span><span class="fv">$b</span><span class="fo">)</span><span class="fo">:</span>
+  <span class="fk">if</span> <span class="fo">(</span><span class="fv">$a</span><span class="fo">|</span><span class="ff">type</span><span class="fo">)</span> <span class="fo">==</span> <span class="fs">"object"</span> <span class="fk">and</span> <span class="fo">(</span><span class="fv">$b</span><span class="fo">|</span><span class="ff">type</span><span class="fo">)</span> <span class="fo">==</span> <span class="fs">"object"</span>
+  <span class="fk">then</span> <span class="fv">$a</span> <span class="fo">+</span> <span class="fv">$b</span>   <span class="fc"># right wins for shared keys</span>
+  <span class="fk">else</span> <span class="fv">$b</span> <span class="fk">end</span><span class="fo">;</span></pre>
+      </div>
+    </div>
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">limit / until / foreach / label-break</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># limit(n; expr): take first n outputs of expr</span>
+<span class="ff">limit</span><span class="fo">(</span><span class="fn2">5</span><span class="fo">;</span> <span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span><span class="fo">)</span>         <span class="fc"># first 5 items</span>
+<span class="ff">limit</span><span class="fo">(</span><span class="fn2">1</span><span class="fo">;</span> <span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span><span class="fo">))</span>  <span class="fc"># first active</span>
+<span class="ff">first</span><span class="fo">(</span><span class="ff">.</span><span class="fp">items</span><span class="ff">[]</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(.</span><span class="fp">active</span><span class="fo">))</span>     <span class="fc"># same as limit(1;...)</span>
+
+<span class="fc"># until(cond; update): loop until condition true</span>
+<span class="fn2">1</span> <span class="fo">|</span> <span class="ff">until</span><span class="fo">(.</span> <span class="fo">></span> <span class="fn2">100</span><span class="fo">;</span> <span class="fo">.</span> <span class="fo">*</span> <span class="fn2">2</span><span class="fo">)</span>   <span class="fc"># 1→2→4→8→16→32→64→128</span>
+
+<span class="fc"># while(cond; update): emit values while condition true</span>
+<span class="fn2">1</span> <span class="fo">|</span> <span class="ff">while</span><span class="fo">(.</span> <span class="fo"><</span> <span class="fn2">100</span><span class="fo">;</span> <span class="fo">.</span> <span class="fo">*</span> <span class="fn2">2</span><span class="fo">)</span>  <span class="fc"># 1,2,4,8,16,32,64</span>
+<span class="fp">[</span><span class="fn2">1</span> <span class="fo">|</span> <span class="ff">while</span><span class="fo">(.</span> <span class="fo"><</span> <span class="fn2">100</span><span class="fo">;</span> <span class="fo">.</span><span class="fo">*</span><span class="fn2">2</span><span class="fo">)</span><span class="fp">]</span>  <span class="fc"># collect: [1,2,4,8,16,32,64]</span>
+
+<span class="fc"># foreach expr as $x (init; update; extract):
+# like reduce but emits intermediate values</span>
+<span class="ff">foreach</span> <span class="ff">.</span><span class="fp">events</span><span class="ff">[]</span> <span class="fo">as</span> <span class="fv">$e</span> <span class="fo">(</span>
+  <span class="fp">{</span><span class="jk">count</span><span class="fo">:</span><span class="fn2">0</span><span class="fo">,</span><span class="jk">total</span><span class="fo">:</span><span class="fn2">0</span><span class="fp">}</span><span class="fo">;</span>           <span class="fc"># init</span>
+  <span class="fo">{</span><span class="jk">count</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">count</span><span class="fo">+</span><span class="fn2">1</span><span class="fo">,</span>
+   <span class="jk">total</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">total</span><span class="fo">+</span><span class="fv">$e</span><span class="fo">.</span><span class="fp">amount</span><span class="fo">}</span><span class="fo">;</span>  <span class="fc"># update</span>
+  <span class="fo">{</span><span class="jk">running_avg</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">total</span><span class="fo">/.</span><span class="fp">count</span><span class="fo">}</span>  <span class="fc"># extract (emitted each step)</span>
+<span class="fo">)</span>
+<span class="fc"># Outputs running average after each event — useful for streaming</span>
+
+<span class="fc"># label-break: early exit from infinite generators</span>
+<span class="ff">label</span> <span class="fv">$out</span> <span class="fo">|</span>
+<span class="ff">foreach</span> <span class="ff">range</span><span class="fo">(</span><span class="ff">infinite</span><span class="fo">)</span> <span class="fo">as</span> <span class="fv">$i</span> <span class="fo">(</span><span class="fn2">0</span><span class="fo">;</span> <span class="fo">.+</span><span class="fv">$i</span><span class="fo">;</span>
+  <span class="fk">if</span> <span class="fo">.</span> <span class="fo">></span> <span class="fn2">100</span> <span class="fk">then</span> <span class="fo">.</span><span class="fo">,</span> <span class="ff">break</span> <span class="fv">$out</span>
+  <span class="fk">else</span> <span class="fo">.</span> <span class="fk">end</span>
+<span class="fo">)</span>
+<span class="fc"># Find first triangular number > 100 (0+1+2+...+n)</span>
+
+<span class="fc"># infinite: generates 0,1,2,... forever (needs limit or break)</span>
+<span class="ff">first</span><span class="fo">(</span><span class="ff">range</span><span class="fo">(</span><span class="ff">infinite</span><span class="fo">)</span> <span class="fo">|</span> <span class="ff">select</span><span class="fo">(</span><span class="fo">.</span><span class="fo">%</span><span class="fn2">7</span><span class="fo">==</span><span class="fn2">0</span> <span class="fo">and</span> <span class="fo">.%</span><span class="fn2">11</span><span class="fo">==</span><span class="fn2">0</span><span class="fo">))</span>
+<span class="fc"># → 77 (first multiple of both 7 and 11)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     PROGRAMS
+══════════════════════════════════════ -->
+<section id="programs">
+  <div class="section-header">
+    <div class="section-eyebrow">Functions & Modules</div>
+    <div class="section-title">JQ <em>PROGRAMS</em></div>
+    <div class="section-sub">jq is a full functional programming language. You can define named functions, use recursion, destructure inputs, and load reusable libraries. Write complex transformations once, call them anywhere.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">def — function definitions</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># def name: body;
+# Functions are defined with 'def', end with ';'
+# They take the input via . (like all jq filters)</span>
+
+<span class="fc"># Zero-argument function (operates on .):</span>
+<span class="kw">def</span> <span class="ff">double</span><span class="fo">:</span> <span class="fo">.</span> <span class="fo">*</span> <span class="fn2">2</span><span class="fo">;</span>
+<span class="fn2">5</span> <span class="fo">|</span> <span class="ff">double</span>    <span class="fc"># → 10</span>
+
+<span class="fc"># With arguments (separated by semicolons):</span>
+<span class="kw">def</span> <span class="ff">clamp</span><span class="fo">(</span><span class="fv">$min</span><span class="fo">;</span> <span class="fv">$max</span><span class="fo">)</span><span class="fo">:</span>
+  <span class="fk">if</span> <span class="fo">.</span> <span class="fo"><</span> <span class="fv">$min</span> <span class="fk">then</span> <span class="fv">$min</span>
+  <span class="fk">elif</span> <span class="fo">.</span> <span class="fo">></span> <span class="fv">$max</span> <span class="fk">then</span> <span class="fv">$max</span>
+  <span class="fk">else</span> <span class="fo">.</span> <span class="fk">end</span><span class="fo">;</span>
+<span class="fn2">150</span> <span class="fo">|</span> <span class="ff">clamp</span><span class="fo">(</span><span class="fn2">0</span><span class="fo">;</span><span class="fn2">100</span><span class="fo">)</span>   <span class="fc"># → 100</span>
+
+<span class="fc"># Function argument can be a FILTER (higher-order):</span>
+<span class="kw">def</span> <span class="ff">apply_twice</span><span class="fo">(</span><span class="fv">f</span><span class="fo">)</span><span class="fo">:</span> <span class="fv">f</span> <span class="fo">|</span> <span class="fv">f</span><span class="fo">;</span>
+<span class="fn2">3</span> <span class="fo">|</span> <span class="ff">apply_twice</span><span class="fo">(.</span><span class="fo">*</span><span class="fn2">2</span><span class="fo">)</span>   <span class="fc"># → 12 (3→6→12)</span>
+
+<span class="fc"># Recursion with def:</span>
+<span class="kw">def</span> <span class="ff">flatten_keys</span><span class="fo">(</span><span class="fv">$prefix</span><span class="fo">)</span><span class="fo">:</span>
+  <span class="fk">if</span> <span class="ff">type</span> <span class="fo">==</span> <span class="fs">"object"</span> <span class="fk">then</span>
+    <span class="ff">to_entries</span><span class="ff">[]</span> <span class="fo">|</span>
+    <span class="fo">.</span><span class="fp">value</span> <span class="fo">|</span> <span class="ff">flatten_keys</span><span class="fo">(</span><span class="fv">$prefix</span> <span class="fo">+</span> <span class="fs">"."</span> <span class="fo">+</span> <span class="fv">$key</span><span class="fo">)</span>
+  <span class="fk">else</span>
+    <span class="fp">{</span><span class="fo">(</span><span class="fv">$prefix</span><span class="fo">)</span><span class="fo">:</span> <span class="fo">.</span><span class="fp">}</span>
+  <span class="fk">end</span><span class="fo">;</span>
+
+<span class="fc"># Built-in recursive: .[] | recurse</span>
+<span class="ff">recurse</span>                        <span class="fc"># same as ..</span>
+<span class="ff">recurse</span><span class="fo">(.</span><span class="fp">children</span><span class="ff">[]</span><span class="fo">?)</span>        <span class="fc"># walk only .children</span>
+<span class="ff">recurse</span><span class="fo">(.</span><span class="fp">children</span><span class="ff">[]</span><span class="fo">?;</span> <span class="ff">length</span> <span class="fo">></span> <span class="fn2">0</span><span class="fo">)</span>  <span class="fc"># with depth guard</span></pre>
+      </div>
+    </div>
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Variables, destructuring, $__loc__</span><span class="code-lang">jq</span></div>
+        <pre><span class="fc"># 'as' binding — name a value for use in expression</span>
+<span class="ff">.</span><span class="fp">price</span> <span class="fo">as</span> <span class="fv">$p</span> <span class="fo">|</span> <span class="fo">{</span><span class="jk">original</span><span class="fo">:</span> <span class="fv">$p</span><span class="fo">,</span> <span class="jk">discounted</span><span class="fo">:</span> <span class="fv">$p</span><span class="fo">*</span><span class="fn2">0.9</span><span class="fo">}</span>
+
+<span class="fc"># Array destructuring:</span>
+<span class="fp">[</span><span class="fv">$first</span><span class="fo">,</span> <span class="fv">$second</span><span class="fp">]</span> <span class="fo">as</span> <span class="fp">[</span><span class="fv">$head</span><span class="fo">,</span> <span class="fv">$tail</span><span class="fp">]</span>
+<span class="ff">.</span><span class="fp">coords</span> <span class="fo">as</span> <span class="fp">[</span><span class="fv">$x</span><span class="fo">,</span> <span class="fv">$y</span><span class="fp">]</span> <span class="fo">|</span> <span class="fs">"(\($x),\($y))"</span>
+
+<span class="fc"># Object destructuring:</span>
+<span class="fo">.</span> <span class="fo">as</span> <span class="fp">{</span><span class="jk">name</span><span class="fo">:</span> <span class="fv">$n</span><span class="fo">,</span> <span class="jk">age</span><span class="fo">:</span> <span class="fv">$a</span><span class="fp">}</span> <span class="fo">|</span> <span class="fs">"\($n) is \($a)"</span>
+
+<span class="fc"># $__loc__ — current file + line number (debugging)</span>
+<span class="fv">$__loc__</span>              <span class="fc"># → {"file":"<stdin>","line":1}</span>
+
+<span class="fc"># @base32 / math functions:</span>
+<span class="ff">sqrt</span>                   <span class="fc"># √ of number</span>
+<span class="ff">floor</span> <span class="fo">|</span> <span class="ff">ceil</span> <span class="fo">|</span> <span class="ff">round</span>  <span class="fc"># rounding</span>
+<span class="ff">fabs</span>                   <span class="fc"># absolute value</span>
+<span class="ff">pow</span><span class="fo">(.</span><span class="fo">;</span><span class="fn2">2</span><span class="fo">)</span>              <span class="fc"># . squared</span>
+<span class="ff">log</span> <span class="fo">|</span> <span class="ff">log2</span> <span class="fo">|</span> <span class="ff">log10</span>   <span class="fc"># logarithms</span>
+<span class="ff">exp</span> <span class="fo">|</span> <span class="ff">exp2</span> <span class="fo">|</span> <span class="ff">exp10</span>   <span class="fc"># exponentials</span>
+<span class="ff">nan</span> <span class="fo">|</span> <span class="ff">infinite</span>        <span class="fc"># special float values</span>
+<span class="ff">isinfinite</span> <span class="fo">|</span> <span class="ff">isnan</span> <span class="fo">|</span> <span class="ff">isnormal</span>  <span class="fc"># float tests</span>
+<span class="ff">significand</span> <span class="fo">|</span> <span class="ff">exponent</span> <span class="fo">|</span> <span class="ff">frexp</span>  <span class="fc"># IEEE 754 decomposition</span>
+
+<span class="fc"># now — current unix timestamp:</span>
+<span class="ff">now</span>                    <span class="fc"># → 1743811200.0</span>
+<span class="ff">now</span> <span class="fo">|</span> <span class="ff">todate</span>          <span class="fc"># → "2026-04-05T00:00:00Z"</span>
+<span class="ff">now</span> <span class="fo">|</span> <span class="ff">strftime</span><span class="fo">(</span><span class="fs">"%Y-%m-%d"</span><span class="fo">)</span>
+<span class="fs">"2026-01-15"</span> <span class="fo">|</span> <span class="ff">strptime</span><span class="fo">(</span><span class="fs">"%Y-%m-%d"</span><span class="fo">)</span> <span class="fo">|</span> <span class="ff">mktime</span>
+<span class="fc"># → unix timestamp of that date</span>
+
+<span class="fc"># Read a library file with import / include:</span>
+<span class="fc"># jq -L ~/jq-lib -r 'import "utils" as U; U::flatten(.)'</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     REAL WORLD
+══════════════════════════════════════ -->
+<section id="realworld">
+  <div class="section-header">
+    <div class="section-eyebrow">Production Patterns</div>
+    <div class="section-title">REAL <em>WORLD</em> JQ</div>
+    <div class="section-sub">The patterns you'll actually use daily in April 2026: parsing API responses, processing LLM agent outputs, mining Kafka streams, extracting from kubectl/docker/github CLI output, building shell pipelines.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="pills" id="rw-pills">
+    <button class="pill active" onclick="showTab('rw','api',this)">API Responses</button>
+    <button class="pill" onclick="showTab('rw','llm',this)">LLM / Agent JSON</button>
+    <button class="pill" onclick="showTab('rw','streams',this)">NDJSON Streams</button>
+    <button class="pill" onclick="showTab('rw','shell',this)">Shell Integration</button>
+    <button class="pill" onclick="showTab('rw','files',this)">Multi-file ops</button>
+  </div>
+
+  <!-- API -->
+  <div id="rw-api" class="tab-pane active">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">REST API response patterns</span><span class="code-lang">bash</span></div>
+        <pre><span class="fc"># ── PAGINATED API ────────────────────────────────────</span>
+<span class="fc"># Response: {"data":[...],"meta":{"next_cursor":"abc"}}</span>
+<span class="shc">curl</span> api.com/users <span class="fo">|</span> <span class="shc">jq</span> <span class="fs">'
+  .data |
+  map(select(.active)) |
+  map({id, name, email: (.email | ascii_downcase)}) |
+  sort_by(.name)
+'</span>
+
+<span class="fc"># Extract next cursor for shell loop:</span>
+CURSOR<span class="op">=</span>$(<span class="shc">curl</span> api.com/users <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'.meta.next_cursor // ""'</span>)
+
+<span class="fc"># ── GITHUB API ───────────────────────────────────────</span>
+<span class="fc"># List open PRs with reviewer counts:</span>
+<span class="shc">gh</span> pr list <span class="shf">--json</span> number,title,reviewRequests,state <span class="fo">|</span>
+<span class="shc">jq</span> <span class="fs">'[.[] |
+  select(.state == "OPEN") |
+  {
+    pr:        .number,
+    title:     .title,
+    reviewers: (.reviewRequests | length)
+  }
+] | sort_by(.reviewers) | reverse'</span>
+
+<span class="fc"># ── KUBERNETES ───────────────────────────────────────</span>
+<span class="shc">kubectl</span> get pods <span class="shf">-o</span> json <span class="fo">|</span> <span class="shc">jq</span> <span class="fs">'
+  .items[] |
+  select(.status.phase != "Running") |
+  {
+    name:   .metadata.name,
+    phase:  .status.phase,
+    reason: (.status.containerStatuses[0].state | to_entries[0].key)
+  }
+'</span>
+
+<span class="fc"># All pod resource limits:</span>
+<span class="shc">kubectl</span> get pods <span class="shf">-o</span> json <span class="fo">|</span> <span class="shc">jq</span> <span class="fs">'
+  [.items[] |
+    .metadata.name as $pod |
+    .spec.containers[] |
+    {
+      pod:     $pod,
+      container: .name,
+      cpu:     (.resources.limits.cpu // "none"),
+      memory:  (.resources.limits.memory // "none")
+    }
+  ]
+'</span>
+
+<span class="fc"># ── DOCKER ───────────────────────────────────────────</span>
+<span class="shc">docker</span> inspect my-container <span class="fo">|</span> <span class="shc">jq</span> <span class="fs">'
+  .[0] |
+  {
+    id:      .Id[:12],
+    image:   .Config.Image,
+    status:  .State.Status,
+    ports:   (.NetworkSettings.Ports | to_entries |
+              map("\(.key) → \(.value[0].HostPort // "none")")
+             ),
+    envs:    (.Config.Env | map(split("=") |
+              {(.[0]): .[1]}
+             ) | add)
+  }
+'</span></pre>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">AWS CLI + cloud APIs</span><span class="code-lang">bash</span></div>
+          <pre><span class="fc"># AWS EC2: find instances with no Name tag</span>
+<span class="shc">aws</span> ec2 describe-instances <span class="fo">|</span> <span class="shc">jq</span> <span class="fs">'
+  .Reservations[].Instances[] |
+  select(.Tags | map(.Key) | contains(["Name"]) | not) |
+  {id: .InstanceId, type: .InstanceType, state: .State.Name}
+'</span>
+
+<span class="fc"># Sum EC2 costs by instance type:</span>
+<span class="shc">aws</span> ec2 describe-instances <span class="fo">|</span> <span class="shc">jq</span> <span class="fs">'
+  [.Reservations[].Instances[] |
+    select(.State.Name == "running") |
+    .InstanceType
+  ] |
+  group_by(.) |
+  map({type: first, count: length}) |
+  sort_by(.count) | reverse
+'</span>
+
+<span class="fc"># CloudWatch: find all alarms in ALARM state</span>
+<span class="shc">aws</span> cloudwatch describe-alarms <span class="fo">|</span> <span class="shc">jq</span> <span class="fs">'
+  [.MetricAlarms[] |
+    select(.StateValue == "ALARM") |
+    {name: .AlarmName, metric: .MetricName, reason: .StateReason}
+  ]
+'</span>
+
+<span class="fc"># Transform for Slack notification:</span>
+<span class="shc">aws</span> cloudwatch describe-alarms <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'
+  .MetricAlarms[] |
+  select(.StateValue == "ALARM") |
+  "🚨 \(.AlarmName): \(.StateReason)"
+'</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LLM -->
+  <div id="rw-llm" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">OpenAI / Anthropic API response parsing</span><span class="code-lang">bash</span></div>
+        <pre><span class="fc"># OpenAI chat completion — extract just the text:</span>
+<span class="shc">curl</span> https://api.openai.com/v1/chat/completions \
+  <span class="shf">-H</span> <span class="fs">"Authorization: Bearer $OPENAI_API_KEY"</span> \
+  <span class="shf">-d</span> <span class="fs">'{"model":"gpt-4o","messages":[{"role":"user","content":"Hi"}]}'</span> \
+  <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'.choices[0].message.content'</span>
+
+<span class="fc"># Extract all tool call arguments:</span>
+<span class="shc">jq</span> <span class="fs">'
+  .choices[0].message.tool_calls // [] |
+  map({
+    fn:   .function.name,
+    args: (.function.arguments | fromjson)
+  })
+'</span> response.json
+
+<span class="fc"># Anthropic Claude — extract text from content blocks:</span>
+<span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'
+  .content[] |
+  select(.type == "text") |
+  .text
+'</span> claude_response.json
+
+<span class="fc"># Parse structured output (JSON mode response):</span>
+<span class="shc">jq</span> <span class="fs">'
+  .choices[0].message.content |
+  fromjson |              # parse the JSON string
+  {
+    sentiment: .sentiment,
+    score:     .confidence_score,
+    entities:  [.entities[] | select(.type == "PERSON") | .text]
+  }
+'</span> response.json
+
+<span class="fc"># Token usage analytics across many completions:</span>
+<span class="shc">cat</span> responses/*.json <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-s</span> <span class="fs">'
+  {
+    total_calls:       length,
+    total_prompt:      map(.usage.prompt_tokens)     | add,
+    total_completion:  map(.usage.completion_tokens)  | add,
+    avg_completion:    (map(.usage.completion_tokens) | add / length | round),
+    models:            [.[].model] | group_by(.) |
+                       map({model: first, calls: length})
+  }
+'</span>
+
+<span class="fc"># Extract all function calls from a multi-step agent run log:</span>
+<span class="shc">cat</span> agent_log.ndjson <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-c</span> <span class="fs">'
+  select(.type == "tool_call") |
+  {
+    ts:   .timestamp,
+    fn:   .function_name,
+    args: .arguments,
+    ms:   .duration_ms
+  }
+'</span></pre>
+      </div>
+      <div>
+        <div class="callout c-mag">
+          <strong>fromjson / tojson — Parse Embedded JSON Strings</strong>
+          LLM APIs return JSON strings containing JSON (the model's structured output). <code>fromjson</code> parses a JSON string into a jq value. <code>tojson</code> serializes a jq value to a JSON string. These two builtins are essential for working with LLM responses that use JSON mode.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Agent output harvesting</span><span class="code-lang">bash</span></div>
+          <pre><span class="fc"># Harvest results from 8 parallel agents running in tmux panes.
+# Each agent writes a result.json. Aggregate across all.</span>
+
+<span class="shc">cat</span> results/agent_*.json <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-s</span> <span class="fs">'
+  {
+    agents_run:     length,
+    agents_success: map(select(.status == "success")) | length,
+    agents_failed:  map(select(.status == "error"))   | length,
+    total_tokens:   map(.token_count // 0)            | add,
+    avg_duration_s: (map(.duration_s) | add / length  | round),
+    outputs:        map(select(.status == "success")  | .result),
+    errors:         map(select(.status == "error")    | {id: .agent_id, err: .error})
+  }
+'</span>
+
+<span class="fc"># Build a markdown report from agent results:</span>
+<span class="shc">cat</span> results/agent_*.json <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-rs</span> <span class="fs">'
+  "# Agent Run Report\n\n" +
+  "Total: \(length) agents\n\n" +
+  (map("## Agent \(.agent_id)\n\(.result)\n") | join("\n"))
+'</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NDJSON STREAMS -->
+  <div id="rw-streams" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">NDJSON streaming — Kafka, logs, agent outputs</span><span class="code-lang">bash</span></div>
+        <pre><span class="fc"># NDJSON: one JSON object per line. jq processes each line.
+# No -s flag = streaming mode (each line processed independently)</span>
+
+<span class="fc"># Kafka consumer → jq pipeline (kcat/kafkacat):</span>
+<span class="shc">kcat</span> <span class="shf">-b</span> broker:9092 <span class="shf">-t</span> orders <span class="shf">-C</span> <span class="shf">-o</span> beginning <span class="fo">|</span>
+<span class="shc">jq</span> <span class="shf">-c</span> <span class="fs">'
+  select(.status == "COMPLETED") |
+  {order_id, customer_id, amount, ts: .event_ts}
+'</span>
+
+<span class="fc"># Count events by type from live Kafka stream:</span>
+<span class="shc">kcat</span> <span class="shf">-b</span> broker:9092 <span class="shf">-t</span> events <span class="shf">-C</span> <span class="shf">-e</span> <span class="fo">|</span>
+<span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'.event_type'</span> <span class="fo">|</span>
+<span class="shc">sort</span> <span class="fo">|</span> <span class="shc">uniq</span> <span class="shf">-c</span> <span class="fo">|</span> <span class="shc">sort</span> <span class="shf">-rn</span>
+
+<span class="fc"># Process a large NDJSON file in streaming mode:</span>
+<span class="shc">jq</span> <span class="shf">-c</span> <span class="fs">'select(.amount > 1000)'</span> events.ndjson <span class="fo">|</span>
+<span class="shc">jq</span> <span class="shf">-s</span> <span class="fs">'group_by(.customer_id) | map({cid: first.customer_id, n: length})'</span>
+
+<span class="fc"># --stream flag: streaming parser (process huge JSON without loading all)</span>
+<span class="shc">jq</span> <span class="shf">--stream</span> <span class="shf">-c</span> <span class="fs">'
+  # --stream emits [path, value] for every scalar and []
+  # Only emit completed top-level objects:
+  . as $in |
+  if ($in | length) == 2 and ($in[0] | length) == 1
+  then $in[1]
+  else empty end
+'</span> giant_array.json
+
+<span class="fc"># JSON log mining — parse structured logs:</span>
+<span class="shc">tail</span> <span class="shf">-f</span> /var/log/app.log <span class="fo">|</span>
+<span class="shc">jq</span> <span class="shf">-cr</span> <span class="fs">'
+  select(.level == "error") |
+  "\(.timestamp) [\(.service)] \(.message)"
+'</span>
+
+<span class="fc"># -R flag: read raw lines (non-JSON), then parse:</span>
+<span class="shc">tail</span> <span class="shf">-f</span> mixed.log <span class="fo">|</span>
+<span class="shc">jq</span> <span class="shf">-Rc</span> <span class="fs">'
+  try fromjson catch {raw: ., parsed: false}
+'</span>
+<span class="fc"># Tries to parse each line as JSON, falls back to {raw: line}</span></pre>
+      </div>
+      <div>
+        <div class="callout c-cyan">
+          <strong>-s (slurp) vs Streaming</strong>
+          <code>jq -s</code> loads ALL NDJSON lines into a single array — convenient but memory-hungry for large files. For files &gt;1GB, pipe through jq twice: first pass per-line selection with <code>-c</code>, second pass slurp the filtered smaller set. Or use <code>--stream</code> for true constant-memory streaming of massive JSON arrays.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Slurp patterns for batch aggregation</span><span class="code-lang">bash</span></div>
+          <pre><span class="fc"># -s: slurp all inputs into one array, then aggregate</span>
+<span class="shc">cat</span> events.ndjson <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-sc</span> <span class="fs">'
+  {
+    total:   length,
+    errors:  map(select(.level == "error")) | length,
+    p50_ms:  (sort_by(.duration_ms) | .[length/2 | floor].duration_ms),
+    p99_ms:  (sort_by(.duration_ms) | .[(length * 0.99) | floor].duration_ms)
+  }
+'</span>
+
+<span class="fc"># Multiple input files — each processed independently:</span>
+<span class="shc">jq</span> <span class="shf">-s</span> <span class="fs">'add | group_by(.region) | map({region: first.region, n: length})'</span> \
+   jan.ndjson feb.ndjson mar.ndjson</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHELL -->
+  <div id="rw-shell" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Shell integration — xargs, loops, conditionals</span><span class="code-lang">bash</span></div>
+        <pre><span class="fc"># -r flag: raw output (no quotes on strings)
+# Essential when piping jq output to shell commands</span>
+
+<span class="fc"># For loop over jq array output:</span>
+<span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'.users[].id'</span> data.json <span class="fo">|</span>
+<span class="kw">while</span> <span class="kw">read</span> -r id; <span class="kw">do</span>
+  <span class="shc">curl</span> <span class="shf">-s</span> "api.com/user/$id" <span class="fo">>></span> results.json
+<span class="kw">done</span>
+
+<span class="fc"># xargs — parallel downloads:</span>
+<span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'.repos[].clone_url'</span> gh.json <span class="fo">|</span>
+<span class="shc">xargs</span> <span class="shf">-P</span> 4 <span class="shf">-I</span> {} <span class="shc">git</span> clone {}
+
+<span class="fc"># Pass multiple fields as tab-separated to while read:</span>
+<span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'.[] | [.id, .name, .email] | @tsv'</span> users.json <span class="fo">|</span>
+<span class="kw">while</span> <span class="kw">IFS</span><span class="op">=</span>$<span class="st">'\t'</span> <span class="kw">read</span> -r id name email; <span class="kw">do</span>
+  <span class="shc">echo</span> "Processing $name ($id) at $email"
+<span class="kw">done</span>
+
+<span class="fc"># Use jq as a conditional in bash (-e exits 1 if null/false):</span>
+<span class="kw">if</span> <span class="shc">curl</span> api.com/status <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-e</span> <span class="fs">'.healthy'</span> <span class="fo">>/dev/null</span>; <span class="kw">then</span>
+  <span class="shc">echo</span> "Service is healthy"
+<span class="kw">else</span>
+  <span class="shc">echo</span> "Service is DOWN"
+<span class="kw">fi</span>
+
+<span class="fc"># Build JSON payload for a POST request:</span>
+PAYLOAD<span class="op">=</span>$(<span class="shc">jq</span> <span class="shf">-cn</span> \
+  <span class="shf">--arg</span>     name   "Alice" \
+  <span class="shf">--arg</span>     email  "alice@example.com" \
+  <span class="shf">--argjson</span> active <span class="kw">true</span> \
+  <span class="shf">--argjson</span> score  42 \
+  <span class="fs">'{name: $name, email: $email, active: $active, score: $score}'</span>
+)
+<span class="shc">curl</span> <span class="shf">-XPOST</span> <span class="shf">-d</span> <span class="fs">"$PAYLOAD"</span> api.com/users
+
+<span class="fc"># Update a specific field in a JSON file in-place:</span>
+<span class="shc">jq</span> <span class="fs">'.config.debug = true'</span> config.json <span class="fo">|</span> <span class="shc">sponge</span> config.json
+<span class="fc"># sponge (from moreutils) avoids redirect-to-same-file issue
+# Alternative: jq ... config.json > /tmp/tmp.json && mv /tmp/tmp.json config.json</span></pre>
+      </div>
+      <div>
+        <div class="callout c-lime">
+          <strong>-n + --arg: Building JSON from Shell Variables</strong>
+          <code>jq -n</code> (null input) lets you build JSON from scratch without needing input. Combine with <code>--arg</code> (string) and <code>--argjson</code> (typed JSON value) to safely embed shell variables into JSON. Never use string interpolation to build JSON — it breaks on quotes and special characters.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">jq as a config processor</span><span class="code-lang">bash</span></div>
+          <pre><span class="fc"># Merge two JSON config files (right overrides left):</span>
+<span class="shc">jq</span> <span class="shf">-s</span> <span class="fs">'.[0] * .[1]'</span> defaults.json overrides.json
+
+<span class="fc"># Convert between formats — JSON to env vars:</span>
+<span class="shc">jq</span> <span class="shf">-r</span> <span class="fs">'to_entries | .[] | "\(.key | ascii_upcase)=\(.value)"'</span> \
+   config.json <span class="fo">>></span> .env
+
+<span class="fc"># .env file to JSON:</span>
+<span class="shc">cat</span> .env <span class="fo">|</span> <span class="shc">jq</span> <span class="shf">-Rn</span> <span class="fs">'
+  [inputs | select(length > 0 and startswith("#") | not) |
+   split("=") | {(.[0]): .[1:] | join("=")}] | add
+'</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MULTI-FILE -->
+  <div id="rw-files" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Multi-file operations + in-place editing</span><span class="code-lang">bash</span></div>
+        <pre><span class="fc"># ── MULTIPLE INPUT FILES ─────────────────────────────
+# jq processes each file as separate input by default</span>
+<span class="shc">jq</span> <span class="fs">'.name'</span> alice.json bob.json carol.json
+<span class="fc"># → "Alice"
+#    "Bob"
+#    "Carol"</span>
+
+<span class="fc"># -s slurps all files into one array:</span>
+<span class="shc">jq</span> <span class="shf">-s</span> <span class="fs">'map(.name)'</span> alice.json bob.json carol.json
+<span class="fc"># → ["Alice","Bob","Carol"]</span>
+
+<span class="fc"># Process all JSON files in a directory:</span>
+<span class="shc">jq</span> <span class="shf">-s</span> <span class="fs">'
+  map({file: input_filename, count: .items | length}) |
+  sort_by(.count) | reverse
+'</span> data/*.json
+
+<span class="fc"># input_filename: built-in, gives current file path</span>
+<span class="shc">jq</span> <span class="fs">'{file: input_filename, keys: keys}'</span> *.json
+
+<span class="fc"># input / inputs — explicit iteration over files</span>
+<span class="shc">jq</span> <span class="shf">-n</span> <span class="fs">'
+  [inputs | select(.active) | .name]
+'</span> users/*.json
+<span class="fc"># -n + inputs: process lazily without loading everything at once
+# inputs = the rest of the input files (after -n consumed "nothing")</span>
+
+<span class="fc"># ── IN-PLACE EDIT PATTERNS ───────────────────────────</span>
+<span class="fc"># Pattern 1: sponge (moreutils package)</span>
+<span class="shc">jq</span> <span class="fs">'.version |= . + 1'</span> package.json <span class="fo">|</span> <span class="shc">sponge</span> package.json
+
+<span class="fc"># Pattern 2: temp file</span>
+<span class="shc">jq</span> <span class="fs">'.version |= . + 1'</span> package.json <span class="fo">></span> /tmp/pkg.json \
+  <span class="fo">&&</span> <span class="shc">mv</span> /tmp/pkg.json package.json
+
+<span class="fc"># Pattern 3: process all JSON files in-place</span>
+<span class="kw">for</span> f <span class="kw">in</span> configs/*.json; <span class="kw">do</span>
+  <span class="shc">jq</span> <span class="fs">'.environment = "production"'</span> <span class="fs">"$f"</span> <span class="fo">|</span> <span class="shc">sponge</span> <span class="fs">"$f"</span>
+<span class="kw">done</span>
+
+<span class="fc"># Validate all JSON files (exit 1 on any invalid):</span>
+<span class="kw">for</span> f <span class="kw">in</span> **/*.json; <span class="kw">do</span>
+  <span class="shc">jq</span> <span class="shf">-e</span> <span class="st">'.'</span> <span class="fs">"$f"</span> <span class="fo">>/dev/null</span> <span class="fo">||</span> <span class="shc">echo</span> <span class="fs">"INVALID: $f"</span>
+<span class="kw">done</span>
+
+<span class="fc"># Convert JSON array file to NDJSON:</span>
+<span class="shc">jq</span> <span class="shf">-c</span> <span class="fs">'.[]'</span> array.json <span class="fo">></span> stream.ndjson
+
+<span class="fc"># Convert NDJSON to JSON array:</span>
+<span class="shc">jq</span> <span class="shf">-sc</span> <span class="fs">'.'</span> stream.ndjson <span class="fo">></span> array.json
+
+<span class="fc"># Sort + dedup a JSON array file:</span>
+<span class="shc">jq</span> <span class="fs">'unique_by(.id) | sort_by(.created_at)'</span> input.json <span class="fo">|</span> <span class="shc">sponge</span> input.json</pre>
+      </div>
+      <div>
+        <h3>jq vs Python for JSON — When to Use Each</h3>
+        <table>
+          <thead><tr><th>Task</th><th>jq</th><th>Python</th></tr></thead>
+          <tbody>
+            <tr><td>One-liner extraction</td><td style="color:var(--lime)">✓ Perfect</td><td>Overkill</td></tr>
+            <tr><td>Shell pipeline integration</td><td style="color:var(--lime)">✓ Native</td><td>Awkward</td></tr>
+            <tr><td>Stream large files</td><td style="color:var(--lime)">✓ --stream</td><td>Possible but verbose</td></tr>
+            <tr><td>Complex business logic</td><td>Gets hard</td><td style="color:var(--lime)">✓ Better</td></tr>
+            <tr><td>External API calls</td><td style="color:var(--coral)">No</td><td style="color:var(--lime)">✓ Yes</td></tr>
+            <tr><td>Multiple data sources</td><td>Limited</td><td style="color:var(--lime)">✓ Natural</td></tr>
+            <tr><td>Regex + transforms</td><td style="color:var(--lime)">✓ PCRE native</td><td>re module</td></tr>
+            <tr><td>REPL exploration</td><td>OK (jqplay.org)</td><td style="color:var(--lime)">✓ IPython</td></tr>
+            <tr><td>No dependencies needed</td><td style="color:var(--lime)">✓ Single binary</td><td>pip install...</td></tr>
+          </tbody>
+        </table>
+        <div class="callout c-vio">
+          <strong>The Rule of Thumb</strong>
+          If the transformation fits in one command line and the input is JSON from a file or API: <strong>jq</strong>. If you need loops, external calls, error handling, or the filter is longer than ~5 pipes: <strong>Python</strong>. The best engineers reach for jq instinctively for inspection and quick transforms, and Python for anything that needs to be maintained.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const navBtns = document.querySelectorAll('.nav-btn');
+const winBtns = document.querySelectorAll('.tmux-win');
+function show(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  navBtns.forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function showTab(g, id, btn) {
+  document.querySelectorAll(`[id^="${g}-"]`).forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(`${g}-${id}`);
+  if (el) el.classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

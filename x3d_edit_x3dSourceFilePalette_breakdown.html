@@ -1,0 +1,509 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.wrap{padding:1.5rem 0}
+h1{font-size:20px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.sub{font-size:13px;color:var(--color-text-secondary);margin-bottom:1.5rem}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1.5rem}
+.tab{background:none;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 13px;font-size:12px;font-weight:400;color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.tab.active{border-color:var(--color-border-primary);color:var(--color-text-primary);background:var(--color-background-secondary);font-weight:500}
+.tab:hover:not(.active){background:var(--color-background-secondary)}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.card h2{font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px}
+p,li{font-size:13px;line-height:1.7;color:var(--color-text-secondary)}
+ul{padding-left:1.2rem}
+code{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:4px;padding:1px 5px;color:var(--color-text-primary)}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;margin:2px 3px}
+.b-blue{background:var(--color-background-info);color:var(--color-text-info)}
+.b-green{background:var(--color-background-success);color:var(--color-text-success)}
+.b-amber{background:var(--color-background-warning);color:var(--color-text-warning)}
+.b-red{background:var(--color-background-danger);color:var(--color-text-danger)}
+.b-purple{background:#EEEDFE;color:#3C3489}
+.sec{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin:1.2rem 0 .5rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.fc{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;cursor:pointer;transition:border-color .15s}
+.fc:hover{border-color:var(--color-border-primary)}
+.fn{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px}
+.fd{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.detail{background:var(--color-background-secondary);border-left:3px solid var(--color-border-info);border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;padding:10px 14px;margin-top:8px;font-size:13px;line-height:1.7;color:var(--color-text-secondary);display:none}
+.detail.open{display:block}
+.detail strong{color:var(--color-text-primary);font-weight:500}
+.pr{display:flex;justify-content:space-between;align-items:baseline;border-bottom:0.5px solid var(--color-border-tertiary);padding:5px 0;font-size:12px}
+.pr:last-child{border-bottom:none}
+.pn{font-family:var(--font-mono);font-size:11px;color:var(--color-text-primary)}
+.pv{color:var(--color-text-secondary);text-align:right;max-width:62%}
+.xslt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.xslt-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px}
+.xslt-title{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.xslt-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.xslt-badge{font-size:10px;font-weight:500;padding:1px 6px;border-radius:99px;margin-top:5px;display:inline-block}
+.node-grid{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.ntag{font-size:11px;font-family:var(--font-mono);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:4px;padding:2px 7px;color:var(--color-text-secondary)}
+.warn{background:var(--color-background-warning);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:12px;color:var(--color-text-warning);margin-top:8px}
+.tip{background:var(--color-background-info);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:12px;color:var(--color-text-info);margin-top:8px}
+.commit-row{display:flex;gap:10px;border-bottom:0.5px solid var(--color-border-tertiary);padding:8px 0;align-items:flex-start}
+.commit-row:last-child{border-bottom:none}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.ct{font-size:12px;color:var(--color-text-primary);font-weight:500;line-height:1.5}
+.cd{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.4}
+.ctag{font-size:10px;font-weight:500;padding:1px 6px;border-radius:99px;margin-left:5px;vertical-align:middle}
+.flow-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0}
+.fbox{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 10px;font-size:11px;color:var(--color-text-primary);white-space:nowrap}
+.farr{color:var(--color-text-secondary);font-size:13px}
+@media(max-width:520px){.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+<h1>X3D-Edit 4.0 · X3dSourceFilePalette — Complete Grok</h1>
+<p class="sub">Web3D Consortium · NetBeans Platform · Java + XSLT + XML · v4.0.40 (Nov 2025) · Apache NetBeans 28 · OpenJDK 25</p>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('overview')">Overview</button>
+  <button class="tab" onclick="show('arch')">Architecture</button>
+  <button class="tab" onclick="show('xslt')">XSLT Engine</button>
+  <button class="tab" onclick="show('jsail')">X3DJSAIL</button>
+  <button class="tab" onclick="show('nodes')">Node Palette</button>
+  <button class="tab" onclick="show('advanced')">Advanced Features</button>
+  <button class="tab" onclick="show('commits')">Recent Activity</button>
+  <button class="tab" onclick="show('extend')">Extension Ideas</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="panel-overview" class="panel active">
+  <div class="card">
+    <h2>What X3D-Edit / X3dSourceFilePalette is</h2>
+    <p>A full-featured, open-source 3D scene authoring environment built on the Apache NetBeans platform. The <code>X3dSourceFilePalette</code> module provides the drag-and-drop node insertion palette — the author's primary composition interface. The broader system wraps X3D validation, multi-format conversion, and live preview into a single IDE.</p>
+    <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap">
+      <span class="badge b-blue">Java / XML / XSLT</span>
+      <span class="badge b-green">NetBeans plugin + standalone app</span>
+      <span class="badge b-blue">X3D v3.0–v4.0</span>
+      <span class="badge b-amber">ISO/IEC 19775 standard</span>
+      <span class="badge b-purple">24,000+ downloads since 2023</span>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Format support</h2>
+      <div class="pr"><span class="pn">.x3d</span><span class="pv">X3D XML encoding (primary)</span></div>
+      <div class="pr"><span class="pn">.x3dv</span><span class="pv">ClassicVRML encoding</span></div>
+      <div class="pr"><span class="pn">.x3db</span><span class="pv">X3D compressed binary</span></div>
+      <div class="pr"><span class="pn">.wrl</span><span class="pv">VRML97 (backwards compat)</span></div>
+      <div class="pr"><span class="pn">.json</span><span class="pv">X3D JSON encoding</span></div>
+      <div class="pr"><span class="pn">.exi</span><span class="pv">Efficient XML Interchange binary</span></div>
+      <div class="pr"><span class="pn">.java</span><span class="pv">X3DJSAIL Java source</span></div>
+      <div class="pr"><span class="pn">.py</span><span class="pv">Python x3d.py source</span></div>
+      <div class="pr"><span class="pn">.html</span><span class="pv">X3DOM / X_ITE embedded HTML5</span></div>
+    </div>
+    <div class="card">
+      <h2>Validation layers</h2>
+      <div class="pr"><span class="pn">DTD</span><span class="pv">element names, parent-child, DEF/USE NMTOKEN</span></div>
+      <div class="pr"><span class="pn">XML Schema</span><span class="pv">strict typed field validation, value bounds</span></div>
+      <div class="pr"><span class="pn">Schematron</span><span class="pv">semantic rules (cross-node logic)</span></div>
+      <div class="pr"><span class="pn">X3D Tidy</span><span class="pv">XSLT-based cleanup and correction</span></div>
+      <div class="pr"><span class="pn">X3DJSAIL</span><span class="pv">programmatic runtime validation</span></div>
+      <div class="pr"><span class="pn">SAXON XSLT</span><span class="pv">primary transform engine</span></div>
+      <div class="pr"><span class="pn">native Java XSLT</span><span class="pv">fallback engine option</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Key Java packages</h2>
+    <div class="pr"><span class="pn">org.web3d.x3d.jsail</span><span class="pv">Concrete POJO scene graph implementation</span></div>
+    <div class="pr"><span class="pn">org.web3d.x3d.jsail.Core</span><span class="pv">X3D, Scene, head, meta, component, unit, WorldInfo</span></div>
+    <div class="pr"><span class="pn">org.web3d.x3d.jsail.fields</span><span class="pv">SF/MF typed field objects (SFVec3f, MFInt32, etc.)</span></div>
+    <div class="pr"><span class="pn">org.web3d.x3d.sai</span><span class="pv">Abstract SAI interfaces (ISO spec bindings)</span></div>
+    <div class="pr"><span class="pn">org.web3d.x3d.palette</span><span class="pv">NetBeans palette, customizer panels per node</span></div>
+    <div class="pr"><span class="pn">org.web3d.x3d.types</span><span class="pv">X3D type constants, profile/component definitions</span></div>
+    <div class="tip">X3DJSAIL is <em>autogenerated</em> from the X3D Unified Object Model (X3DUOM) XML via the XSLT stylesheet <code>CreateX3dSceneAccessInterfaceJava.xslt</code> — the source for 500+ concrete classes is never hand-edited.</div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div id="panel-arch" class="panel">
+  <div class="card">
+    <h2>System layers</h2>
+    <div class="flow-row"><div class="fbox">Author edits .x3d XML</div><span class="farr">→</span><div class="fbox">NetBeans text editor (syntax highlight)</div><span class="farr">→</span><div class="fbox">X3dSourceFilePalette (drag-drop nodes)</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="farr">↓ validate</span></div>
+    <div class="flow-row"><div class="fbox">DTD / Schema / Schematron</div><span class="farr">→</span><div class="fbox">X3D-Tidy XSLT cleanup</div><span class="farr">→</span><div class="fbox">X3DJSAIL runtime validation</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="farr">↓ convert / export</span></div>
+    <div class="flow-row"><div class="fbox">SAXON XSLT engine</div><span class="farr">→</span><div class="fbox">target format (.java / .py / .json / .html)</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="farr">↓ preview</span></div>
+    <div class="flow-row"><div class="fbox">embedded Xj3D viewer</div><span class="farr">or</span><div class="fbox">X3DOM / X_ITE in browser</div><span class="farr">or</span><div class="fbox">external player</div></div>
+  </div>
+
+  <div class="card">
+    <h2>X3DUOM → X3DJSAIL generation pipeline</h2>
+    <div class="flow-row"><div class="fbox">X3D XML Schema (.xsd)</div><span class="farr">→</span><div class="fbox">BuildSpec*.xslt</div><span class="farr">→</span><div class="fbox">X3dUnifiedObjectModel-4.0.xml</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="farr">↓</span></div>
+    <div class="flow-row"><div class="fbox">CreateX3dSceneAccessInterfaceJava.xslt</div><span class="farr">→</span><div class="fbox">500+ Java class files</div><span class="farr">→</span><div class="fbox">X3DJSAIL.jar</div></div>
+    <p style="margin-top:8px">The X3DUOM XML is the single source of truth. Every node's field names, types, access modes, default values, tooltips, and parent-child constraints all flow from it. Changes to the X3D spec → edit the schema → re-run XSLT → regenerate all code.</p>
+  </div>
+
+  <div class="card">
+    <h2>NetBeans module structure</h2>
+    <div class="pr"><span class="pn">X3dSourceFilePalette</span><span class="pv">Palette panel — drag-drop node insertion</span></div>
+    <div class="pr"><span class="pn">X3dEdit module suite</span><span class="pv">Top-level NetBeans module wrapper</span></div>
+    <div class="pr"><span class="pn">Xj3D integration</span><span class="pv">Embedded Java-based X3D viewer (modified fork)</span></div>
+    <div class="pr"><span class="pn">X3dValidator</span><span class="pv">Checkmark button → multi-layer QA pipeline</span></div>
+    <div class="pr"><span class="pn">X3dPreferences</span><span class="pv">Player/tool paths, visualization widgets, CAD filters, XML Security</span></div>
+    <div class="pr"><span class="pn">CORS server module</span><span class="pv">Auto-launch localhost http server for X_ITE rendering</span></div>
+    <div class="pr"><span class="pn">X3D Examples archives</span><span class="pv">Download wizard → several thousand example scenes</span></div>
+  </div>
+
+  <div class="card">
+    <h2>OpenJDK 24+ JAXP entity expansion issue</h2>
+    <p>A 2024 JDK change restricts JAXP entity expansion by default — the large X3D XML DOCTYPE definition exceeds the limit. Required config patch: add <code>-J-Djdk.xml.entityExpansionLimit=5000</code> to <code>netbeans.conf</code>. This is a known active issue and a good example of where the active maintenance focus has been recently.</p>
+  </div>
+</div>
+
+<!-- XSLT ENGINE -->
+<div id="panel-xslt" class="panel">
+  <div class="card">
+    <h2>The XSLT stylesheet library</h2>
+    <p>The heart of X3D-Edit's conversion power. A large set of XSLT stylesheets bundled in the plugin, invoked via SAXON (default) or native Java XSLT. Each stylesheet transforms a source .x3d into a different target representation. This is the "transpiler" layer of the X3D ecosystem.</p>
+  </div>
+
+  <p class="sec">Format conversion stylesheets</p>
+  <div class="xslt-grid">
+    <div class="xslt-card" onclick="toggle('xs-java')">
+      <div class="xslt-title">X3dToJava.xslt</div>
+      <div class="xslt-desc">Produces X3DJSAIL Java source that, when compiled and run, re-creates the exact X3D scene. Round-trip engineering.</div>
+      <span class="xslt-badge b-blue">→ .java</span>
+    </div>
+    <div id="d-xs-java" class="detail"><strong>Key pattern:</strong> each X3D node becomes a Java new SomeNodeObject().setField1(v).setField2(v) chain. Method chaining (fluent API). Large arrays are split into multiple init methods to stay under the 64KB Java method limit. Used for thousands of regression tests in CI builds. The X3dToJava.xslt is also how X3DJSAIL itself was bootstrapped — the stylesheet uses X3DUOM to generate the JSAIL source.</div>
+
+    <div class="xslt-card" onclick="toggle('xs-py')">
+      <div class="xslt-title">X3dToPython.xslt</div>
+      <div class="xslt-desc">Produces Python x3d.py library source that re-creates the scene. Companion to X3dToJava.xslt.</div>
+      <span class="xslt-badge b-green">→ .py</span>
+    </div>
+    <div id="d-xs-py" class="detail"><strong>Output:</strong> Python script using the x3d.py package (pip-installable). Same round-trip pattern as Java. Run the .py to regenerate the .x3d. Enables Python-native scene building workflows. Important for the Blender integration angle — connecting io_scene_x3d (Python) with X3DJSAIL (Java) via this stylesheet is a natural bridge.</div>
+
+    <div class="xslt-card" onclick="toggle('xs-json')">
+      <div class="xslt-title">X3dToJson.xslt</div>
+      <div class="xslt-desc">Converts .x3d XML to the X3D JSON encoding. Supports forthcoming X3D JSON standard.</div>
+      <span class="xslt-badge b-amber">→ .json</span>
+    </div>
+    <div id="d-xs-json" class="detail">Drops DOCTYPE (expected — XSLT can't carry it). Uses Saxon expand:off for default attribute handling. JSON encoding maps XML attributes → JSON object fields, XML children → arrays. Used extensively in web3D toolchains (X3DOM, X_ITE). The JSON encoding spec was co-authored by Roy Walmsley and Don Brutzman (Web3D 2016 paper).</div>
+
+    <div class="xslt-card" onclick="toggle('xs-vrml')">
+      <div class="xslt-title">X3dToVrml97.xslt</div>
+      <div class="xslt-desc">Backwards compatibility to VRML97 .wrl format. Warns in-output for X3D features with no VRML97 equivalent.</div>
+      <span class="xslt-badge" style="background:#E1F5EE;color:#0F6E56">→ .wrl</span>
+    </div>
+    <div id="d-xs-vrml" class="detail">Any X3D scene fitting the Immersive Profile will convert cleanly. Features beyond Immersive (CAD, GeoSpatial, H-Anim, DIS, physics, etc.) emit embedded warnings. The stylesheet embeds console output to report conversion difficulties.</div>
+
+    <div class="xslt-card" onclick="toggle('xs-x3dv')">
+      <div class="xslt-title">X3dToX3dvClassicVrmlEncoding.xslt</div>
+      <div class="xslt-desc">Converts to ClassicVRML (.x3dv) — the curly-brace text encoding of X3D (not VRML97 but similar syntax).</div>
+      <span class="xslt-badge" style="background:#E1F5EE;color:#0F6E56">→ .x3dv</span>
+    </div>
+    <div id="d-xs-x3dv" class="detail">ClassicVRML is the "classic" text encoding for X3D — semantically identical to XML X3D but using VRML-style brace syntax. Verified for syntax correctness using Castle Model Converter and Castle Model Viewer in CI.</div>
+
+    <div class="xslt-card" onclick="toggle('xs-html')">
+      <div class="xslt-title">X3dToX3domX_ITE.xslt / X3dToXhtml.xslt</div>
+      <div class="xslt-desc">Produces a self-contained HTML5 page with X3D inline. X3DOM and X_ITE (formerly Cobweb) are two web renderers.</div>
+      <span class="xslt-badge b-blue">→ .html</span>
+    </div>
+    <div id="d-xs-html" class="detail">X3DOM and X_ITE both render X3D directly embedded in HTML5 via WebGL, with no plugin. X3dToXhtml.xslt is the tagset pretty-printer with cross-linked DEF/USE/ROUTE indexing — useful for documentation. X3dToX3domX_ITE.xslt produces the live interactive page.</div>
+
+    <div class="xslt-card" onclick="toggle('xs-tidy')">
+      <div class="xslt-title">X3dTidy.xslt</div>
+      <div class="xslt-desc">Semantic cleanup and correction. Fixes common errors — does not just pretty-print. Available as menu item X3D → Conversions → X3D Tidy.</div>
+      <span class="xslt-badge b-amber">→ cleaned .x3d</span>
+    </div>
+    <div id="d-xs-tidy" class="detail">Checks and corrects things like: NULL value handling, field default value normalization, DEF/USE consistency, coordinate system inconsistencies. The result is a corrected .x3d. Complements but does not replace schema/Schematron validation (those report errors; Tidy fixes them).</div>
+
+    <div class="xslt-card" onclick="toggle('xs-extrusion')">
+      <div class="xslt-title">X3dExtrusionCrossSectionToSvg.xslt</div>
+      <div class="xslt-desc">Visualizes Extrusion node cross-section profiles as SVG. A specialized geometry inspection tool.</div>
+      <span class="xslt-badge b-purple">→ .svg</span>
+    </div>
+    <div id="d-xs-extrusion" class="detail">Extracts the crossSection point array from an Extrusion node and renders it as a 2D SVG diagram. Extremely useful for debugging complex extrusion paths. Also shows spine path and scale. Represents the pattern of using XSLT for geometry-specific diagnostics.</div>
+
+    <div class="xslt-card" onclick="toggle('xs-markdown')">
+      <div class="xslt-title">X3dModelMetaToMarkdown.xslt</div>
+      <div class="xslt-desc">Extracts all meta name=value pairs from an X3D model's head and produces a Markdown documentation file.</div>
+      <span class="xslt-badge b-green">→ .md</span>
+    </div>
+    <div id="d-xs-markdown" class="detail">Useful for automated documentation generation. Meta tags in X3D head carry title, description, author, license, created date, etc. This stylesheet makes them into human-readable Markdown docs. Supports CI documentation pipelines.</div>
+  </div>
+
+  <p class="sec">EXI binary encoding</p>
+  <div class="card">
+    <p>X3D supports EXI (Efficient XML Interchange) — a W3C standard for binary XML encoding that dramatically reduces file size and parse time. Two EXI engines supported:</p>
+    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+      <span class="badge b-blue">EXIficient (default)</span>
+      <span class="badge b-amber">OpenEXI (alternate)</span>
+    </div>
+    <p style="margin-top:8px">Files can be loaded via <code>CommandLine -fromEXI</code> or <code>X3D.loadFromFileEXI()</code>. The X3D JSON encoding uses gzip internally; EXI is the more aggressive binary option targeting bandwidth-constrained delivery (IoT, web streaming).</p>
+  </div>
+</div>
+
+<!-- X3DJSAIL -->
+<div id="panel-jsail" class="panel">
+  <div class="card">
+    <h2>X3DJSAIL — the programmatic API</h2>
+    <p>A <em>Plain Old Java Object</em> (POJO) implementation of the full X3D scene graph. 500+ concrete classes, autogenerated from X3DUOM. Implements both <code>org.web3d.x3d.jsail</code> (concrete) and <code>org.web3d.x3d.sai</code> (abstract ISO binding interfaces).</p>
+  </div>
+
+  <p class="sec">X3D object (root) capabilities</p>
+  <div class="grid2">
+    <div class="fc" onclick="toggle('j-serial')"><div class="fn">Serialization methods</div><div class="fd">toFileX3D, toFileJava, toFilePython, toFileJSON, toFileClassicVRML, toFileVRML97, toFileX3DOM, toFileX_ITE, toFileHtmlDocumentation, toFileMarkdown, toFileEXI, toFileGZIP, toFileZIP</div></div>
+    <div id="d-j-serial" class="detail"><strong>Pattern:</strong> every method calls <code>toFileStylesheetConversion(filename, stylesheet, params)</code> internally. SAXON is invoked as a Java library, not a command-line process. Outputs can be round-trip verified: .x3d → .java → compile → run → new .x3d → diff against original. The round-trip test suite does exactly this on thousands of example scenes nightly in CI.</div>
+
+    <div class="fc" onclick="toggle('j-validate')"><div class="fn">Validation methods</div><div class="fd">validationReport(), toStringSchematron(), toStringX3DTidy(), isValid(), findNodeByDEF(), findNodeByName()</div></div>
+    <div id="d-j-validate" class="detail"><strong>validationReport():</strong> comprehensive check of all nodes, fields, types, parent-child relationships. Returns multi-line diagnostic string. <code>findNodeByDEF()</code> walks the scene graph recursively to locate a node by its DEF attribute — useful for programmatic scene modification. <code>isValid()</code> returns boolean after running all checks.</div>
+
+    <div class="fc" onclick="toggle('j-pipelining')"><div class="fn">Method pipelining (fluent API)</div><div class="fd">All setter methods return the same object (this), enabling chained method calls. Example: new Transform().setDEF("MyXfm").setTranslation(1,2,3).setChildren(...)</div></div>
+    <div id="d-j-pipelining" class="detail">The fluent API is baked into every JSAIL class — each <code>set*()</code> returns <code>X3DObject</code> (or the concrete subclass). This allows the generated Java output from X3dToJava.xslt to be compact and readable. It's also key to making X3DJSAIL usable as a scene construction library without verbose intermediate variable assignment.</div>
+
+    <div class="fc" onclick="toggle('j-cmd')"><div class="fn">CommandLine utility</div><div class="fd">java org.web3d.x3d.jsail.CommandLine — standalone JAR access to all X3DJSAIL capabilities via CLI switches.</div></div>
+    <div id="d-j-cmd" class="detail">Supports: -validate, -toX3D, -toXML, -toClassicVrml, -toJava, -toJSON, -toPython, -toVRML97, -toHTML, -toX3DOM, -toX_ITE, -toMarkdown, -toEXI, -toGZIP, -toZIP, -canonical, -fromEXI, -fromGZIP, -fromZIP, -Schematron, -Tidy, -X3DUOM, -hints, -regexes, -tooltips. The CommandLine class is also embedded in every Java file produced by X3dToJava.xslt so each generated program is also self-executing.</div>
+  </div>
+
+  <p class="sec">ConfigurationProperties</p>
+  <div class="card">
+    <p>Static singleton controlling all X3DJSAIL runtime behavior. Key settings:</p>
+    <div class="pr"><span class="pn">XSLT_ENGINE_SAXON / _NATIVE_JAVA</span><span class="pv">which XSLT engine to use</span></div>
+    <div class="pr"><span class="pn">EXI_ENGINE_EXIFICIENT / _OPENEXI</span><span class="pv">which EXI engine to use</span></div>
+    <div class="pr"><span class="pn">indentCharacter, indentIncrement</span><span class="pv">serialization whitespace</span></div>
+    <div class="pr"><span class="pn">showDefaultAttributes</span><span class="pv">whether to emit attributes that match X3D defaults</span></div>
+    <div class="pr"><span class="pn">deleteIntermediateFiles</span><span class="pv">cleanup after XSLT temp files</span></div>
+    <div class="pr"><span class="pn">omitTrailingZeros</span><span class="pv">float formatting cleanup in output</span></div>
+    <div class="pr"><span class="pn">propertiesFileName</span><span class="pv">load custom X3DJSAIL.properties file</span></div>
+  </div>
+
+  <div class="card">
+    <h2>SF/MF field type system</h2>
+    <p>X3D has a rich type system — all 40+ field types are implemented as Java objects in <code>org.web3d.x3d.jsail.fields</code>:</p>
+    <div class="node-grid">
+      <span class="ntag">SFBool / MFBool</span><span class="ntag">SFInt32 / MFInt32</span><span class="ntag">SFFloat / MFFloat</span>
+      <span class="ntag">SFDouble / MFDouble</span><span class="ntag">SFVec2f / MFVec2f</span><span class="ntag">SFVec3f / MFVec3f</span>
+      <span class="ntag">SFVec4f / MFVec4f</span><span class="ntag">SFRotation / MFRotation</span><span class="ntag">SFColor / MFColor</span>
+      <span class="ntag">SFColorRGBA / MFColorRGBA</span><span class="ntag">SFString / MFString</span><span class="ntag">SFNode / MFNode</span>
+      <span class="ntag">SFImage / MFImage</span><span class="ntag">SFMatrix3f / MFMatrix3f</span><span class="ntag">SFMatrix4f / MFMatrix4f</span>
+    </div>
+    <p style="margin-top:8px">Each field object includes regex-based validation, isNMTOKEN() name checks, and interoperability naming convention checks. FieldObjectTests.java has hundreds of tests covering every method of every field type.</p>
+  </div>
+</div>
+
+<!-- NODE PALETTE -->
+<div id="panel-nodes" class="panel">
+  <div class="card">
+    <h2>X3dSourceFilePalette — node categories</h2>
+    <p>The palette organizes all X3D nodes by X3D profile component. Each node has a custom <em>customizer panel</em> (a Swing JPanel specific to that node) with field editors, tooltips from X3D Tooltips, and a "Check" QA button.</p>
+  </div>
+
+  <p class="sec">Core / scene graph nodes</p>
+  <div class="node-grid">
+    <span class="ntag">X3D</span><span class="ntag">Scene</span><span class="ntag">head</span><span class="ntag">meta</span><span class="ntag">component</span><span class="ntag">unit</span>
+    <span class="ntag">WorldInfo</span><span class="ntag">Group</span><span class="ntag">Transform</span><span class="ntag">Switch</span><span class="ntag">Inline</span>
+    <span class="ntag">LOD</span><span class="ntag">StaticGroup</span><span class="ntag">Collision</span>
+    <span class="ntag">DEF / USE</span><span class="ntag">ROUTE</span><span class="ntag">ProtoDeclare</span><span class="ntag">ProtoInterface</span>
+    <span class="ntag">ProtoBody</span><span class="ntag">ProtoInstance</span><span class="ntag">ExternProtoDeclare</span>
+  </div>
+
+  <p class="sec">Geometry 3D</p>
+  <div class="node-grid">
+    <span class="ntag">Box</span><span class="ntag">Cone</span><span class="ntag">Cylinder</span><span class="ntag">Sphere</span>
+    <span class="ntag">IndexedFaceSet</span><span class="ntag">IndexedTriangleSet</span><span class="ntag">IndexedTriangleFanSet</span><span class="ntag">IndexedTriangleStripSet</span>
+    <span class="ntag">TriangleSet</span><span class="ntag">TriangleFanSet</span><span class="ntag">TriangleStripSet</span>
+    <span class="ntag">ElevationGrid</span><span class="ntag">Extrusion</span>
+    <span class="ntag">IndexedLineSet</span><span class="ntag">LineSet</span><span class="ntag">PointSet</span>
+  </div>
+
+  <p class="sec">Geometry 2D</p>
+  <div class="node-grid">
+    <span class="ntag">Arc2D</span><span class="ntag">ArcClose2D</span><span class="ntag">Circle2D</span><span class="ntag">Disk2D</span>
+    <span class="ntag">Polyline2D</span><span class="ntag">Polypoint2D</span><span class="ntag">Rectangle2D</span><span class="ntag">TriangleSet2D</span>
+  </div>
+
+  <p class="sec">Appearance / Materials</p>
+  <div class="node-grid">
+    <span class="ntag">Appearance</span><span class="ntag">Material</span><span class="ntag">TwoSidedMaterial</span>
+    <span class="ntag">PhysicalMaterial</span><span class="ntag">UnlitMaterial</span>
+    <span class="ntag">ImageTexture</span><span class="ntag">MovieTexture</span><span class="ntag">PixelTexture</span>
+    <span class="ntag">MultiTexture</span><span class="ntag">TextureCoordinate</span><span class="ntag">TextureTransform</span>
+    <span class="ntag">ComposedShader</span><span class="ntag">PackagedShader</span><span class="ntag">ProgramShader</span><span class="ntag">ShaderPart</span><span class="ntag">ShaderProgram</span>
+    <span class="ntag">ComposedCubeMapTexture</span><span class="ntag">GeneratedCubeMapTexture</span><span class="ntag">ImageCubeMapTexture</span>
+  </div>
+  <div class="tip" style="margin-top:4px">PhysicalMaterial and UnlitMaterial are X3D v4 additions — the PBR material model. This is what io_scene_x3d currently lacks on export.</div>
+
+  <p class="sec">Animation / Interpolation</p>
+  <div class="node-grid">
+    <span class="ntag">TimeSensor</span>
+    <span class="ntag">PositionInterpolator</span><span class="ntag">OrientationInterpolator</span>
+    <span class="ntag">ScalarInterpolator</span><span class="ntag">ColorInterpolator</span>
+    <span class="ntag">NormalInterpolator</span><span class="ntag">CoordinateInterpolator</span>
+    <span class="ntag">EaseInEaseOut</span><span class="ntag">SquadOrientationInterpolator</span><span class="ntag">SplinePositionInterpolator</span>
+  </div>
+
+  <p class="sec">Sensors</p>
+  <div class="node-grid">
+    <span class="ntag">TouchSensor</span><span class="ntag">PlaneSensor</span><span class="ntag">CylinderSensor</span><span class="ntag">SphereSensor</span>
+    <span class="ntag">KeySensor</span><span class="ntag">StringSensor</span>
+    <span class="ntag">VisibilitySensor</span><span class="ntag">ProximitySensor</span>
+    <span class="ntag">TransformSensor</span><span class="ntag">LoadSensor</span>
+  </div>
+
+  <p class="sec">Advanced / Specialized profiles</p>
+  <div class="node-grid">
+    <span class="ntag">GeoLocation</span><span class="ntag">GeoLOD</span><span class="ntag">GeoMetadata</span><span class="ntag">GeoPositionInterpolator</span><span class="ntag">GeoTouchSensor</span><span class="ntag">GeoViewpoint</span>
+    <span class="ntag">Humanoid</span><span class="ntag">Joint</span><span class="ntag">Segment</span><span class="ntag">Site</span><span class="ntag">HAnimMotion</span>
+    <span class="ntag">CADAssembly</span><span class="ntag">CADFace</span><span class="ntag">CADLayer</span><span class="ntag">CADPart</span>
+    <span class="ntag">EspduTransform</span><span class="ntag">SignalPdu</span><span class="ntag">ReceiverPdu</span><span class="ntag">TransmitterPdu</span>
+    <span class="ntag">NurbsCurve</span><span class="ntag">NurbsSurface</span><span class="ntag">NurbsSet</span><span class="ntag">NurbsPatchSurface</span>
+    <span class="ntag">VolumeData</span><span class="ntag">IsoSurfaceVolumeData</span><span class="ntag">SegmentedVolumeData</span>
+  </div>
+</div>
+
+<!-- ADVANCED FEATURES -->
+<div id="panel-advanced" class="panel">
+  <div class="card">
+    <h2>XML Security — digital signatures + encryption</h2>
+    <p>A distinctive capability not found in most X3D tools. X3D-Edit can embed W3C XML Digital Signature (<code>ds:</code>) and XML Encryption (<code>xenc:</code>) namespaces directly into X3D scenes. The preferences panel configures keystore paths, passwords, and certificate aliases.</p>
+    <p style="margin-top:8px">Use cases: scene provenance authentication (prove a scene came from a trusted source), IP protection of X3D content for enterprise deployments, signed X3D assets in supply chains. The tool validates signatures on import and embeds them on export.</p>
+    <div class="warn">Current known issue (GitHub): digital signature validation fails for signed X3D files even when <code>ds:</code> and <code>xenc:</code> namespaces are declared — under investigation.</div>
+  </div>
+
+  <div class="card">
+    <h2>ROUTE event tracing</h2>
+    <p>When the Trace checkbox is enabled on any node, X3D-Edit inserts a <code>Script</code> node immediately after it that intercepts and logs all events through that ROUTE connection. Output goes to the browser console with timestamps and event values. Useful for debugging complex animation and sensor networks.</p>
+    <p style="margin-top:8px">This is implemented as XSLT — the Trace option adds the Script node template inline in the XML. Sensors, interpolators, and ROUTE destinations all support it.</p>
+  </div>
+
+  <div class="card">
+    <h2>Visualization widgets</h2>
+    <p>X3D-Edit can auto-insert visualization helper geometry into scenes during authoring. Configure via X3D-Edit Visualization Preferences. Examples include: axis indicators for coordinate frames, bounding box helpers, skeleton visualization for H-Anim Humanoid, sensor zone indicators for proximity/visibility sensors.</p>
+  </div>
+
+  <div class="card">
+    <h2>CAD Distillation Filter (CDF)</h2>
+    <p>Parameters for geometry reduction/distillation targeted at CAD data coming in from engineering tools (via COLLADA or direct CAD export). The CDF preferences let you control level-of-detail reduction, polygon budget limits, and simplification threshold. Feeds into the CADGeometry profile nodes (<code>CADAssembly</code>, <code>CADFace</code>, <code>CADLayer</code>, <code>CADPart</code>).</p>
+  </div>
+
+  <div class="card">
+    <h2>H-Anim humanoid animation (X3D v4 update)</h2>
+    <p>Full support for the H-Anim 2.0 Humanoid Animation specification. Nodes include: <code>Humanoid</code>, <code>Joint</code>, <code>Segment</code>, <code>Site</code>, and the newer <code>HAnimMotion</code> node (X3D v4 addition) for motion capture data. X3D-Edit provides customizer panels for each, with skeleton preview in the Xj3D viewer.</p>
+    <p style="margin-top:8px"><code>HAnimMotion</code> is notable — it represents a channel-based motion capture encoding directly in the scene graph, without requiring external BVH files. This is new in v4.</p>
+  </div>
+
+  <div class="card">
+    <h2>DIS profile — Distributed Interactive Simulation</h2>
+    <p>X3D has a full profile for military and training simulation via IEEE 1278 DIS (Distributed Interactive Simulation) PDUs (Protocol Data Units). Nodes: <code>EspduTransform</code>, <code>SignalPdu</code>, <code>ReceiverPdu</code>, <code>TransmitterPdu</code>, <code>DISEntityManager</code>, <code>DISEntityTypeMapping</code>.</p>
+    <p style="margin-top:8px">This ties X3D scenes directly into live simulation networks — a 3D object's position is updated in real time by incoming DIS PDUs over the network. X3D-Edit originated at the Naval Postgraduate School, which explains this focus.</p>
+  </div>
+
+  <div class="card">
+    <h2>GeoSpatial profile</h2>
+    <p>Nodes for geographically-referenced 3D content: <code>GeoLocation</code>, <code>GeoLOD</code>, <code>GeoViewpoint</code>, <code>GeoPositionInterpolator</code>. Supports multiple coordinate systems: GD (Geographic), UTM, GC (Geocentric). Allows X3D scenes to be anchored to real-world coordinates with correct datum handling.</p>
+  </div>
+
+  <div class="card">
+    <h2>CORS server + X_ITE workflow</h2>
+    <p>A recently added feature. X3D-Edit can auto-launch a CORS-compliant HTTP server on localhost (configured as a user preference). This enables rendering X3D scenes in X_ITE (formerly Cobweb) directly in the browser without same-origin policy errors. The workflow is: download examples → enable CORS autolaunch → open .x3d → auto-preview in X_ITE in browser. Key for the modern web-delivery use case.</p>
+  </div>
+
+  <div class="card">
+    <h2>X3D Canonical Form</h2>
+    <p>X3DJSAIL supports serialization to X3D Canonical Form — a normalized, deterministic XML representation used for comparison, diffing, and digital signature. Canonical form eliminates whitespace variations, normalizes attribute ordering, and makes round-trip comparison reliable. Invoked via <code>toStringX3D()</code> with canonical flag or <code>CommandLine -canonical</code>.</p>
+  </div>
+</div>
+
+<!-- RECENT ACTIVITY -->
+<div id="panel-commits" class="panel">
+  <div class="card">
+    <h2>Recent development themes (2024–2025)</h2>
+    <p>Based on release notes, README changelogs, and issue tracker activity. X3D-Edit v4.0.37–v4.0.40.</p>
+  </div>
+
+  <div class="card" style="padding:.75rem 1.25rem">
+    <div class="commit-row">
+      <div class="cdot" style="background:#185FA5"></div>
+      <div><div class="ct">Java OpenJDK 24/25 compatibility + JAXP entity expansion fix <span class="ctag b-red">breaking change</span></div><div class="cd">JDK-8343022 — OpenJDK 24 restricted JAXP entity expansion by default. X3D DOCTYPE is large enough to hit the new 1000-entity limit. Required adding -J-Djdk.xml.entityExpansionLimit=5000 to netbeans.conf. Active recent maintenance focus.</div></div>
+    </div>
+    <div class="commit-row">
+      <div class="cdot" style="background:#0F6E56"></div>
+      <div><div class="ct">Apache NetBeans 25/26/27/28 quarterly upgrades <span class="ctag b-green">ongoing</span></div><div class="cd">X3D-Edit follows NetBeans release cadence (quarterly). Each major NetBeans update requires rebuilding and re-signing the NBM plugin module. Now at NetBeans 28 + OpenJDK 25.0.1 for the Nov 2025 build.</div></div>
+    </div>
+    <div class="commit-row">
+      <div class="cdot" style="background:#BA7517"></div>
+      <div><div class="ct">CORS localhost http server integration <span class="ctag b-blue">new feature</span></div><div class="cd">Auto-launch CORS server on localhost as a user preference. Enables seamless X_ITE-in-browser preview without manually starting a web server. Part of a push to improve the web delivery workflow for X3D content.</div></div>
+    </div>
+    <div class="commit-row">
+      <div class="cdot" style="background:#185FA5"></div>
+      <div><div class="ct">X3D version 4.0 validation support complete <span class="ctag b-green">complete</span></div><div class="cd">Full v4 Schema, Schematron rules, and new node support (PhysicalMaterial, UnlitMaterial, HAnimMotion, unit element with conversion factors). X3DJSAIL tracking v4 standard throughout 2024-2025.</div></div>
+    </div>
+    <div class="commit-row">
+      <div class="cdot" style="background:#534AB7"></div>
+      <div><div class="ct">X3dSourceFilePalette module — name alignment ongoing <span class="ctag b-amber">in progress</span></div><div class="cd">README notes "not all names aligned, not all source applied, work ongoing" for the palette module. Active work harmonizing node/panel class naming conventions after the migration from SourceForge to GitHub Maven-based build.</div></div>
+    </div>
+    <div class="commit-row">
+      <div class="cdot" style="background:#993C1D"></div>
+      <div><div class="ct">XML Security digital signature validation bug <span class="ctag b-red">open issue</span></div><div class="cd">Signed X3D files with ds:/xenc: namespace declarations fail validation even when properly signed. Issue open in GitHub tracker. The signing side works; the verification side has a namespace resolution failure.</div></div>
+    </div>
+    <div class="commit-row">
+      <div class="cdot" style="background:#0F6E56"></div>
+      <div><div class="ct">unit element editor panel — angle/length/mass/force <span class="ctag b-blue">new feature</span></div><div class="cd">X3D v4 unit command lets scenes declare non-meter coordinate units. New editing panel provides reference conversion factors. Lets authors work in feet, inches, or other units with automatic conversion documentation.</div></div>
+    </div>
+    <div class="commit-row">
+      <div class="cdot" style="background:#185FA5"></div>
+      <div><div class="ct">Maven Central deployment + GitHub trusted plugin migration <span class="ctag b-green">complete</span></div><div class="cd">Full move from SourceForge build system to GitHub + Maven Central. Plugin is now a trusted entry in the Apache NetBeans Plugin Portal (over 24,000 downloads since May 2023).</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- EXTENSION IDEAS -->
+<div id="panel-extend" class="panel">
+  <div class="card">
+    <h2>Connection points to io_scene_x3d (Blender)</h2>
+    <p>These are where X3D-Edit's Java ecosystem and the Blender Python addon can meet.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="fc" onclick="toggle('e-pbr')"><div class="fn">PBR material bridge</div><div class="fd">X3D-Edit now has PhysicalMaterial + UnlitMaterial (X3D v4). io_scene_x3d has no PBR export. Direct opportunity.</div></div>
+    <div id="d-e-pbr" class="detail"><strong>Idea:</strong> Extend io_scene_x3d export to traverse Blender's Principled BSDF node tree and emit X3D v4 PhysicalMaterial nodes (baseColor, metallic, roughness, emissiveColor, normalTexture, occlusionTexture). The X3D-Edit customizer panel for PhysicalMaterial documents exactly which fields exist and their valid ranges — use it as your spec reference. X3DJSAIL's PhysicalMaterial class gives you the complete field list programmatically.</div>
+
+    <div class="fc" onclick="toggle('e-hanim')"><div class="fn">H-Anim armature export</div><div class="fd">Blender armatures map naturally to H-Anim Joint/Segment hierarchy. Export path is currently missing from io_scene_x3d.</div></div>
+    <div id="d-e-hanim" class="detail"><strong>Idea:</strong> Walk Blender's armature bones → emit X3D Humanoid/Joint/Segment tree. HAnimMotion (X3D v4) can encode keyframe animation directly. X3D-Edit has full editing support for these nodes. Would enable round-trip Blender ↔ X3D for character animation, and connection to web-based X3D character viewers via X3DOM/X_ITE.</div>
+
+    <div class="fc" onclick="toggle('e-python')"><div class="fn">X3dToPython.xslt output → Blender</div><div class="fd">X3D-Edit can export .x3d → .py (Python using x3d.py). That Python could potentially drive io_scene_x3d directly.</div></div>
+    <div id="d-e-python" class="detail"><strong>Idea:</strong> The Python x3d.py package and Blender's io_scene_x3d both operate in the X3D space but from different angles. A bridge script that translates x3d.py scene objects into bpy.data calls (essentially an in-memory importer without the XML parse step) would enable programmatic scene building in X3D terms that directly populates a Blender scene.</div>
+
+    <div class="fc" onclick="toggle('e-route')"><div class="fn">ROUTE animation import (io_scene_x3d TODO)</div><div class="fd">import_x3d.py has ROUTE_IPO_NAMESPACE infrastructure but animation is never built. X3D-Edit fully supports ROUTE authoring.</div></div>
+    <div id="d-e-route" class="detail"><strong>Gap:</strong> X3D has TimeSensor + PositionInterpolator/OrientationInterpolator + ROUTE → this is a keyframe animation system. Blender's action system maps to this 1:1. The ROUTE_IPO_NAMESPACE in the importer was designed for exactly this — it's just never wired to bpy.data.actions. X3D-Edit's interpolator nodes show the exact data layout needed.</div>
+
+    <div class="fc" onclick="toggle('e-exi')"><div class="fn">EXI binary I/O for performance</div><div class="fd">X3D-Edit supports EXI (compact binary XML). Large Blender exports would benefit enormously from EXI encoding.</div></div>
+    <div id="d-e-exi" class="detail"><strong>Idea:</strong> For large architectural/engineering scenes exported from Blender, EXI encoding can reduce file size 10x+ vs plain XML X3D. Adding EXI write support to io_scene_x3d would require either a Python EXI library (rare) or a subprocess call to X3DJSAIL's CommandLine -toEXI. The latter is practical as a post-export step.</div>
+
+    <div class="fc" onclick="toggle('e-geo')"><div class="fn">GeoSpatial + Blender GIS integration</div><div class="fd">Blender has growing GIS/geospatial workflows. X3D GeoLocation/GeoLOD could be the bridge to web delivery.</div></div>
+    <div id="d-e-geo" class="detail"><strong>Idea:</strong> Blender scenes with real-world coordinates (from GIS imports like BlenderGIS addon) could export X3D GeoLocation nodes, placing geometry at real-world lat/lon/alt. X3D-Edit has full GeoSpatial profile editing support. The web viewer (X_ITE, X3DOM) can then render these scenes against virtual globes.</div>
+
+    <div class="fc" onclick="toggle('e-dis')"><div class="fn">DIS simulation export</div><div class="fd">X3D DIS profile connects 3D objects to live simulation networks. Blender models destined for simulation use.</div></div>
+    <div id="d-e-dis" class="detail"><strong>Niche but powerful:</strong> Defense, training, and simulation users use Blender to create 3D assets that end up in real-time simulation environments. Exporting Blender objects with EspduTransform wrappers would let them drive position/orientation directly from DIS PDUs over UDP in real time. NPS (where X3D-Edit originated) actively works on this use case.</div>
+
+    <div class="fc" onclick="toggle('e-canon')"><div class="fn">X3D Canonical Form for diffing</div><div class="fd">Use X3D Canonical Form to reliably compare Blender export outputs across commits or settings changes.</div></div>
+    <div id="d-e-canon" class="detail"><strong>Testing idea:</strong> Running X3DJSAIL's canonical serialization on io_scene_x3d outputs would give deterministic, diffable output regardless of floating-point formatting, attribute ordering, or whitespace. Extremely useful for building a regression test suite for the Blender exporter — compare canonical form of expected output against actual output.</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function show(tab){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  event.target.classList.add('active');
+}
+function toggle(id){
+  const el=document.getElementById('d-'+id);
+  if(!el)return;
+  el.classList.toggle('open');
+}
+</script>

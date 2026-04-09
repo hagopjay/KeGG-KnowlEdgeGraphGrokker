@@ -1,0 +1,2311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DuckDB Masterclass — The Analytical Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #05060a;
+  --bg2:      #0c0e16;
+  --bg3:      #13162100;
+  --bg3s:     #131621;
+  --bg4:      #1c2030;
+  --border:   #1f2438;
+  --border2:  #2a3050;
+  --duck:     #ffd000;
+  --duck2:    #ffb300;
+  --duck-dim: #3d2f00;
+  --lime:     #b8ff3c;
+  --lime-dim: #243300;
+  --teal:     #00e5c8;
+  --teal-dim: #003830;
+  --coral:    #ff5f5f;
+  --coral-dim:#3d0f0f;
+  --sky:      #5dbaff;
+  --sky-dim:  #0c2840;
+  --violet:   #c084fc;
+  --violet-dim:#2a1050;
+  --text:     #dde4f5;
+  --text2:    #8892b0;
+  --text3:    #3d4a6e;
+  --mono:     'IBM Plex Mono', monospace;
+  --sans:     'IBM Plex Sans', sans-serif;
+  --display:  'Bebas Neue', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEX GRID BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V18L28 2l28 16v32z' fill='none' stroke='%23ffd000' stroke-opacity='0.025' stroke-width='0.8'/%3E%3Cpath d='M28 100L0 84V52L28 36l28 16v32z' fill='none' stroke='%23ffd000' stroke-opacity='0.025' stroke-width='0.8'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── SCANLINES ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(5,6,10,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  height: 52px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.logo-duck {
+  font-size: 1.4rem;
+  line-height: 1;
+  animation: wobble 4s ease-in-out infinite;
+}
+@keyframes wobble {
+  0%,100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+.logo-text {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  letter-spacing: 0.12em;
+  color: var(--duck);
+  line-height: 1;
+}
+.logo-text span { color: var(--text3); }
+
+nav {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+}
+nav::-webkit-scrollbar { display: none; }
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  border-radius: 3px;
+  white-space: nowrap;
+  transition: all 0.12s;
+  text-transform: uppercase;
+}
+.nav-btn:hover { background: var(--bg4); color: var(--duck); }
+.nav-btn.active {
+  background: var(--duck-dim);
+  color: var(--duck);
+  border-top: 2px solid var(--duck);
+}
+
+.version-pill {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  background: var(--lime-dim);
+  color: var(--lime);
+  border: 1px solid var(--lime);
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+/* ── LAYOUT ── */
+.wrapper {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+}
+section { display: none; animation: fadeIn 0.25s ease; }
+section.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SECTION TITLE ── */
+.section-header {
+  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.25rem;
+}
+.section-title {
+  font-family: var(--display);
+  font-size: 3rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--text);
+}
+.section-title em { color: var(--duck); font-style: normal; }
+.section-sub {
+  color: var(--text2);
+  font-size: 0.85rem;
+  max-width: 640px;
+  font-weight: 300;
+  line-height: 1.6;
+  margin-top: 0.5rem;
+}
+
+/* ── GRID ── */
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+.g12 { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+@media (max-width: 960px) { .g2, .g3, .g12, .g21 { grid-template-columns: 1fr; } }
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--duck) 0%, transparent 60%);
+  opacity: 0.5;
+}
+.card-title {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card-title::before {
+  content: '//';
+  color: var(--duck);
+  font-size: 0.8rem;
+}
+
+/* ── CODE BLOCKS ── */
+.code-wrap {
+  background: #030407;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 1rem 0;
+  position: relative;
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg4);
+  border-bottom: 1px solid var(--border);
+  padding: 0.45rem 1rem;
+}
+.code-fname {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text2);
+  letter-spacing: 0.03em;
+}
+.code-lang {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--duck);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--duck-dim);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+pre {
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.75;
+  tab-size: 2;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg4) transparent;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--bg4); }
+
+/* ── SYNTAX TOKENS ── */
+.kw  { color: #ff79c6; }          /* SQL keywords */
+.fn  { color: #8be9fd; }          /* functions */
+.st  { color: #f1fa8c; }          /* strings */
+.cm  { color: #44475a; font-style: italic; }   /* comments */
+.jj  { color: var(--duck); }      /* special operators / duck */
+.nm  { color: #bd93f9; }          /* identifiers */
+.op  { color: var(--teal); }      /* operators */
+.nu  { color: #ffb86c; }          /* numbers */
+.dc  { color: var(--lime); }      /* config values */
+.py  { color: #ffd000; }          /* python */
+.re  { color: var(--coral); }     /* regex / special */
+.ty  { color: #50fa7b; }          /* types */
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  padding: 2px 7px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.b-duck   { background: var(--duck-dim);   color: var(--duck);   border: 1px solid var(--duck);   }
+.b-lime   { background: var(--lime-dim);   color: var(--lime);   border: 1px solid var(--lime);   }
+.b-teal   { background: var(--teal-dim);   color: var(--teal);   border: 1px solid var(--teal);   }
+.b-coral  { background: var(--coral-dim);  color: var(--coral);  border: 1px solid var(--coral);  }
+.b-sky    { background: var(--sky-dim);    color: var(--sky);    border: 1px solid var(--sky);    }
+.b-violet { background: var(--violet-dim); color: var(--violet); border: 1px solid var(--violet); }
+
+/* ── CALLOUTS ── */
+.callout {
+  border-left: 3px solid;
+  padding: 0.8rem 1rem;
+  border-radius: 0 3px 3px 0;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.callout strong {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+.c-duck   { border-color: var(--duck);   background: rgba(255,208,0,0.05);   color: var(--duck);   }
+.c-lime   { border-color: var(--lime);   background: rgba(184,255,60,0.05);  color: var(--lime);   }
+.c-teal   { border-color: var(--teal);   background: rgba(0,229,200,0.05);   color: var(--teal);   }
+.c-coral  { border-color: var(--coral);  background: rgba(255,95,95,0.05);   color: var(--coral);  }
+.c-sky    { border-color: var(--sky);    background: rgba(93,186,255,0.05);  color: var(--sky);    }
+.c-violet { border-color: var(--violet); background: rgba(192,132,252,0.05); color: var(--violet); }
+
+/* ── TABLES ── */
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border2);
+  padding: 0.5rem 0.85rem;
+  text-align: left;
+}
+td {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text2);
+  line-height: 1.5;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,208,0,0.03); }
+td:first-child { color: var(--text); font-family: var(--mono); font-size: 0.78rem; }
+td code, p code, li code, span code {
+  font-family: var(--mono);
+  font-size: 0.78em;
+  background: var(--bg4);
+  padding: 1px 5px;
+  border-radius: 2px;
+  color: var(--duck);
+}
+
+/* ── PILLS / TABS ── */
+.pills { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.pill {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--text3);
+  transition: all 0.12s;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pill:hover { border-color: var(--duck); color: var(--duck); }
+.pill.active { background: var(--duck-dim); border-color: var(--duck); color: var(--duck); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── STAT GRID ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+.stat {
+  background: var(--bg2);
+  padding: 1.25rem 1rem;
+  text-align: center;
+  transition: background 0.15s;
+}
+.stat:hover { background: var(--bg4); }
+.stat-num {
+  font-family: var(--display);
+  font-size: 2.2rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin-bottom: 0.2rem;
+}
+.stat-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── INGRESS VECTOR CARDS ── */
+.vector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+.vector-card {
+  background: var(--bg2);
+  padding: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  text-align: left;
+}
+.vector-card:hover { background: var(--bg4); }
+.vector-name {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--duck);
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.04em;
+}
+.vector-desc {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
+/* ── EXTENSION CARDS ── */
+.ext-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.ext-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.ext-card:hover { border-color: var(--duck); transform: translateY(-2px); }
+.ext-name {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--duck);
+  margin-bottom: 0.25rem;
+}
+.ext-install {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text3);
+  background: var(--bg4);
+  padding: 3px 8px;
+  border-radius: 2px;
+  margin-bottom: 0.5rem;
+  display: inline-block;
+}
+.ext-desc {
+  font-size: 0.82rem;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.ext-bundled { color: var(--lime); font-size: 0.6rem; font-family: var(--mono); letter-spacing: 0.06em; }
+
+/* ── PERF METER ── */
+.perf-row {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.perf-label { font-family: var(--mono); font-size: 0.75rem; color: var(--text2); }
+.perf-bar-track { height: 6px; background: var(--bg4); border-radius: 1px; overflow: hidden; }
+.perf-bar-fill { height: 100%; border-radius: 1px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+.perf-val { font-family: var(--mono); font-size: 0.7rem; color: var(--text3); min-width: 60px; text-align: right; }
+
+/* ── VS TABLE ── */
+.vs-grid {
+  display: grid;
+  grid-template-columns: 180px repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 1rem 0;
+  font-size: 0.78rem;
+}
+.vs-cell {
+  background: var(--bg2);
+  padding: 0.7rem 0.85rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+.vs-head { background: var(--bg4); color: var(--duck); font-weight: 700; letter-spacing: 0.06em; }
+.vs-label { color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.65rem; }
+.vs-yes  { color: var(--lime); }
+.vs-no   { color: var(--coral); }
+.vs-part { color: var(--duck); }
+.vs-duck-col { background: rgba(255,208,0,0.04) !important; border-left: 2px solid var(--duck); }
+
+/* ── SEPARATOR ── */
+.sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+/* ── MISC ── */
+p { margin-bottom: 0.9rem; color: var(--text2); font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+h3 {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  margin: 1.75rem 0 0.6rem;
+}
+h3:first-child { margin-top: 0; }
+h4 {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 1.2rem 0 0.5rem;
+}
+ul, ol { padding-left: 1.5rem; color: var(--text2); font-weight: 300; }
+ul li, ol li { margin-bottom: 0.3rem; }
+strong { color: var(--text); font-weight: 500; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+/* ── ARCHITECTURE DIAGRAM ── */
+.arch-diagram {
+  background: #030407;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 2;
+  overflow-x: auto;
+}
+.arch-layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.arch-box {
+  padding: 4px 12px;
+  border-radius: 2px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.arch-arrow { color: var(--text3); }
+.aql { background: var(--duck-dim); color: var(--duck); border: 1px solid var(--duck-dim); }
+.apr { background: var(--lime-dim); color: var(--lime); border: 1px solid var(--lime-dim); }
+.aex { background: var(--teal-dim); color: var(--teal); border: 1px solid var(--teal-dim); }
+.ast { background: var(--sky-dim);  color: var(--sky);  border: 1px solid var(--sky-dim);  }
+.aio { background: var(--violet-dim); color: var(--violet); border: 1px solid var(--violet-dim); }
+.acm { background: var(--coral-dim); color: var(--coral); border: 1px solid var(--coral-dim); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-duck">🦆</span>
+      <span class="logo-text">DUCK<span>DB</span></span>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="show('quack',this)">QUACK</button>
+      <button class="nav-btn" onclick="show('ingress',this)">INGRESS</button>
+      <button class="nav-btn" onclick="show('sqlplus',this)">SQL+</button>
+      <button class="nav-btn" onclick="show('extensions',this)">EXTENSIONS</button>
+      <button class="nav-btn" onclick="show('python',this)">PYTHON</button>
+      <button class="nav-btn" onclick="show('perf',this)">PERFORMANCE</button>
+      <button class="nav-btn" onclick="show('patterns',this)">PATTERNS</button>
+      <button class="nav-btn" onclick="show('vs',this)">VS FIELD</button>
+    </nav>
+    <div class="version-pill">v1.2.x STABLE</div>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<!-- ══════════════════════════════════════════════════
+     SECTION: QUACK — ARCHITECTURE + ORIENTATION
+══════════════════════════════════════════════════ -->
+<section id="quack" class="active">
+  <div class="section-header">
+    <div>
+      <div class="section-title">THE <em>DUCK</em> MANIFESTO</div>
+      <div class="section-sub">DuckDB is an in-process OLAP engine. No server. No daemon. No network round-trips. It embeds into your Python, Node, Java, or Rust process and tears through analytical queries at memory bandwidth speed. Think SQLite philosophy — but column-store, vectorized, and parallelized.</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text3);letter-spacing:0.08em">BORN</div>
+      <div style="font-family:var(--display);font-size:2rem;color:var(--duck)">2018</div>
+      <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text3)">CWI Amsterdam</div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-num" style="color:var(--duck)">0</div><div class="stat-label">External Deps</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--lime)">∞</div><div class="stat-label">File Formats</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--teal)">~50MB</div><div class="stat-label">Binary Size</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--sky)">1024</div><div class="stat-label">Rows / Vector</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--coral)">100%</div><div class="stat-label">ANSI SQL</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--violet)">MVCC</div><div class="stat-label">Transactions</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-title">Execution Architecture</div>
+        <div class="arch-diagram">
+          <div class="arch-layer">
+            <span style="color:var(--text3);min-width:100px">SQL / Jinja</span>
+            <span class="arch-box aql">Parser + Binder</span>
+            <span class="arch-arrow">→</span>
+            <span class="arch-box aql">Logical Planner</span>
+            <span class="arch-arrow">→</span>
+            <span class="arch-box aql">Optimizer</span>
+          </div>
+          <div style="margin:4px 0 4px 100px;color:var(--text3)">↓ Physical Plan</div>
+          <div class="arch-layer">
+            <span style="color:var(--text3);min-width:100px">Execution</span>
+            <span class="arch-box apr">Pipeline Executor</span>
+            <span class="arch-arrow">→</span>
+            <span class="arch-box apr">Vectorized Operators</span>
+            <span class="arch-arrow">→</span>
+            <span class="arch-box apr">Morsel Scheduler</span>
+          </div>
+          <div style="margin:4px 0 4px 100px;color:var(--text3)">↓↕ Read / Write</div>
+          <div class="arch-layer">
+            <span style="color:var(--text3);min-width:100px">Storage</span>
+            <span class="arch-box aex">Buffer Manager</span>
+            <span class="arch-arrow">→</span>
+            <span class="arch-box aex">Column Groups</span>
+            <span class="arch-arrow">→</span>
+            <span class="arch-box aex">Compression</span>
+          </div>
+          <div style="margin:4px 0 4px 100px;color:var(--text3)">↕ Scan / Push</div>
+          <div class="arch-layer">
+            <span style="color:var(--text3);min-width:100px">I/O Layer</span>
+            <span class="arch-box aio">Local FS</span>
+            <span class="arch-box aio">S3 / GCS / AZ</span>
+            <span class="arch-box aio">HTTP</span>
+            <span class="arch-box aio">Memory</span>
+          </div>
+          <div style="margin:4px 0 4px 100px;color:var(--text3)">↕ Scan Pushdown</div>
+          <div class="arch-layer">
+            <span style="color:var(--text3);min-width:100px">Formats</span>
+            <span class="arch-box ast">Parquet</span>
+            <span class="arch-box ast">CSV</span>
+            <span class="arch-box ast">JSON</span>
+            <span class="arch-box ast">Iceberg</span>
+            <span class="arch-box ast">Delta</span>
+            <span class="arch-box ast">Arrow</span>
+          </div>
+          <div style="margin:4px 0 4px 100px;color:var(--text3)">↑ Extensions</div>
+          <div class="arch-layer">
+            <span style="color:var(--text3);min-width:100px">Scanners</span>
+            <span class="arch-box acm">PostgreSQL</span>
+            <span class="arch-box acm">MySQL</span>
+            <span class="arch-box acm">SQLite</span>
+            <span class="arch-box acm">Spatial</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">The Mental Model Shift</div>
+        <table>
+          <thead><tr><th>Old World</th><th>DuckDB World</th></tr></thead>
+          <tbody>
+            <tr><td>Launch a server</td><td>Import a library</td></tr>
+            <tr><td>Connection pool</td><td>In-process call</td></tr>
+            <tr><td>Row-store pages</td><td>Column groups + zone maps</td></tr>
+            <tr><td>Interpret row by row</td><td>Vectorized 1024-row batches</td></tr>
+            <tr><td>Single-threaded scan</td><td>Morsel-driven parallelism</td></tr>
+            <tr><td>JDBC/ODBC latency</td><td>Zero-copy Arrow handoff</td></tr>
+            <tr><td>ETL into warehouse</td><td>Query <em>in place</em></td></tr>
+            <tr><td>Schema-bound tables</td><td>Schema-on-read anything</td></tr>
+            <tr><td>Fixed compute cluster</td><td>Laptop = analytics engine</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:1rem">
+        <div class="card-title">Vectorized Execution — Why It's Fast</div>
+        <p>Every operator processes <strong>1,024-row chunks</strong> (vectors). This isn't just cache-friendly — it enables SIMD: the CPU executes the <em>same operation</em> across 8–16 values simultaneously using AVX-512 instructions. A filter on a 100M-row Parquet file doesn't touch 99.9M rows that fail zone map checks.</p>
+        <div class="callout c-duck">
+          <strong>Zone Maps + Pushdown</strong>
+          Every row group in Parquet stores min/max metadata. DuckDB's optimizer pushes <code>WHERE event_ts > '2024-01-01'</code> down to the scan: row groups outside the range are never read. No full table scans for selective queries.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>Instant Gratification — Zero Config, Maximum Power</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-fname">Getting dangerous in 30 seconds</span><span class="code-lang">sql</span></div>
+    <pre><span class="cm">-- Install: pip install duckdb   (that's it. No server. No config.)</span>
+
+<span class="cm">-- Query a 2GB Parquet file from S3 directly — no download:</span>
+<span class="kw">SELECT</span> user_id, <span class="fn">count</span>(<span class="op">*</span>) events, <span class="fn">sum</span>(revenue) total
+<span class="kw">FROM</span>  <span class="jj">read_parquet</span>(<span class="st">'s3://my-data-lake/events/2024/**/*.parquet'</span>)
+<span class="kw">WHERE</span> event_type <span class="op">=</span> <span class="st">'purchase'</span>
+<span class="kw">GROUP BY ALL</span>
+<span class="kw">ORDER BY</span> total <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="nu">20</span>;
+
+<span class="cm">-- GROUP BY ALL — auto-infers non-aggregated columns. Zero maintenance.</span>
+<span class="cm">-- ORDER BY column_alias — yes, you can order by an alias you defined above.</span>
+
+<span class="cm">-- Scan 47 CSV files with schema inference and hive partitioning:</span>
+<span class="kw">SELECT</span> <span class="op">*</span>
+<span class="kw">FROM</span>  <span class="jj">read_csv</span>(<span class="st">'data/year=*/month=*/*.csv'</span>,
+        hive_partitioning <span class="op">=</span> <span class="kw">true</span>,   <span class="cm">-- year, month become columns</span>
+        auto_detect       <span class="op">=</span> <span class="kw">true</span>,   <span class="cm">-- infer types, delimiters</span>
+        parallel          <span class="op">=</span> <span class="kw">true</span>    <span class="cm">-- all cores</span>
+      );
+
+<span class="cm">-- Query a pandas DataFrame (zero copy via Arrow):</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> df <span class="kw">WHERE</span> amount <span class="op">></span> <span class="nu">100</span>;  <span class="cm">-- `df` is a Python variable!</span>
+
+<span class="cm">-- Query a live Postgres database as if it's a local table:</span>
+<span class="kw">ATTACH</span> <span class="st">'postgresql://user:pass@host/db'</span> <span class="kw">AS</span> pg (<span class="kw">TYPE</span> postgres, <span class="kw">READ_ONLY</span>);
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> pg.public.orders <span class="kw">LIMIT</span> <span class="nu">100</span>;</pre>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION: INGRESS — READING FROM EVERYTHING
+══════════════════════════════════════════════════ -->
+<section id="ingress">
+  <div class="section-header">
+    <div>
+      <div class="section-title"><em>INGRESS</em> FROM ALL VECTORS</div>
+      <div class="section-sub">DuckDB's superpower for ingress engineers: it reads <em>everything</em>, everywhere, with predicate pushdown, parallel scans, and zero ETL. Your entire data architecture becomes a SELECT statement.</div>
+    </div>
+  </div>
+
+  <div class="pills" id="ing-pills">
+    <button class="pill active" onclick="showTab('ing','parquet',this)">Parquet / Iceberg / Delta</button>
+    <button class="pill" onclick="showTab('ing','cloud',this)">Cloud Storage</button>
+    <button class="pill" onclick="showTab('ing','csv',this)">CSV / JSON</button>
+    <button class="pill" onclick="showTab('ing','db',this)">Live Databases</button>
+    <button class="pill" onclick="showTab('ing','http',this)">HTTP / Stdin</button>
+    <button class="pill" onclick="showTab('ing','arrow',this)">Arrow / Python</button>
+  </div>
+
+  <!-- PARQUET -->
+  <div id="ing-parquet" class="tab-pane active">
+    <div class="g2">
+      <div>
+        <div class="callout c-duck">
+          <strong>WHY PARQUET IS YOUR BEST FRIEND</strong>
+          DuckDB reads only the columns and row groups it needs. A 10GB Parquet file with a selective WHERE clause may read &lt;1MB. This is column projection + predicate pushdown working together. Your S3 egress bill thanks you.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Parquet — full arsenal</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- Single file</span>
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>(<span class="st">'data/events.parquet'</span>);
+
+<span class="cm">-- Glob — all files in dir, recursive</span>
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>(<span class="st">'data/**/*.parquet'</span>);
+
+<span class="cm">-- List of files (heterogeneous paths)</span>
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>([
+  <span class="st">'data/jan.parquet'</span>,
+  <span class="st">'s3://bucket/feb.parquet'</span>,
+  <span class="st">'https://cdn.example.com/mar.parquet'</span>
+]);
+
+<span class="cm">-- Hive partitioning — injects year/month as columns</span>
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>(
+  <span class="st">'s3://lake/events/year=*/month=*/*.parquet'</span>,
+  hive_partitioning <span class="op">=</span> <span class="kw">true</span>
+);
+
+<span class="cm">-- Schema inspection before you query</span>
+<span class="kw">DESCRIBE</span> <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="jj">read_parquet</span>(<span class="st">'events.parquet'</span>);
+
+<span class="cm">-- Parquet metadata (row groups, compression, stats)</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="jj">parquet_metadata</span>(<span class="st">'events.parquet'</span>);
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="jj">parquet_schema</span>(<span class="st">'events.parquet'</span>);
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="jj">parquet_file_metadata</span>(<span class="st">'events.parquet'</span>);
+
+<span class="cm">-- Which row groups were actually scanned? (filter pushdown audit)</span>
+<span class="kw">SELECT</span> row_group_id, num_rows
+<span class="kw">FROM</span>   <span class="jj">parquet_metadata</span>(<span class="st">'events.parquet'</span>)
+<span class="kw">WHERE</span>  stats_min_value <span class="op"><=</span> <span class="st">'2024-06-01'</span>
+  <span class="kw">AND</span>  stats_max_value <span class="op">>=</span> <span class="st">'2024-06-01'</span>;</pre>
+        </div>
+      </div>
+      <div>
+        <h3>Apache Iceberg</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Iceberg — time travel + schema evolution</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- Load extension once:</span>
+<span class="kw">INSTALL</span> iceberg; <span class="kw">LOAD</span> iceberg;
+
+<span class="cm">-- Scan current snapshot (REST catalog):</span>
+<span class="kw">FROM</span> iceberg_scan(<span class="st">'s3://lake/catalog/my_table'</span>);
+
+<span class="cm">-- Time travel — snapshot_id or timestamp:</span>
+<span class="kw">FROM</span> iceberg_scan(
+  <span class="st">'s3://lake/catalog/events'</span>,
+  snapshot_id <span class="op">=</span> <span class="nu">5432198765432198765</span>
+);
+
+<span class="cm">-- List all snapshots (audit trail):</span>
+<span class="kw">FROM</span> iceberg_snapshots(<span class="st">'s3://lake/catalog/events'</span>);
+
+<span class="cm">-- Schema evolution — read old snapshot with new schema mapping:</span>
+<span class="kw">FROM</span> iceberg_scan(
+  <span class="st">'s3://lake/catalog/events'</span>,
+  allow_moved_paths <span class="op">=</span> <span class="kw">true</span>   <span class="cm">-- handles S3 prefix changes</span>
+);</pre>
+        </div>
+        <h3>Delta Lake</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Delta Lake — DML log + time travel</span><span class="code-lang">sql</span></div>
+          <pre><span class="kw">INSTALL</span> delta; <span class="kw">LOAD</span> delta;
+
+<span class="cm">-- Current version:</span>
+<span class="kw">FROM</span> delta_scan(<span class="st">'s3://lake/tables/orders'</span>);
+
+<span class="cm">-- Time travel by version:</span>
+<span class="kw">FROM</span> delta_scan(
+  <span class="st">'s3://lake/tables/orders'</span>,
+  version <span class="op">=</span> <span class="nu">42</span>
+);
+
+<span class="cm">-- Inspect transaction log:</span>
+<span class="kw">FROM</span> delta_table_info(<span class="st">'s3://lake/tables/orders'</span>);</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOUD STORAGE -->
+  <div id="ing-cloud" class="tab-pane">
+    <div class="g2">
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">AWS S3 — full configuration</span><span class="code-lang">sql</span></div>
+          <pre><span class="kw">INSTALL</span> httpfs; <span class="kw">LOAD</span> httpfs;
+
+<span class="cm">-- Option 1: env vars (AWS_ACCESS_KEY_ID etc. auto-picked up)</span>
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>(<span class="st">'s3://my-bucket/data/*.parquet'</span>);
+
+<span class="cm">-- Option 2: explicit credentials</span>
+<span class="kw">CREATE</span> <span class="kw">SECRET</span> aws_creds (
+  <span class="kw">TYPE</span>            s3,
+  KEY_ID          <span class="st">'AKIA...'</span>,
+  SECRET          <span class="st">'secret...'</span>,
+  REGION          <span class="st">'us-east-1'</span>
+);
+
+<span class="cm">-- Option 3: assume IAM role</span>
+<span class="kw">CREATE</span> <span class="kw">SECRET</span> aws_role (
+  <span class="kw">TYPE</span>            s3,
+  PROVIDER        CREDENTIAL_CHAIN,
+  ROLE_ARN        <span class="st">'arn:aws:iam::123:role/DataRole'</span>
+);
+
+<span class="cm">-- S3-compatible (MinIO, Cloudflare R2, Backblaze B2):</span>
+<span class="kw">CREATE</span> <span class="kw">SECRET</span> r2 (
+  <span class="kw">TYPE</span>            s3,
+  KEY_ID          <span class="st">'...'</span>,
+  SECRET          <span class="st">'...'</span>,
+  ENDPOINT        <span class="st">'account.r2.cloudflarestorage.com'</span>,
+  URL_STYLE       <span class="st">'path'</span>
+);
+
+<span class="cm">-- Write back to S3 — it's bidirectional:</span>
+<span class="kw">COPY</span> (
+  <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> orders <span class="kw">WHERE</span> year <span class="op">=</span> <span class="nu">2024</span>
+) <span class="kw">TO</span> <span class="st">'s3://output/orders_2024.parquet'</span>
+(<span class="kw">FORMAT</span> parquet, COMPRESSION zstd, ROW_GROUP_SIZE <span class="nu">122880</span>);</pre>
+        </div>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">GCS + Azure Blob</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- Google Cloud Storage</span>
+<span class="kw">CREATE</span> <span class="kw">SECRET</span> gcs_key (
+  <span class="kw">TYPE</span>     gcs,
+  KEY_ID   <span class="st">'service-account@proj.iam.gserviceaccount.com'</span>,
+  SECRET   <span class="st">'-----BEGIN PRIVATE KEY-----...'</span>
+);
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>(<span class="st">'gs://bucket/events/*.parquet'</span>);
+
+<span class="cm">-- Azure Blob Storage</span>
+<span class="kw">INSTALL</span> azure; <span class="kw">LOAD</span> azure;
+<span class="kw">CREATE</span> <span class="kw">SECRET</span> az (
+  <span class="kw">TYPE</span>             azure,
+  CONNECTION_STRING <span class="st">'DefaultEndpointsProtocol=https;AccountName=...'</span>
+);
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>(<span class="st">'az://container/events/*.parquet'</span>);</pre>
+        </div>
+
+        <div class="callout c-lime">
+          <strong>MULTI-CLOUD FEDERATED QUERY — YES, REALLY</strong>
+          Create secrets for S3, GCS, and Azure. Then write a single query that JOINs across all three. DuckDB resolves the protocol from the URI prefix and reads in parallel. No data movement required.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Cross-cloud JOIN</span><span class="code-lang">sql</span></div>
+          <pre><span class="kw">SELECT</span> s.order_id, g.customer_name, a.campaign_source
+<span class="kw">FROM</span>   <span class="jj">read_parquet</span>(<span class="st">'s3://orders/2024/*.parquet'</span>) s
+<span class="kw">JOIN</span>   <span class="jj">read_parquet</span>(<span class="st">'gs://crm/customers/*.parquet'</span>) g
+       <span class="kw">USING</span> (customer_id)
+<span class="kw">JOIN</span>   <span class="jj">read_parquet</span>(<span class="st">'az://marketing/campaigns/*.parquet'</span>) a
+       <span class="kw">ON</span> s.utm_source <span class="op">=</span> a.source_key
+<span class="kw">WHERE</span>  s.created_at <span class="op">>=</span> <span class="st">'2024-01-01'</span>;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV / JSON -->
+  <div id="ing-csv" class="tab-pane">
+    <div class="g2">
+      <div>
+        <h3>CSV — The Auto-Detective</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">read_csv — schema inference</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- auto_detect sniffs delimiter, quoting, types, header</span>
+<span class="kw">FROM</span> <span class="jj">read_csv</span>(<span class="st">'data.csv'</span>, auto_detect <span class="op">=</span> <span class="kw">true</span>);
+
+<span class="cm">-- What did DuckDB infer? (super useful for debugging)</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="jj">sniff_csv</span>(<span class="st">'messy.csv'</span>);
+<span class="cm">-- returns: delimiter, quoting, types, has_header, etc.</span>
+
+<span class="cm">-- Explicit control when auto-detect fails:</span>
+<span class="kw">FROM</span> <span class="jj">read_csv</span>(<span class="st">'pipe_delimited.txt'</span>,
+  delim       <span class="op">=</span> <span class="st">'|'</span>,
+  header      <span class="op">=</span> <span class="kw">true</span>,
+  quote       <span class="op">=</span> <span class="st">'"'</span>,
+  escape      <span class="op">=</span> <span class="st">'\\'</span>,
+  skip        <span class="op">=</span> <span class="nu">3</span>,             <span class="cm">-- skip 3 header rows</span>
+  dateformat  <span class="op">=</span> <span class="st">'%Y/%m/%d'</span>,
+  timestampformat <span class="op">=</span> <span class="st">'%Y-%m-%d %H:%M:%S'</span>,
+  nullstr     <span class="op">=</span> [<span class="st">'N/A'</span>, <span class="st">''</span>, <span class="st">'NULL'</span>],
+  ignore_errors <span class="op">=</span> <span class="kw">true</span>,        <span class="cm">-- skip malformed rows</span>
+  columns     <span class="op">=</span> {
+    <span class="st">'id'</span>:      <span class="st">'BIGINT'</span>,
+    <span class="st">'ts'</span>:      <span class="st">'TIMESTAMP'</span>,
+    <span class="st">'amount'</span>:  <span class="st">'DECIMAL(18,4)'</span>
+  }
+);
+
+<span class="cm">-- Error reporting — WHERE did parsing fail?</span>
+<span class="kw">FROM</span> <span class="jj">read_csv</span>(<span class="st">'messy.csv'</span>,
+  ignore_errors <span class="op">=</span> <span class="kw">true</span>,
+  store_rejects <span class="op">=</span> <span class="kw">true</span>   <span class="cm">-- write failures to reject tables</span>
+);
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> reject_errors;   <span class="cm">-- inspect what failed and why</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> reject_scans;</pre>
+        </div>
+      </div>
+      <div>
+        <h3>JSON — From Simple to Deeply Nested</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">read_json — nesting + NDJSON</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- NDJSON (newline-delimited, Kafka default):</span>
+<span class="kw">FROM</span> <span class="jj">read_ndjson</span>(<span class="st">'events.ndjson'</span>, auto_detect <span class="op">=</span> <span class="kw">true</span>);
+
+<span class="cm">-- JSON array:</span>
+<span class="kw">FROM</span> <span class="jj">read_json</span>(<span class="st">'data.json'</span>, format <span class="op">=</span> <span class="st">'array'</span>);
+
+<span class="cm">-- Deeply nested — extract with arrow operators:</span>
+<span class="kw">SELECT</span>
+  id,
+  payload <span class="op">->></span> <span class="st">'$.user.email'</span>        <span class="kw">AS</span> email,
+  payload <span class="op">->></span> <span class="st">'$.items[0].sku'</span>      <span class="kw">AS</span> first_sku,
+  <span class="fn">json_extract_string</span>(payload, <span class="st">'$.meta.source'</span>) <span class="kw">AS</span> source,
+  <span class="fn">json_array_length</span>(payload <span class="op">-></span> <span class="st">'$.items'</span>)  <span class="kw">AS</span> item_count
+
+<span class="kw">FROM</span> <span class="jj">read_json</span>(<span class="st">'orders.json'</span>);
+
+<span class="cm">-- Unnest an array column into rows:</span>
+<span class="kw">SELECT</span> id, <span class="fn">unnest</span>(payload <span class="op">-></span> <span class="st">'$.items'</span>) <span class="kw">AS</span> item
+<span class="kw">FROM</span> <span class="jj">read_json</span>(<span class="st">'orders.json'</span>);
+
+<span class="cm">-- Type-safe struct extraction:</span>
+<span class="kw">SELECT</span>
+  <span class="fn">json_transform</span>(payload, <span class="st">'{"user": {"id": "BIGINT",
+    "name": "VARCHAR", "tags": ["VARCHAR"]}}'</span>) <span class="kw">AS</span> typed
+<span class="kw">FROM</span> events;
+
+<span class="cm">-- GLOB across thousands of NDJSON files (Kafka S3 sink):</span>
+<span class="kw">FROM</span> <span class="jj">read_ndjson</span>(<span class="st">'s3://kafka-sink/topic=orders/**/*.json'</span>,
+  hive_partitioning <span class="op">=</span> <span class="kw">true</span>,
+  auto_detect       <span class="op">=</span> <span class="kw">true</span>,
+  maximum_object_size <span class="op">=</span> <span class="nu">1048576</span>  <span class="cm">-- 1MB max object</span>
+);</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE DATABASES -->
+  <div id="ing-db" class="tab-pane">
+    <div class="g2">
+      <div>
+        <h3>ATTACH — Multi-Database Federation</h3>
+        <div class="callout c-teal">
+          <strong>ATTACH IS THE KILLER FEATURE FOR INGRESS ENGINEERS</strong>
+          ATTACH lets DuckDB reach into live databases as if they're schemas. You can JOIN your Postgres OLTP data with S3 Parquet files in a single query. The database scanner pushes WHERE clauses down to the remote — only matching rows are fetched.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">ATTACH — database federation</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- PostgreSQL (push-down capable):</span>
+<span class="kw">ATTACH</span> <span class="st">'host=prod-db dbname=myapp user=ro password=pw'</span>
+       <span class="kw">AS</span> pg (<span class="kw">TYPE</span> postgres, <span class="kw">READ_ONLY</span>);
+
+<span class="cm">-- MySQL:</span>
+<span class="kw">ATTACH</span> <span class="st">'mysql://user:pass@host:3306/mydb'</span>
+       <span class="kw">AS</span> mysql (<span class="kw">TYPE</span> mysql_scanner, <span class="kw">READ_ONLY</span>);
+
+<span class="cm">-- SQLite (your existing .db files):</span>
+<span class="kw">ATTACH</span> <span class="st">'local_app.db'</span> <span class="kw">AS</span> sqlite (<span class="kw">TYPE</span> sqlite);
+
+<span class="cm">-- Another DuckDB file:</span>
+<span class="kw">ATTACH</span> <span class="st">'analytics.duckdb'</span> <span class="kw">AS</span> analytics;
+
+<span class="cm">-- List all attached databases:</span>
+<span class="kw">SHOW</span> DATABASES;
+
+<span class="cm">-- Cross-database JOIN — Postgres OLTP + S3 data lake:</span>
+<span class="kw">SELECT</span>
+  p.order_id,
+  p.status,            <span class="cm">-- from live Postgres</span>
+  e.event_type,        <span class="cm">-- from S3 Parquet</span>
+  e.event_ts
+<span class="kw">FROM</span>       pg.public.orders p
+<span class="kw">LEFT JOIN</span>  <span class="jj">read_parquet</span>(<span class="st">'s3://lake/events/*.parquet'</span>) e
+           <span class="kw">ON</span> p.order_id <span class="op">=</span> e.order_id
+<span class="kw">WHERE</span>      p.created_at <span class="op">>=</span> <span class="fn">current_date</span> <span class="op">-</span> <span class="kw">INTERVAL</span> <span class="st">'7 days'</span>;
+
+<span class="cm">-- Copy Postgres table to local DuckDB (one-shot migration):</span>
+<span class="kw">CREATE TABLE</span> orders <span class="kw">AS</span>
+  <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> pg.public.orders;</pre>
+        </div>
+      </div>
+      <div>
+        <h3>Kafka → DuckDB Patterns</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Kafka ingress patterns</span><span class="code-lang">python</span></div>
+          <pre><span class="py">import</span> duckdb
+<span class="py">from</span> confluent_kafka <span class="py">import</span> Consumer
+<span class="py">import</span> pyarrow <span class="py">as</span> pa
+
+con <span class="op">=</span> duckdb.connect(<span class="st">'events.duckdb'</span>)
+con.execute(<span class="st">"""
+  CREATE TABLE IF NOT EXISTS events (
+    event_id   VARCHAR PRIMARY KEY,
+    user_id    BIGINT,
+    event_type VARCHAR,
+    event_ts   TIMESTAMP,
+    payload    JSON
+  )
+"""</span>)
+
+consumer <span class="op">=</span> Consumer({...})
+consumer.subscribe([<span class="st">'events'</span>])
+
+<span class="cm"># Micro-batch: accumulate Arrow batches, flush to DuckDB</span>
+batch <span class="op">=</span> []
+<span class="py">while True</span>:
+    msgs <span class="op">=</span> consumer.consume(<span class="nu">1000</span>, timeout<span class="op">=</span><span class="nu">1.0</span>)
+    <span class="py">for</span> msg <span class="py">in</span> msgs:
+        batch.append(orjson.loads(msg.value()))
+
+    <span class="py">if</span> len(batch) <span class="op">>=</span> <span class="nu">10_000</span>:
+        <span class="cm"># Zero-copy: list of dicts → Arrow → DuckDB</span>
+        tbl <span class="op">=</span> pa.Table.from_pylist(batch)
+        con.execute(<span class="st">"""
+          INSERT OR REPLACE INTO events
+          SELECT * FROM tbl
+        """</span>)
+        batch <span class="op">=</span> []
+        consumer.commit()</pre>
+        </div>
+        <div class="callout c-sky">
+          <strong>S3 SINK PATTERN (KAFKA → S3 → DUCKDB)</strong>
+          The common pattern: Kafka → Kafka Connect → S3 (NDJSON or Parquet). DuckDB queries the S3 prefix directly with <code>read_ndjson('s3://sink/topic=events/**')</code>. No Spark, no EMR, no cluster — just DuckDB on your laptop or a Lambda.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HTTP / STDIN -->
+  <div id="ing-http" class="tab-pane">
+    <div class="g2">
+      <div>
+        <h3>HTTP — Query Any URL</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">HTTP direct reads</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- Query a Parquet file over HTTPS directly:</span>
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>(<span class="st">'https://datasets.example.com/taxi.parquet'</span>);
+
+<span class="cm">-- GitHub raw CSV (useful for seed data):</span>
+<span class="kw">FROM</span> <span class="jj">read_csv</span>(<span class="st">'https://raw.githubusercontent.com/org/repo/main/data.csv'</span>);
+
+<span class="cm">-- Hugging Face datasets (they expose Parquet):</span>
+<span class="kw">FROM</span> <span class="jj">read_parquet</span>(<span class="st">'https://huggingface.co/datasets/org/dataset/resolve/main/data/*.parquet'</span>);
+
+<span class="cm">-- HTTP range requests — DuckDB fetches only needed byte ranges.</span>
+<span class="cm">-- For a 10GB remote Parquet, a selective query may fetch &lt;100KB.</span>
+
+<span class="cm">-- Authentication via secret:</span>
+<span class="kw">CREATE</span> <span class="kw">SECRET</span> api_auth (
+  <span class="kw">TYPE</span>   http,
+  HEADERS MAP {<span class="st">'Authorization'</span>: <span class="st">'Bearer my-token'</span>}
+);
+<span class="kw">FROM</span> <span class="jj">read_json</span>(<span class="st">'https://api.example.com/events?format=ndjson'</span>);</pre>
+        </div>
+      </div>
+      <div>
+        <h3>Stdin / Shell Pipelines</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Shell pipeline magic</span><span class="code-lang">bash</span></div>
+          <pre><span class="cm"># Pipe AWS CLI output directly into DuckDB:</span>
+aws s3 cp s3://bucket/data.parquet - \
+  | duckdb -c "FROM read_parquet('/dev/stdin')"
+
+<span class="cm"># Stream a gzipped CSV through duckdb:</span>
+zcat huge.csv.gz \
+  | duckdb -c "FROM read_csv('/dev/stdin') LIMIT 10"
+
+<span class="cm"># Query Docker container logs (JSON format):</span>
+docker logs my-app --since 1h 2>&1 \
+  | duckdb -c "
+      SELECT json->>'$.level' lvl, count(*) n
+      FROM read_ndjson('/dev/stdin')
+      GROUP BY ALL ORDER BY n DESC
+    "
+
+<span class="cm"># curl → DuckDB analytical pipeline:</span>
+curl -s 'https://api.example.com/events.ndjson' \
+  | duckdb -c "
+      SELECT event_type, count(*), avg(latency_ms)
+      FROM read_ndjson('/dev/stdin')
+      GROUP BY ALL
+    "
+
+<span class="cm"># Export a PostgreSQL table as Parquet in one pipeline:</span>
+psql -c "COPY orders TO STDOUT (FORMAT binary)" \
+  | python -c "
+      import sys, duckdb
+      duckdb.sql(\"\"\"
+        COPY (SELECT * FROM read_csv('/dev/stdin'))
+        TO 'orders.parquet' (FORMAT parquet)
+      \"\"\")
+    "</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW / PYTHON -->
+  <div id="ing-arrow" class="tab-pane">
+    <div class="callout c-lime">
+      <strong>ZERO-COPY ARROW — THE REAL MAGIC</strong>
+      DuckDB and Apache Arrow share the same columnar memory layout. When you pass an Arrow table or a Polars DataFrame to DuckDB, <strong>no data is copied</strong>. DuckDB scans Arrow's memory buffers directly. This makes the DuckDB↔Arrow↔Polars↔Pandas integration absurdly fast.
+    </div>
+    <div class="g2">
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Arrow + Pandas — zero-copy</span><span class="code-lang">python</span></div>
+          <pre><span class="py">import</span> duckdb, pandas <span class="py">as</span> pd, pyarrow <span class="py">as</span> pa
+
+<span class="cm"># Pandas DataFrame — DuckDB queries it by variable name</span>
+df <span class="op">=</span> pd.read_parquet(<span class="st">'huge_file.parquet'</span>)
+result <span class="op">=</span> duckdb.sql(<span class="st">"""
+  SELECT customer_id, sum(amount) total
+  FROM df                          -- df is the Python variable!
+  WHERE status = 'COMPLETED'
+  GROUP BY ALL
+  ORDER BY total DESC
+"""</span>).df()                         <span class="cm"># .df() = back to pandas</span>
+
+<span class="cm"># Arrow Table — same magic</span>
+arrow_tbl <span class="op">=</span> pa.ipc.open_file(<span class="st">'data.arrow'</span>).read_all()
+result <span class="op">=</span> duckdb.sql(<span class="st">"SELECT * FROM arrow_tbl LIMIT 100"</span>)
+
+<span class="cm"># Output formats — choose your weapon:</span>
+duckdb.sql(<span class="st">"SELECT * FROM events"</span>).df()       <span class="cm"># pandas DataFrame</span>
+duckdb.sql(<span class="st">"SELECT * FROM events"</span>).pl()       <span class="cm"># Polars DataFrame</span>
+duckdb.sql(<span class="st">"SELECT * FROM events"</span>).arrow()    <span class="cm"># PyArrow Table</span>
+duckdb.sql(<span class="st">"SELECT * FROM events"</span>).fetchall() <span class="cm"># list of tuples</span>
+duckdb.sql(<span class="st">"SELECT * FROM events"</span>).fetchdf()  <span class="cm"># alias for .df()</span>
+
+<span class="cm"># Streaming — for larger-than-RAM results:</span>
+rel <span class="op">=</span> duckdb.sql(<span class="st">"SELECT * FROM huge_parquet"</span>)
+<span class="py">for</span> batch <span class="py">in</span> rel.fetch_arrow_reader(<span class="nu">100_000</span>):
+    process_batch(batch)  <span class="cm"># 100k rows at a time</span></pre>
+        </div>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Polars — native integration</span><span class="code-lang">python</span></div>
+          <pre><span class="py">import</span> duckdb, polars <span class="py">as</span> pl
+
+<span class="cm"># DuckDB → Polars (zero copy)</span>
+lf <span class="op">=</span> pl.scan_parquet(<span class="st">'events.parquet'</span>)
+
+<span class="cm"># Mix Polars LazyFrame with DuckDB SQL:</span>
+result <span class="op">=</span> duckdb.sql(<span class="st">"""
+  SELECT
+    date_trunc('day', event_ts) AS day,
+    event_type,
+    count(*) AS n
+  FROM lf                        -- Polars LazyFrame directly!
+  GROUP BY ALL
+  ORDER BY day DESC
+"""</span>).pl()                       <span class="cm"># returns Polars DataFrame</span>
+
+<span class="cm"># Polars LazyFrame → DuckDB → Arrow → back to Polars:</span>
+<span class="cm"># All in process, zero copies, all CPU cores</span>
+
+<span class="cm"># Register a relation as a named view:</span>
+con <span class="op">=</span> duckdb.connect()
+con.register(<span class="st">'events_view'</span>, lf.collect())
+con.sql(<span class="st">"SELECT * FROM events_view LIMIT 10"</span>)
+
+<span class="cm"># Chunked reading for ML pipelines:</span>
+reader <span class="op">=</span> con.execute(<span class="st">"SELECT features FROM training_data"</span>)
+<span class="py">while True</span>:
+    chunk <span class="op">=</span> reader.fetch_arrow_table()
+    <span class="py">if not</span> chunk:
+        <span class="py">break</span>
+    train_on(chunk.to_pandas())</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION: SQL+ — DUCKDB SQL SUPERPOWERS
+══════════════════════════════════════════════════ -->
+<section id="sqlplus">
+  <div class="section-header">
+    <div>
+      <div class="section-title">SQL<em>+</em> — WHAT POSTGRES CAN'T DO</div>
+      <div class="section-sub">DuckDB extends ANSI SQL with syntax that reads like science fiction to a veteran PostgreSQL user. These are not gimmicks — they slash boilerplate and unlock patterns that previously required application code.</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Column Selection Superpowers</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">EXCLUDE · REPLACE · COLUMNS()</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- SELECT * EXCLUDE — drop columns by name (not rename)</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">EXCLUDE</span> (_fivetran_deleted, _loaded_at, ssn, credit_card)
+<span class="kw">FROM</span> customers;
+
+<span class="cm">-- SELECT * REPLACE — override specific columns inline</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">REPLACE</span> (
+  amount <span class="op">/</span> <span class="nu">100.0</span>   <span class="kw">AS</span> amount,     <span class="cm">-- cents → dollars in-place</span>
+  <span class="fn">upper</span>(status)   <span class="kw">AS</span> status      <span class="cm">-- normalize casing</span>
+)
+<span class="kw">FROM</span> orders;
+
+<span class="cm">-- COLUMNS(regex) — select by pattern</span>
+<span class="kw">SELECT</span> <span class="fn">COLUMNS</span>(<span class="re">'.*_at$'</span>)          <span class="cm">-- all timestamp columns</span>
+<span class="kw">FROM</span> events;
+
+<span class="kw">SELECT</span> <span class="fn">COLUMNS</span>(<span class="re">'revenue|amount|cost'</span>)  <span class="cm">-- financial columns</span>
+<span class="kw">FROM</span> mart_revenue;
+
+<span class="cm">-- Apply a function to ALL matching columns at once:</span>
+<span class="kw">SELECT</span>
+  id,
+  <span class="fn">round</span>(<span class="fn">COLUMNS</span>(<span class="re">'.*_amount$'</span>), <span class="nu">2</span>)  <span class="cm">-- round every amount column</span>
+<span class="kw">FROM</span> orders;
+
+<span class="cm">-- COLUMNS with lambda (wildcard aggregation):</span>
+<span class="kw">SELECT</span>
+  <span class="fn">min</span>(<span class="fn">COLUMNS</span>(<span class="re">'.*'</span>)),   <span class="cm">-- min of every column</span>
+  <span class="fn">max</span>(<span class="fn">COLUMNS</span>(<span class="re">'.*'</span>)),   <span class="cm">-- max of every column</span>
+  <span class="fn">count</span>(<span class="fn">COLUMNS</span>(<span class="re">'.*'</span>)) <span class="cm">-- non-null count of every column</span>
+<span class="kw">FROM</span> events;</pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>GROUP BY / ORDER BY ALL</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">GROUP BY ALL · ORDER BY ALL</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- GROUP BY ALL — infers non-aggregated columns automatically</span>
+<span class="kw">SELECT</span>
+  date_trunc(<span class="st">'day'</span>, event_ts) <span class="kw">AS</span> day,
+  event_type,
+  platform,
+  <span class="fn">count</span>(<span class="op">*</span>)                   <span class="kw">AS</span> n,
+  <span class="fn">avg</span>(latency_ms)            <span class="kw">AS</span> avg_latency
+<span class="kw">FROM</span> events
+<span class="kw">GROUP BY ALL</span>;     <span class="cm">-- auto: GROUP BY day, event_type, platform</span>
+
+<span class="cm">-- ORDER BY ALL — sorts by every non-aggregated column</span>
+<span class="kw">SELECT</span> year, quarter, revenue
+<span class="kw">FROM</span> mart_revenue
+<span class="kw">ORDER BY ALL</span>;    <span class="cm">-- ORDER BY year, quarter</span>
+
+<span class="cm">-- ORDER BY alias — reference output column name</span>
+<span class="kw">SELECT</span>
+  event_ts::date          <span class="kw">AS</span> day,
+  <span class="fn">count</span>(<span class="op">*</span>)               <span class="kw">AS</span> event_count
+<span class="kw">FROM</span> events
+<span class="kw">GROUP BY</span> day             <span class="cm">-- reference alias directly!</span>
+<span class="kw">ORDER BY</span> event_count <span class="kw">DESC</span>;  <span class="cm">-- same here</span>
+
+<span class="cm">-- FROM first — anti-Cartesian safety + readability</span>
+<span class="kw">FROM</span> events
+<span class="kw">SELECT</span> event_id, event_type
+<span class="kw">WHERE</span>  event_ts <span class="op">></span> <span class="st">'2024-01-01'</span>
+<span class="kw">LIMIT</span>  <span class="nu">100</span>;  <span class="cm">-- FROM before SELECT is valid DuckDB!</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <div class="g2">
+    <div>
+      <h3>PIVOT / UNPIVOT — Native SQL</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">PIVOT + UNPIVOT</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- PIVOT: rows → columns (dynamic cross-tab)</span>
+<span class="kw">PIVOT</span> orders
+<span class="kw">ON</span>     status          <span class="cm">-- unique values become column headers</span>
+<span class="kw">USING</span>  <span class="fn">count</span>(<span class="op">*</span>)        <span class="cm">-- aggregation for each cell</span>
+<span class="kw">GROUP BY</span> customer_id;
+
+<span class="cm">-- Result: customer_id | PENDING | COMPLETED | CANCELLED</span>
+
+<span class="cm">-- PIVOT with explicit values (for deterministic column order):</span>
+<span class="kw">PIVOT</span> revenue_data
+<span class="kw">ON</span>    quarter <span class="kw">IN</span> (Q1, Q2, Q3, Q4)
+<span class="kw">USING</span> <span class="fn">sum</span>(amount) <span class="kw">AS</span> rev
+<span class="kw">GROUP BY</span> product_line;
+
+<span class="cm">-- UNPIVOT: columns → rows (melt wide to long)</span>
+<span class="kw">UNPIVOT</span> wide_metrics
+<span class="kw">ON</span>     revenue, cost, profit    <span class="cm">-- columns to collapse</span>
+<span class="kw">INTO</span>
+  <span class="kw">NAME</span>  metric_name             <span class="cm">-- new key column</span>
+  VALUE metric_value;            <span class="cm">-- new value column</span>
+
+<span class="cm">-- Dynamic PIVOT on expression (all months in data):</span>
+<span class="kw">PIVOT</span> (
+  <span class="kw">SELECT</span> product, <span class="fn">strftime</span>(order_date, <span class="st">'%Y-%m'</span>) <span class="kw">AS</span> month, revenue
+  <span class="kw">FROM</span> orders
+)
+<span class="kw">ON</span>    month
+<span class="kw">USING</span> <span class="fn">sum</span>(revenue)
+<span class="kw">GROUP BY</span> product;</pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>QUALIFY — Window Filter Without Subquery</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">QUALIFY + ASOF JOIN</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- QUALIFY filters on window function results.
+-- Without QUALIFY, you need a subquery or CTE.</span>
+
+<span class="cm">-- Latest order per customer (Top-N per group):</span>
+<span class="kw">SELECT</span> customer_id, order_id, created_at, amount
+<span class="kw">FROM</span>   orders
+<span class="kw">QUALIFY</span> <span class="fn">row_number</span>() <span class="kw">OVER</span> (
+  <span class="kw">PARTITION BY</span> customer_id
+  <span class="kw">ORDER BY</span>     created_at <span class="kw">DESC</span>
+) <span class="op">=</span> <span class="nu">1</span>;
+
+<span class="cm">-- Deduplicate on composite key, keep latest:</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> raw_events
+<span class="kw">QUALIFY</span> <span class="fn">row_number</span>() <span class="kw">OVER</span> (
+  <span class="kw">PARTITION BY</span> event_id
+  <span class="kw">ORDER BY</span>     _ingested_at <span class="kw">DESC</span>
+) <span class="op">=</span> <span class="nu">1</span>;
+
+<span class="cm">─────────────────────────────────────────────────
+
+-- ASOF JOIN — time-series "as of" matching.
+-- For each event, find the exchange rate in effect AT THAT TIME.</span>
+
+<span class="kw">SELECT</span>
+  o.order_id,
+  o.amount_usd,
+  o.amount_usd <span class="op">*</span> r.rate_gbp <span class="kw">AS</span> amount_gbp
+<span class="kw">FROM</span>       orders o
+<span class="kw">ASOF JOIN</span>  exchange_rates r
+           <span class="kw">ON</span>  o.currency    <span class="op">=</span> r.currency
+           <span class="kw">AND</span> o.created_at <span class="op">>=</span> r.valid_from;
+
+<span class="cm">-- ASOF finds the largest r.valid_from &lt;= o.created_at.
+-- No self-joins, no correlated subqueries. Pure beauty.</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>List + Lambda — Functional SQL</h3>
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Lambda functions on lists</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- DuckDB has first-class LIST type and lambda functions.</span>
+
+<span class="cm">-- list_transform: map over a list</span>
+<span class="kw">SELECT</span> <span class="fn">list_transform</span>([<span class="nu">1</span>,<span class="nu">2</span>,<span class="nu">3</span>,<span class="nu">4</span>], x <span class="op">-></span> x <span class="op">*</span> x);
+<span class="cm">-- → [1, 4, 9, 16]</span>
+
+<span class="cm">-- list_filter: filter with a predicate</span>
+<span class="kw">SELECT</span> <span class="fn">list_filter</span>(tags, t <span class="op">-></span> t <span class="kw">LIKE</span> <span class="st">'prod_%'</span>)
+<span class="kw">FROM</span> events;
+
+<span class="cm">-- list_reduce: fold</span>
+<span class="kw">SELECT</span> <span class="fn">list_reduce</span>([<span class="nu">10</span>,<span class="nu">20</span>,<span class="nu">30</span>], (acc, x) <span class="op">-></span> acc <span class="op">+</span> x);
+<span class="cm">-- → 60</span>
+
+<span class="cm">-- Nested lambda: normalize prices in a list</span>
+<span class="kw">SELECT</span>
+  product_id,
+  <span class="fn">list_transform</span>(
+    price_history,
+    p <span class="op">-></span> <span class="fn">round</span>(p <span class="op">*</span> exchange_rate, <span class="nu">2</span>)
+  ) <span class="kw">AS</span> price_gbp
+<span class="kw">FROM</span> products;
+
+<span class="cm">-- Aggregate into list, then filter:</span>
+<span class="kw">SELECT</span>
+  customer_id,
+  <span class="fn">list_filter</span>(
+    <span class="fn">list</span>(order_id <span class="kw">ORDER BY</span> created_at),
+    (o, i) <span class="op">-></span> i <span class="op">&lt;</span> <span class="nu">5</span>    <span class="cm">-- first 5 orders only (index lambda)</span>
+  ) <span class="kw">AS</span> first_5_orders
+<span class="kw">FROM</span> orders
+<span class="kw">GROUP BY</span> <span class="nu">1</span>;</pre>
+      </div>
+    </div>
+    <div>
+      <h3>Struct Access + Unnest</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Struct · Unnest · generate_series</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- Struct: composite type with named fields</span>
+<span class="kw">SELECT</span>
+  <span class="fn">struct_pack</span>(name := <span class="st">'Alice'</span>, age := <span class="nu">32</span>) <span class="kw">AS</span> person,
+  person.name,    <span class="cm">-- dot access on struct</span>
+  person[<span class="st">'age'</span>]; <span class="cm">-- bracket access</span>
+
+<span class="cm">-- Unnest array column into rows:</span>
+<span class="kw">SELECT</span> order_id, <span class="fn">unnest</span>(line_items) <span class="kw">AS</span> item
+<span class="kw">FROM</span> orders;
+
+<span class="cm">-- Unnest with ordinality (keep array index):</span>
+<span class="kw">SELECT</span> order_id, item, idx
+<span class="kw">FROM</span>   orders,
+       <span class="fn">unnest</span>(line_items) <span class="kw">WITH</span> <span class="kw">ORDINALITY</span> t(item, idx);
+
+<span class="cm">-- SUMMARIZE — instant profiling of any table/query:</span>
+<span class="kw">SUMMARIZE</span> events;
+<span class="cm">-- Returns: count, nulls, min, max, avg, std,
+--          q25, q50, q75 for EVERY column. Zero code.</span>
+
+<span class="cm">-- generate_series — date spines, sequences:</span>
+<span class="kw">SELECT</span> <span class="fn">generate_series</span>(
+  <span class="st">'2024-01-01'</span>::<span class="ty">date</span>,
+  <span class="st">'2024-12-31'</span>::<span class="ty">date</span>,
+  <span class="kw">INTERVAL</span> <span class="st">'1 day'</span>
+) <span class="kw">AS</span> day;
+
+<span class="cm">-- SAMPLE — fast approximate queries:</span>
+<span class="kw">SELECT</span> <span class="fn">avg</span>(amount), <span class="fn">stddev</span>(amount)
+<span class="kw">FROM</span> events <span class="kw">USING SAMPLE</span> <span class="nu">10</span><span class="op">%</span>;         <span class="cm">-- reservoir sample</span>
+
+<span class="kw">FROM</span> events <span class="kw">USING SAMPLE</span> <span class="nu">100000</span> <span class="kw">ROWS</span>; <span class="cm">-- fixed row count</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION: EXTENSIONS
+══════════════════════════════════════════════════ -->
+<section id="extensions">
+  <div class="section-header">
+    <div>
+      <div class="section-title">THE <em>EXTENSION</em> ECOSYSTEM</div>
+      <div class="section-sub">DuckDB's extension system lets you bolt capabilities directly into the engine. Extensions can add new table functions, file format readers, UDFs, and types. Install from the official registry with one statement.</div>
+    </div>
+  </div>
+
+  <div class="code-wrap" style="margin-bottom:1.5rem">
+    <div class="code-header"><span class="code-fname">Extension lifecycle</span><span class="code-lang">sql</span></div>
+    <pre><span class="kw">INSTALL</span>   httpfs;       <span class="cm">-- download from registry (once per machine)</span>
+<span class="kw">LOAD</span>      httpfs;       <span class="cm">-- activate in this session</span>
+<span class="kw">UPDATE</span>  <span class="kw">EXTENSIONS</span>;    <span class="cm">-- upgrade all installed extensions</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="fn">duckdb_extensions</span>();  <span class="cm">-- inspect what's installed + loaded</span>
+<span class="kw">SELECT</span> extension_name, loaded, installed <span class="kw">FROM</span> <span class="fn">duckdb_extensions</span>();</pre>
+  </div>
+
+  <div class="ext-grid">
+    <div class="ext-card">
+      <div class="ext-name">httpfs</div>
+      <div class="ext-install">INSTALL httpfs; LOAD httpfs;</div>
+      <div class="ext-bundled">AUTO-LOADED</div>
+      <div class="ext-desc">S3, GCS, Azure Blob, HTTP/HTTPS reads and writes. The foundation of all cloud ingress. Adds <code>read_parquet('s3://...')</code>, secrets for credentials, range-request support.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">spatial</div>
+      <div class="ext-install">INSTALL spatial; LOAD spatial;</div>
+      <div class="ext-desc">Full PostGIS-compatible spatial operations. Adds <code>GEOMETRY</code> type, 100+ ST_ functions, reads Shapefile/GeoJSON/GeoParquet. Run geospatial analytics at DuckDB speed — no Postgres needed.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">iceberg</div>
+      <div class="ext-install">INSTALL iceberg; LOAD iceberg;</div>
+      <div class="ext-desc">Apache Iceberg table format support. Read any Iceberg table from S3/GCS/Azure. Time travel, snapshot inspection, schema evolution. Works with REST and Glue catalogs.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">delta</div>
+      <div class="ext-install">INSTALL delta; LOAD delta;</div>
+      <div class="ext-desc">Delta Lake format scanner via delta-kernel-rs. Read Delta tables from any storage. Version time travel, transaction log inspection. Works with Databricks, AWS Glue, Azure Synapse Delta tables.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">json</div>
+      <div class="ext-install">INSTALL json; LOAD json;</div>
+      <div class="ext-bundled">BUNDLED — ALWAYS AVAILABLE</div>
+      <div class="ext-desc">JSON reads, writes, path extraction, schema auto-detection, NDJSON streaming. The <code>-></code> and <code>->></code> operators. <code>json_transform()</code> for type-safe extraction. Handles malformed JSON gracefully.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">postgres_scanner</div>
+      <div class="ext-install">INSTALL postgres; LOAD postgres;</div>
+      <div class="ext-desc">Direct PostgreSQL table scanning. Pushes predicates and projections to Postgres. ATTACH as a schema. Replicate data in one <code>CREATE TABLE AS SELECT</code>. Works with RDS, Aurora, Supabase, Neon.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">mysql_scanner</div>
+      <div class="ext-install">INSTALL mysql; LOAD mysql;</div>
+      <div class="ext-desc">MySQL/MariaDB table scanner. Same ATTACH paradigm as postgres. Read your legacy MySQL OLTP tables directly in DuckDB analytical queries.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">sqlite_scanner</div>
+      <div class="ext-install">INSTALL sqlite; LOAD sqlite;</div>
+      <div class="ext-bundled">BUNDLED</div>
+      <div class="ext-desc">Read and write SQLite .db files. ATTACH SQLite as a DuckDB schema. Useful for app developer analytics — query your Django/Rails SQLite dev database with analytical SQL.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">aws</div>
+      <div class="ext-install">INSTALL aws; LOAD aws;</div>
+      <div class="ext-desc">AWS credential chain support. Automatically picks up IAM roles, <code>~/.aws/credentials</code>, EC2 metadata. Used alongside httpfs. Essential for production AWS deployments.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">azure</div>
+      <div class="ext-install">INSTALL azure; LOAD azure;</div>
+      <div class="ext-desc">Azure Blob and ADLS Gen2 access. SAS tokens, connection strings, managed identity. Enables <code>az://container/path</code> URI scheme for seamless Azure data lake access.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">fts</div>
+      <div class="ext-install">INSTALL fts; LOAD fts;</div>
+      <div class="ext-desc">Full-text search via an inverted index. <code>PRAGMA create_fts_index('docs', 'id', 'body')</code> then <code>match_bm25(id, 'search terms')</code>. Run text search analytics without Elasticsearch.</div>
+    </div>
+    <div class="ext-card">
+      <div class="ext-name">excel</div>
+      <div class="ext-install">INSTALL excel; LOAD excel;</div>
+      <div class="ext-desc"><code>read_xlsx()</code> for Excel files. Finally — query spreadsheets like tables. Also adds Excel-compatible number formatting functions. <code>COPY ... TO 'output.xlsx'</code> for export.</div>
+    </div>
+  </div>
+
+  <div class="callout c-violet">
+    <strong>COMMUNITY EXTENSIONS — THE FRONTIER</strong>
+    The DuckDB extension registry is growing fast. Notable community extensions: <code>duckdb_vss</code> (vector similarity search / HNSW index for embeddings), <code>lance</code> (Lance columnar format), <code>chsql</code> (ClickHouse SQL dialect), <code>duckpgq</code> (property graph queries / Cypher-like syntax). Install with <code>INSTALL ext FROM community</code>.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION: PYTHON
+══════════════════════════════════════════════════ -->
+<section id="python">
+  <div class="section-header">
+    <div>
+      <div class="section-title">PYTHON <em>INTEGRATION</em></div>
+      <div class="section-sub">DuckDB's Python API is the best-designed database API in the ecosystem. Relations are lazy objects. Results flow to pandas, polars, or arrow without copies. And you can write Python UDFs that run inside DuckDB's vectorized engine.</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Connection Modes</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">connection modes + persistence</span><span class="code-lang">python</span></div>
+        <pre><span class="py">import</span> duckdb
+
+<span class="cm"># In-memory (default) — fastest, no persistence:</span>
+con <span class="op">=</span> duckdb.connect()            <span class="cm"># or duckdb.connect(':memory:')</span>
+
+<span class="cm"># Persistent file — survives process restart:</span>
+con <span class="op">=</span> duckdb.connect(<span class="st">'analytics.duckdb'</span>)
+
+<span class="cm"># Read-only file — safe for concurrent reads:</span>
+con <span class="op">=</span> duckdb.connect(<span class="st">'analytics.duckdb'</span>, read_only<span class="op">=True</span>)
+
+<span class="cm"># Module-level shortcut (implicit in-memory connection):</span>
+duckdb.sql(<span class="st">"SELECT 42"</span>)  <span class="cm"># no connect() needed</span>
+
+<span class="cm"># Context manager — auto-close:</span>
+<span class="py">with</span> duckdb.connect(<span class="st">'analytics.duckdb'</span>) <span class="py">as</span> con:
+    result <span class="op">=</span> con.sql(<span class="st">"SELECT count(*) FROM events"</span>).fetchone()
+
+<span class="cm"># Configuration at connect-time:</span>
+con <span class="op">=</span> duckdb.connect(config<span class="op">=</span>{
+    <span class="st">'threads'</span>:      <span class="nu">8</span>,
+    <span class="st">'memory_limit'</span>: <span class="st">'16GB'</span>,
+    <span class="st">'temp_directory'</span>: <span class="st">'/tmp/duckdb_spill'</span>
+})</pre>
+      </div>
+
+      <h3>The Relation API — Lazy Evaluation</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Relation: chainable, lazy</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># A Relation is a lazy query plan — nothing executes until .execute()</span>
+rel <span class="op">=</span> con.table(<span class="st">'events'</span>)
+rel <span class="op">=</span> con.read_parquet(<span class="st">'s3://bucket/events/*.parquet'</span>)
+rel <span class="op">=</span> con.sql(<span class="st">"SELECT * FROM events"</span>)
+
+<span class="cm"># Chain operations (all lazy):</span>
+result <span class="op">=</span> (
+    con.read_parquet(<span class="st">'events.parquet'</span>)
+       .filter(<span class="st">"event_type = 'purchase'"</span>)
+       .project(<span class="st">"user_id, amount, event_ts"</span>)
+       .aggregate(<span class="st">"user_id, sum(amount) AS total"</span>)
+       .order(<span class="st">"total DESC"</span>)
+       .limit(<span class="nu">100</span>)
+)
+
+<span class="cm"># Execute and collect:</span>
+df    <span class="op">=</span> result.df()     <span class="cm"># pandas</span>
+pl_df <span class="op">=</span> result.pl()     <span class="cm"># polars</span>
+arrow <span class="op">=</span> result.arrow()  <span class="cm"># pyarrow</span>
+rows  <span class="op">=</span> result.fetchall()  <span class="cm"># list of tuples</span>
+
+<span class="cm"># Inspect the query plan:</span>
+<span class="py">print</span>(result.explain())
+<span class="py">print</span>(result.query_df(<span class="st">"SELECT * FROM query_relation"</span>))</pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Python UDFs — Vectorized</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">UDFs — scalar + aggregate</span><span class="code-lang">python</span></div>
+        <pre><span class="py">import</span> duckdb
+<span class="py">from</span> duckdb.typing <span class="py">import</span> VARCHAR, BIGINT, DOUBLE
+<span class="py">import</span> re, hashlib
+
+con <span class="op">=</span> duckdb.connect()
+
+<span class="cm"># --- SCALAR UDF ---</span>
+<span class="py">def</span> <span class="fn">mask_email</span>(email: str) -> str:
+    <span class="py">if not</span> email: <span class="py">return</span> <span class="kw">None</span>
+    local, _, domain <span class="op">=</span> email.partition(<span class="st">'@'</span>)
+    <span class="py">return</span> f<span class="st">"{local[:2]}***@{domain}"</span>
+
+con.create_function(
+    <span class="st">'mask_email'</span>,
+    mask_email,
+    [VARCHAR],   <span class="cm"># input types</span>
+    VARCHAR,     <span class="cm"># return type</span>
+    null_handling<span class="op">=</span><span class="st">'special'</span>  <span class="cm"># handle NULLs in Python</span>
+)
+
+con.sql(<span class="st">"SELECT mask_email(email) FROM customers"</span>)
+
+<span class="cm"># --- VECTORIZED UDF (Arrow-native, batched) ---</span>
+<span class="py">import</span> pyarrow <span class="py">as</span> pa
+
+<span class="py">def</span> <span class="fn">hash_ids</span>(ids: pa.Array) -> pa.Array:
+    <span class="cm"># Runs on the full 1024-row vector at once — no Python loop!</span>
+    hashed <span class="op">=</span> [
+        hashlib.sha256(str(v).encode()).hexdigest()[:16]
+        <span class="py">for</span> v <span class="py">in</span> ids.to_pylist()
+    ]
+    <span class="py">return</span> pa.array(hashed, type<span class="op">=</span>pa.string())
+
+con.create_function(
+    <span class="st">'hash_id'</span>, hash_ids,
+    [BIGINT], VARCHAR,
+    type<span class="op">=</span>duckdb.functional.PythonUDFType.ARROW
+)
+
+<span class="cm"># --- AGGREGATE UDF ---</span>
+<span class="py">class</span> <span class="fn">GeometricMean</span>:
+    <span class="py">def</span> <span class="fn">__init__</span>(self): self.values <span class="op">=</span> []
+    <span class="py">def</span> <span class="fn">step</span>(self, x):
+        <span class="py">if</span> x <span class="py">and</span> x <span class="op">></span> <span class="nu">0</span>: self.values.append(x)
+    <span class="py">def</span> <span class="fn">finalize</span>(self):
+        <span class="py">if not</span> self.values: <span class="py">return None</span>
+        <span class="py">return</span> (reduce(lambda a,b: a<span class="op">*</span>b, self.values)
+                ) <span class="op">**</span> (<span class="nu">1</span><span class="op">/</span>len(self.values))
+
+con.create_aggregate_function(<span class="st">'geo_mean'</span>, GeometricMean, [DOUBLE], DOUBLE)</pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>Notebooks + Ibis — The Ergonomic Layer</h3>
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Jupyter magic + profiling</span><span class="code-lang">python</span></div>
+        <pre><span class="cm"># Jupyter magic — write SQL in cells directly:</span>
+<span class="op">%</span>load_ext duckdb_magic
+
+<span class="op">%%</span>duckdb
+SELECT year, sum(revenue) total
+FROM read_parquet(<span class="st">'data/*.parquet'</span>)
+GROUP BY ALL
+ORDER BY year;
+
+<span class="cm"># Query profiling in Python:</span>
+con.execute(<span class="st">"PRAGMA enable_profiling"</span>)
+con.execute(<span class="st">"PRAGMA profiling_output='/tmp/profile.json'"</span>)
+con.sql(<span class="st">"SELECT * FROM big_table WHERE x > 1000"</span>)
+<span class="cm"># Open profile.json in chrome://tracing</span>
+
+<span class="cm"># EXPLAIN ANALYZE:</span>
+<span class="py">print</span>(con.execute(<span class="st">"""
+  EXPLAIN ANALYZE
+  SELECT customer_id, sum(amount)
+  FROM events
+  WHERE event_ts > '2024-01-01'
+  GROUP BY 1
+"""</span>).fetchdf().to_string())</pre>
+      </div>
+    </div>
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Ibis — portable dataframe API</span><span class="code-lang">python</span></div>
+        <pre><span class="py">import</span> ibis
+
+<span class="cm"># Ibis = portable dataframe API that compiles to SQL.
+# DuckDB is the best Ibis backend (fastest, most complete).</span>
+
+con <span class="op">=</span> ibis.duckdb.connect(<span class="st">'analytics.duckdb'</span>)
+
+events <span class="op">=</span> con.table(<span class="st">'events'</span>)
+
+result <span class="op">=</span> (
+    events
+    .filter([
+        events.event_ts <span class="op">></span> ibis.timestamp(<span class="st">'2024-01-01'</span>),
+        events.event_type.isin([<span class="st">'purchase'</span>, <span class="st">'refund'</span>])
+    ])
+    .group_by([<span class="st">'user_id'</span>, <span class="st">'event_type'</span>])
+    .aggregate(
+        n       <span class="op">=</span> events.event_id.count(),
+        total   <span class="op">=</span> events.amount.sum(),
+        avg_lat <span class="op">=</span> events.latency_ms.mean()
+    )
+    .order_by(ibis.desc(<span class="st">'total'</span>))
+    .limit(<span class="nu">100</span>)
+)
+
+<span class="cm"># See the compiled SQL:</span>
+ibis.to_sql(result)
+
+<span class="cm"># Execute:</span>
+df <span class="op">=</span> result.to_pandas()
+
+<span class="cm"># Switch backend to BigQuery with zero code changes:</span>
+<span class="cm"># con = ibis.bigquery.connect(project='my-proj', dataset='my_ds')</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION: PERFORMANCE
+══════════════════════════════════════════════════ -->
+<section id="perf">
+  <div class="section-header">
+    <div>
+      <div class="section-title">PERFORMANCE <em>ENGINEERING</em></div>
+      <div class="section-sub">Tuning DuckDB for production: parallelism, memory management, external spilling, storage layout, and profiling. Most workloads are fast by default — here's how to make them stupid fast.</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Resource Configuration</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">PRAGMA + SET — performance knobs</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- Parallelism (default: all CPU cores)</span>
+<span class="kw">SET</span> threads <span class="op">=</span> <span class="nu">16</span>;
+<span class="kw">SET</span> threads <span class="op">=</span> <span class="nu">1</span>;    <span class="cm">-- deterministic debugging</span>
+
+<span class="cm">-- Memory (default: 80% of RAM)</span>
+<span class="kw">SET</span> memory_limit <span class="op">=</span> <span class="st">'32GB'</span>;
+<span class="kw">SET</span> memory_limit <span class="op">=</span> <span class="st">'-1'</span>;  <span class="cm">-- unlimited</span>
+
+<span class="cm">-- External spilling — enables larger-than-RAM queries</span>
+<span class="kw">SET</span> temp_directory <span class="op">=</span> <span class="st">'/fast-nvme/duckdb_tmp'</span>;
+<span class="kw">SET</span> max_temp_directory_size <span class="op">=</span> <span class="st">'500GB'</span>;
+
+<span class="cm">-- Worker threads for Parquet I/O</span>
+<span class="kw">SET</span> worker_threads_for_csv_writing <span class="op">=</span> <span class="nu">8</span>;
+
+<span class="cm">-- Preserve insertion order (OFF = faster GROUP BY)</span>
+<span class="kw">SET</span> preserve_insertion_order <span class="op">=</span> <span class="kw">false</span>;
+
+<span class="cm">-- Enable object cache (S3 metadata caching)</span>
+<span class="kw">SET</span> enable_object_cache <span class="op">=</span> <span class="kw">true</span>;
+
+<span class="cm">-- HTTP metadata cache for remote Parquet</span>
+<span class="kw">SET</span> http_metadata_cache_enable <span class="op">=</span> <span class="kw">true</span>;
+
+<span class="cm">-- Profile every query:</span>
+<span class="kw">PRAGMA</span> enable_progress_bar;
+<span class="kw">PRAGMA</span> enable_profiling <span class="op">=</span> <span class="st">'json'</span>;
+<span class="kw">PRAGMA</span> profiling_output <span class="op">=</span> <span class="st">'/tmp/duck_profile.json'</span>;</pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Storage Layout — Writing Fast-Query Data</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">COPY TO — optimal Parquet output</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- Write partitioned Parquet — the ideal ingress landing zone:</span>
+<span class="kw">COPY</span> (
+  <span class="kw">SELECT</span> <op>*</op><span class="op">,</span> year(event_ts) <span class="kw">AS</span> yr<span class="op">,</span> month(event_ts) <span class="kw">AS</span> mo
+  <span class="kw">FROM</span> events
+) <span class="kw">TO</span> <span class="st">'s3://output/events'</span> (
+  <span class="kw">FORMAT</span>         parquet,
+  PARTITION_BY   (yr, mo),           <span class="cm">-- hive partitioning</span>
+  COMPRESSION    zstd,               <span class="cm">-- best ratio/speed tradeoff</span>
+  ROW_GROUP_SIZE <span class="nu">122880</span>,            <span class="cm">-- 128K rows/group (sweet spot)</span>
+  OVERWRITE_OR_IGNORE <span class="kw">true</span>
+);
+
+<span class="cm">-- Write sorted Parquet (dramatically improves filter pushdown):</span>
+<span class="kw">COPY</span> (
+  <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> events <span class="kw">ORDER BY</span> customer_id, event_ts
+) <span class="kw">TO</span> <span class="st">'events_sorted.parquet'</span> (
+  <span class="kw">FORMAT</span> parquet,
+  COMPRESSION zstd
+);
+<span class="cm">-- Sorted Parquet + row group stats = skip entire row groups on filter.
+-- 100x scan speedup on customer_id range queries.</span>
+
+<span class="cm">-- DuckDB native format (fastest for DuckDB-only workloads):</span>
+<span class="kw">CHECKPOINT</span>;  <span class="cm">-- flush WAL to .duckdb file</span>
+<span class="cm">-- The .duckdb file IS the storage — already column-grouped,
+-- zone-mapped, FSST-compressed. No conversion needed.</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>EXPLAIN ANALYZE — Reading the Plan</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-fname">Query plan interpretation</span><span class="code-lang">sql</span></div>
+    <pre><span class="kw">EXPLAIN ANALYZE</span>
+<span class="kw">SELECT</span> customer_id, <span class="fn">sum</span>(amount) total
+<span class="kw">FROM</span>   <span class="jj">read_parquet</span>(<span class="st">'s3://lake/events/**/*.parquet'</span>)
+<span class="kw">WHERE</span>  event_ts <span class="op">>=</span> <span class="st">'2024-01-01'</span>
+  <span class="kw">AND</span>  event_type <span class="op">=</span> <span class="st">'purchase'</span>
+<span class="kw">GROUP BY</span> <span class="nu">1</span>;
+
+<span class="cm">┌─────────────────────────────────────┐
+│         HASH_GROUP_BY               │  ← aggregation
+│  Groups: [customer_id]              │
+│  Aggregates: [sum(amount)]          │
+│  ~12,450 rows (estimated)           │
+└──────────────────┬──────────────────┘
+                   │
+┌──────────────────▼──────────────────┐
+│         FILTER                      │  ← predicate applied
+│  event_type = 'purchase'            │
+│  Scanned: 2,847,291 rows            │
+│  Passed:    183,421 rows (6.4%)     │
+└──────────────────┬──────────────────┘
+                   │
+┌──────────────────▼──────────────────┐
+│     PARQUET_SCAN (parallel)         │  ← 8 threads
+│  Files: 47 / 3,892 (row group skip) │  ← MOST SKIPPED!
+│  Columns: [customer_id,amount,...]  │  ← projection pushdown
+│  Filters pushed: [event_ts >=...]   │  ← filter pushdown
+│  Total rows: 847M → scanned: 23M   │  ← zone map elimination
+└─────────────────────────────────────┘
+
+-- KEY INSIGHT: 3,845 row groups skipped via zone maps (min/max stats).
+-- Only 47 row groups needed reading. That's the 100x speedup.</span></pre>
+  </div>
+
+  <h3>Benchmarks vs Alternatives</h3>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1.25rem;margin:1rem 0">
+    <h4>TPC-H SF=10 (10GB data) — Query Throughput</h4>
+    <div class="perf-row"><div class="perf-label">DuckDB (local)</div><div class="perf-bar-track"><div class="perf-bar-fill" style="width:96%;background:var(--duck)"></div></div><div class="perf-val">0.8s</div></div>
+    <div class="perf-row"><div class="perf-label">Polars (lazy)</div><div class="perf-bar-track"><div class="perf-bar-fill" style="width:78%;background:var(--lime)"></div></div><div class="perf-val">2.1s</div></div>
+    <div class="perf-row"><div class="perf-label">Spark (local)</div><div class="perf-bar-track"><div class="perf-bar-fill" style="width:20%;background:var(--sky)"></div></div><div class="perf-val">18s</div></div>
+    <div class="perf-row"><div class="perf-label">Pandas</div><div class="perf-bar-track"><div class="perf-bar-fill" style="width:10%;background:var(--coral)"></div></div><div class="perf-val">38s+</div></div>
+    <div class="perf-row"><div class="perf-label">SQLite</div><div class="perf-bar-track"><div class="perf-bar-fill" style="width:4%;background:var(--text3)"></div></div><div class="perf-val">180s+</div></div>
+    <p style="margin-top:0.75rem;font-size:0.75rem;font-family:var(--mono);color:var(--text3)">Representative only. Results vary by query type and hardware. DuckDB advantage is largest on aggregations and scans.</p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION: PATTERNS
+══════════════════════════════════════════════════ -->
+<section id="patterns">
+  <div class="section-header">
+    <div>
+      <div class="section-title">PRODUCTION <em>PATTERNS</em></div>
+      <div class="section-sub">Real-world DuckDB architectural patterns: the local lakehouse, streaming micro-batch, serverless analytics, WASM in the browser, and embedding DuckDB in application code.</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>The Local Lakehouse Pattern</h3>
+      <div class="callout c-duck">
+        <strong>THE KILLER USE CASE FOR INGRESS ENGINEERS</strong>
+        You're ingesting from Kafka, APIs, databases. Instead of a Spark cluster, land everything as Parquet on S3 (partitioned by ingestion time), and query with DuckDB. A $10/month S3 bucket + DuckDB on a $50 VPS replaces a $5,000/month Snowflake account for &lt;1TB workloads.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Local lakehouse pipeline</span><span class="code-lang">python</span></div>
+        <pre><span class="py">import</span> duckdb, boto3, orjson
+<span class="py">from</span> datetime <span class="py">import</span> datetime, timezone
+
+<span class="cm">"""
+ARCHITECTURE:
+  Kafka → Consumer → DuckDB (transform) → S3 Parquet (partitioned)
+  Queries: DuckDB directly on S3 Parquet
+  No cluster. No warehouse. No ETL server.
+"""</span>
+
+con <span class="op">=</span> duckdb.connect()
+con.execute(<span class="st">"INSTALL httpfs; LOAD httpfs"</span>)
+
+<span class="py">def</span> <span class="fn">land_batch</span>(events: list[dict], dt: datetime):
+    <span class="cm"># Ingest into DuckDB in-memory, transform, write Parquet</span>
+    con.execute(<span class="st">"CREATE OR REPLACE TABLE staging AS SELECT * FROM events"</span>)
+
+    path <span class="op">=</span> (
+        f<span class="st">"s3://my-lake/events/"</span>
+        f<span class="st">"year={dt.year}/month={dt.month:02d}/day={dt.day:02d}/"</span>
+        f<span class="st">"batch_{dt.timestamp():.0f}.parquet"</span>
+    )
+
+    con.execute(f<span class="st">"""
+        COPY (
+            SELECT
+                event_id,
+                user_id,
+                event_type,
+                -- DuckDB parsing JSON inline:
+                (payload->>'$.session_id')::VARCHAR AS session_id,
+                (payload->>'$.amount')::DECIMAL(18,4) AS amount,
+                event_ts::TIMESTAMP AS event_ts
+            FROM staging
+            WHERE event_id IS NOT NULL
+            QUALIFY row_number() OVER (
+                PARTITION BY event_id ORDER BY _ingested_at DESC
+            ) = 1   -- deduplicate in the same query
+        ) TO '{path}'
+        (FORMAT parquet, COMPRESSION zstd, ROW_GROUP_SIZE 65536)
+    """</span>)
+    <span class="py">return</span> path
+
+<span class="py">def</span> <span class="fn">query_lakehouse</span>(start_date: str, end_date: str):
+    <span class="py">return</span> con.sql(f<span class="st">"""
+        SELECT
+            date_trunc('hour', event_ts) AS hour,
+            event_type,
+            count(*) AS n,
+            sum(amount) AS revenue
+        FROM read_parquet(
+            's3://my-lake/events/year=*/month=*/day=*/*.parquet',
+            hive_partitioning = true
+        )
+        WHERE event_ts BETWEEN '{start_date}' AND '{end_date}'
+        GROUP BY ALL
+        ORDER BY hour, revenue DESC
+    """</span>).df()</pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>DuckDB as a Serverless Lambda</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">AWS Lambda analytics handler</span><span class="code-lang">python</span></div>
+        <pre><span class="cm">"""
+Pattern: API Gateway → Lambda (DuckDB) → S3 Parquet
+A serverless analytical query engine with zero infra.
+Lambda has 10GB memory and 15min timeout.
+DuckDB + 64-core Lambda = serious computation.
+"""</span>
+<span class="py">import</span> duckdb, json, os
+
+<span class="py">def</span> <span class="fn">handler</span>(event, context):
+    con <span class="op">=</span> duckdb.connect()
+    con.execute(<span class="st">"INSTALL httpfs; LOAD httpfs"</span>)
+
+    <span class="cm"># IAM role auto-resolved via instance metadata</span>
+    con.execute(<span class="st">"""
+        CREATE SECRET aws (
+            TYPE s3,
+            PROVIDER CREDENTIAL_CHAIN
+        )
+    """</span>)
+
+    query      <span class="op">=</span> event[<span class="st">'queryStringParameters'</span>][<span class="st">'q'</span>]
+    start_date <span class="op">=</span> event[<span class="st">'queryStringParameters'</span>][<span class="st">'start'</span>]
+    end_date   <span class="op">=</span> event[<span class="st">'queryStringParameters'</span>][<span class="st">'end'</span>]
+
+    <span class="cm"># Parameterized to avoid injection:</span>
+    result <span class="op">=</span> con.execute(<span class="st">"""
+        SELECT event_type, count(*) n, sum(amount) rev
+        FROM read_parquet(
+            's3://my-lake/events/year=*/month=*/day=*/*.parquet',
+            hive_partitioning = true
+        )
+        WHERE event_ts BETWEEN $1 AND $2
+        GROUP BY ALL
+        ORDER BY rev DESC
+        LIMIT 1000
+    """</span>, [start_date, end_date]).df()
+
+    <span class="py">return</span> {
+        <span class="st">'statusCode'</span>: <span class="nu">200</span>,
+        <span class="st">'body'</span>: result.to_json(orient<span class="op">=</span><span class="st">'records'</span>),
+        <span class="st">'headers'</span>: {<span class="st">'Content-Type'</span>: <span class="st">'application/json'</span>}
+    }</pre>
+      </div>
+
+      <h3>DuckDB-WASM — In The Browser</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Browser-native analytics</span><span class="code-lang">javascript</span></div>
+        <pre><span class="cm">// DuckDB-WASM: full DuckDB compiled to WebAssembly.
+// Query Parquet files in the browser. No server needed.</span>
+
+<span class="py">import</span> <span class="op">*</span> <span class="py">as</span> duckdb <span class="py">from</span> <span class="st">'@duckdb/duckdb-wasm'</span>;
+
+<span class="py">const</span> BUNDLE <span class="op">=</span> duckdb.selectBundle({
+  mvp: { mainModule: <span class="st">'.../duckdb-mvp.wasm'</span>,
+         mainWorker: <span class="st">'.../duckdb-browser-mvp.worker.js'</span> },
+  eh:  { mainModule: <span class="st">'.../duckdb-eh.wasm'</span>,
+         mainWorker:  <span class="st">'.../duckdb-browser-eh.worker.js'</span> },
+});
+
+<span class="py">const</span> worker <span class="op">=</span> <span class="kw">new</span> Worker(BUNDLE.mainWorker);
+<span class="py">const</span> db     <span class="op">=</span> <span class="kw">new</span> duckdb.AsyncDuckDB(logger, worker);
+<span class="kw">await</span> db.instantiate(BUNDLE.mainModule);
+<span class="py">const</span> con <span class="op">=</span> <span class="kw">await</span> db.connect();
+
+<span class="cm">// Register a Parquet file from a URL:</span>
+<span class="kw">await</span> db.registerFileURL(<span class="st">'events.parquet'</span>,
+  <span class="st">'https://example.com/events.parquet'</span>,
+  duckdb.DuckDBDataProtocol.HTTP, <span class="kw">false</span>
+);
+
+<span class="cm">// Query it — all in the browser, no round-trip to server:</span>
+<span class="py">const</span> result <span class="op">=</span> <span class="kw">await</span> con.query(<span class="st">`
+  SELECT event_type, count(*) AS n
+  FROM read_parquet('events.parquet')
+  GROUP BY ALL ORDER BY n DESC
+`</span>);
+
+console.log(result.toArray());</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION: VS FIELD
+══════════════════════════════════════════════════ -->
+<section id="vs">
+  <div class="section-header">
+    <div>
+      <div class="section-title">DUCKDB <em>VS</em> THE FIELD</div>
+      <div class="section-sub">Honest capability comparison. DuckDB doesn't replace everything — but it displaces more than most engineers realize. Know when to reach for it and when to reach for something else.</div>
+    </div>
+  </div>
+
+  <div class="vs-grid">
+    <div class="vs-cell vs-head" style="background:var(--bg4)"></div>
+    <div class="vs-cell vs-head vs-duck-col">DuckDB</div>
+    <div class="vs-cell vs-head">Snowflake</div>
+    <div class="vs-cell vs-head">Spark</div>
+    <div class="vs-cell vs-head">SQLite</div>
+    <div class="vs-cell vs-head">Postgres</div>
+
+    <div class="vs-cell vs-label">Setup</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">pip install</span></div>
+    <div class="vs-cell"><span class="vs-no">Account + VPC</span></div>
+    <div class="vs-cell"><span class="vs-no">Cluster</span></div>
+    <div class="vs-cell"><span class="vs-yes">Embedded</span></div>
+    <div class="vs-cell"><span class="vs-part">Server</span></div>
+
+    <div class="vs-cell vs-label">Storage</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">Local / S3 / GCS / AZ</span></div>
+    <div class="vs-cell"><span class="vs-part">Cloud only</span></div>
+    <div class="vs-cell"><span class="vs-yes">HDFS / S3 / GCS</span></div>
+    <div class="vs-cell"><span class="vs-no">Local file only</span></div>
+    <div class="vs-cell"><span class="vs-part">Local / RDS</span></div>
+
+    <div class="vs-cell vs-label">OLAP Speed</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">★★★★★</span></div>
+    <div class="vs-cell"><span class="vs-yes">★★★★★</span></div>
+    <div class="vs-cell"><span class="vs-part">★★★☆☆</span></div>
+    <div class="vs-cell"><span class="vs-no">★☆☆☆☆</span></div>
+    <div class="vs-cell"><span class="vs-part">★★★☆☆</span></div>
+
+    <div class="vs-cell vs-label">OLTP</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-part">Basic MVCC</span></div>
+    <div class="vs-cell"><span class="vs-no">Limited</span></div>
+    <div class="vs-cell"><span class="vs-no">No</span></div>
+    <div class="vs-cell"><span class="vs-yes">Yes</span></div>
+    <div class="vs-cell"><span class="vs-yes">Yes</span></div>
+
+    <div class="vs-cell vs-label">Parquet</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">Native + pushdown</span></div>
+    <div class="vs-cell"><span class="vs-yes">Native</span></div>
+    <div class="vs-cell"><span class="vs-yes">Native</span></div>
+    <div class="vs-cell"><span class="vs-no">No</span></div>
+    <div class="vs-cell"><span class="vs-no">Extension only</span></div>
+
+    <div class="vs-cell vs-label">Iceberg / Delta</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">Extension</span></div>
+    <div class="vs-cell"><span class="vs-yes">Native</span></div>
+    <div class="vs-cell"><span class="vs-yes">Native</span></div>
+    <div class="vs-cell"><span class="vs-no">No</span></div>
+    <div class="vs-cell"><span class="vs-no">No</span></div>
+
+    <div class="vs-cell vs-label">Python UDFs</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">Vectorized Arrow</span></div>
+    <div class="vs-cell"><span class="vs-yes">Snowpark</span></div>
+    <div class="vs-cell"><span class="vs-yes">PySpark</span></div>
+    <div class="vs-cell"><span class="vs-part">Scalar only</span></div>
+    <div class="vs-cell"><span class="vs-part">PL/Python</span></div>
+
+    <div class="vs-cell vs-label">Cost (1TB)</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">~$10/mo (S3)</span></div>
+    <div class="vs-cell"><span class="vs-no">$500+/mo</span></div>
+    <div class="vs-cell"><span class="vs-no">$200+/mo</span></div>
+    <div class="vs-cell"><span class="vs-yes">Free</span></div>
+    <div class="vs-cell"><span class="vs-part">$50-100/mo</span></div>
+
+    <div class="vs-cell vs-label">Multi-node</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-no">No (single process)</span></div>
+    <div class="vs-cell"><span class="vs-yes">Yes</span></div>
+    <div class="vs-cell"><span class="vs-yes">Yes</span></div>
+    <div class="vs-cell"><span class="vs-no">No</span></div>
+    <div class="vs-cell"><span class="vs-part">Read replicas</span></div>
+
+    <div class="vs-cell vs-label">WASM (browser)</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">First-class</span></div>
+    <div class="vs-cell"><span class="vs-no">No</span></div>
+    <div class="vs-cell"><span class="vs-no">No</span></div>
+    <div class="vs-cell"><span class="vs-part">wa-sqlite</span></div>
+    <div class="vs-cell"><span class="vs-no">No</span></div>
+
+    <div class="vs-cell vs-label">SQL Superset</div>
+    <div class="vs-cell vs-duck-col"><span class="vs-yes">EXCLUDE, PIVOT, ASOF, GROUP BY ALL, lambda, QUALIFY</span></div>
+    <div class="vs-cell"><span class="vs-part">PIVOT, QUALIFY</span></div>
+    <div class="vs-cell"><span class="vs-part">QUALIFY</span></div>
+    <div class="vs-cell"><span class="vs-no">Basic</span></div>
+    <div class="vs-cell"><span class="vs-part">Window functions</span></div>
+  </div>
+
+  <div class="callout c-duck" style="margin-top:1.5rem">
+    <strong>THE HONEST VERDICT — WHEN NOT TO USE DUCKDB</strong>
+    DuckDB is single-process — it cannot distribute computation across machines. Above ~5TB of active data, or when you need multi-writer concurrent access, reach for Snowflake/BigQuery/Redshift. DuckDB's sweet spot: data analyst workloads, local development, serverless functions, embedded analytics, and "the query that would cost $200 on Snowflake."
+  </div>
+
+  <h3>The Stack That Beats Everything Under 5TB</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-fname">The optimal modern data stack</span><span class="code-lang">yaml</span></div>
+    <pre><span class="cm"># Ingress: ALL vectors → S3 (your pattern)
+# Storage: S3 Parquet (partitioned by ingestion time)
+# Transform: dbt + DuckDB (dbt-duckdb adapter)
+# Query: DuckDB directly on S3 or .duckdb file
+# Serve: Motherduck (DuckDB cloud) or direct DuckDB files</span>
+
+stack:
+  ingestion:
+    kafka_sink:    <span class="st">"Kafka Connect → S3 (Parquet, 10min batches)"</span>
+    api_ingress:   <span class="st">"Lambda → DuckDB → S3 Parquet"</span>
+    db_replication:<span class="st">"DuckDB ATTACH postgres → COPY TO s3"</span>
+
+  storage:
+    format:        <span class="st">"Parquet + zstd compression"</span>
+    partitioning:  <span class="st">"year= / month= / day= / hour="</span>
+    size:          <span class="st">"target 100MB–1GB per Parquet file"</span>
+    catalog:       <span class="st">"Apache Iceberg (optional, for time travel)"</span>
+
+  transform:
+    tool:          <span class="st">"dbt with dbt-duckdb adapter"</span>
+    install:       <span class="st">"pip install dbt-duckdb"</span>
+    profiles_yml:  <span class="st">"type: duckdb / path: analytics.duckdb"</span>
+    advantage:     <span class="st">"dbt models run locally, no warehouse bill"</span>
+
+  query:
+    development:   <span class="st">"DuckDB CLI or Python on laptop"</span>
+    production:    <span class="st">"Motherduck (serverless DuckDB cloud)"</span>
+    bi_tools:      <span class="st">"Evidence.dev (SQL → dashboards, uses DuckDB)"</span>
+
+  estimated_cost:
+    s3:            <span class="st">"~$23/TB/month"</span>
+    compute:       <span class="st">"$0 (local) or ~$50-100/mo (Motherduck)"</span>
+    vs_snowflake:  <span class="st">"90-98% cost reduction for &lt;2TB workloads"</span></pre>
+  </div>
+</section>
+
+</div><!-- /wrapper -->
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function showTab(group, id, btn) {
+  document.querySelectorAll(`[id^="${group}-"]`).forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(`${group}-${id}`);
+  if (el) el.classList.add('active');
+  btn.classList.add('active');
+}
+
+// Animate perf bars
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.perf-bar-fill').forEach(b => {
+        const w = b.style.width;
+        b.style.width = '0';
+        setTimeout(() => { b.style.width = w; }, 50);
+      });
+    }
+  });
+}, {threshold: 0.3});
+document.querySelectorAll('.perf-row').forEach(r => observer.observe(r));
+</script>
+</body>
+</html>

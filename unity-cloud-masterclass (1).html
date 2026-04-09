@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unity Cloud Engineering Masterclass</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;700;800&family=Inter:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0a0c10;
+  --bg2: #0f1218;
+  --bg3: #161b24;
+  --panel: #1a2030;
+  --border: #232b3a;
+  --border2: #2d3a50;
+  --accent: #00d4ff;
+  --accent2: #7c3aed;
+  --accent3: #10b981;
+  --accent4: #f59e0b;
+  --red: #ef4444;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --code-bg: #0d1117;
+  --code-border: #1e2a3a;
+  --mono: 'JetBrains Mono', monospace;
+  --display: 'Syne', sans-serif;
+  --body: 'Inter', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.7;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR */
+#sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.sidebar-header {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+.sidebar-logo span { color: var(--text2); font-weight: 400; font-size: 12px; display: block; margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+.progress-bar-wrap {
+  margin-top: 14px;
+  background: var(--border);
+  border-radius: 3px;
+  height: 3px;
+}
+.progress-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.nav-section {
+  padding: 6px 0;
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 12px 20px 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text2);
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,212,255,0.06); }
+
+.nav-item .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--border2);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.nav-item.active .dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+/* MAIN */
+#main {
+  margin-left: 280px;
+  flex: 1;
+  max-width: 900px;
+  padding: 0 48px 120px;
+}
+
+/* HERO */
+.hero {
+  padding: 72px 0 56px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 56px;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-family: var(--display);
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+}
+
+.hero p {
+  font-size: 17px;
+  color: var(--text2);
+  max-width: 620px;
+  line-height: 1.65;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.hero-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.hero-chip strong { color: var(--text2); font-weight: 500; }
+
+/* SECTIONS */
+.section {
+  margin-bottom: 72px;
+  scroll-margin-top: 40px;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+h2 {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  color: var(--text);
+}
+
+h3 {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 32px 0 12px;
+  letter-spacing: -0.3px;
+}
+
+h4 {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin: 24px 0 10px;
+}
+
+p { color: var(--text2); margin-bottom: 14px; }
+p strong { color: var(--text); font-weight: 500; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* CALLOUTS */
+.callout {
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin: 20px 0;
+  border-left: 3px solid;
+  font-size: 14px;
+}
+.callout p { margin: 0; }
+.callout.info { background: rgba(0,212,255,0.06); border-color: var(--accent); }
+.callout.info p { color: #7dd3e8; }
+.callout.warn { background: rgba(245,158,11,0.06); border-color: var(--accent4); }
+.callout.warn p { color: #d4a44c; }
+.callout.danger { background: rgba(239,68,68,0.06); border-color: var(--red); }
+.callout.danger p { color: #f87171; }
+.callout.success { background: rgba(16,185,129,0.06); border-color: var(--accent3); }
+.callout.success p { color: #6ee7b7; }
+.callout-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.callout.info .callout-label { color: var(--accent); }
+.callout.warn .callout-label { color: var(--accent4); }
+.callout.danger .callout-label { color: var(--red); }
+.callout.success .callout-label { color: var(--accent3); }
+
+/* CODE */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  margin: 16px 0;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--code-border);
+}
+
+.code-lang {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+.code-copy {
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-family: var(--body);
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.code-copy:hover { color: var(--text); border-color: var(--border2); }
+.code-copy.copied { color: var(--accent3); border-color: var(--accent3); }
+
+pre {
+  padding: 18px 20px;
+  overflow-x: auto;
+  line-height: 1.6;
+  color: #a8b4c8;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-track { background: transparent; }
+pre::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.kw { color: #c792ea; }
+.str { color: #c3e88d; }
+.cmt { color: #546e7a; font-style: italic; }
+.num { color: #f78c6c; }
+.fn { color: #82aaff; }
+.type { color: #ffcb6b; }
+.op { color: #89ddff; }
+.var { color: #eeffff; }
+
+/* STEP CARDS */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 20px 0;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px 18px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  align-items: flex-start;
+}
+
+.step-num {
+  width: 26px;
+  height: 26px;
+  background: rgba(0,212,255,0.12);
+  border: 1px solid rgba(0,212,255,0.25);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-content { flex: 1; }
+.step-title { font-weight: 500; color: var(--text); font-size: 14px; margin-bottom: 4px; }
+.step-desc { font-size: 13px; color: var(--text2); margin: 0; }
+
+/* ERROR TABLE */
+.err-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.err-table th {
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.err-table td {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text2);
+}
+
+.err-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.err-table .err-code {
+  font-family: var(--mono);
+  color: var(--red);
+  font-size: 12px;
+}
+
+.err-table .fix-code {
+  font-family: var(--mono);
+  color: var(--accent3);
+  font-size: 12px;
+}
+
+/* ARCH DIAGRAM */
+.arch-svg-wrap {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  margin: 24px 0;
+}
+
+/* PACKAGES GRID */
+.pkg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.pkg-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.pkg-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.pkg-desc {
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+/* INSIGHT BOX */
+.insight {
+  background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(0,212,255,0.06));
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 20px 0;
+}
+
+.insight-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent2);
+  margin-bottom: 8px;
+}
+
+.insight p { color: #c4b5fd; margin: 0; font-size: 14px; }
+
+/* SCALING METRICS */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.metric-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.metric-val {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* INLINE CODE */
+code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.15);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+
+/* TOC TRACKER */
+.sticky-progress {
+  position: fixed;
+  top: 0; right: 0; left: 280px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  z-index: 200;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.1s;
+}
+
+ul { padding-left: 20px; color: var(--text2); margin-bottom: 14px; }
+ul li { margin-bottom: 6px; }
+ul li strong { color: var(--text); font-weight: 500; }
+
+ol { padding-left: 20px; color: var(--text2); margin-bottom: 14px; }
+ol li { margin-bottom: 8px; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+</style>
+</head>
+<body>
+
+<div class="sticky-progress" id="readProgress"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      Unity Cloud<br>
+      <span>Engineering Masterclass</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Foundation</div>
+    <a class="nav-item active" href="#overview"><span class="dot"></span>Architecture Overview</a>
+    <a class="nav-item" href="#prerequisites"><span class="dot"></span>Prerequisites & Setup</a>
+    <a class="nav-item" href="#project-setup"><span class="dot"></span>Unity Project Setup</a>
+    <a class="nav-item" href="#ugs-dashboard"><span class="dot"></span>UGS Dashboard</a>
+    <a class="nav-item" href="#packages"><span class="dot"></span>Package Installation</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Core Services</div>
+    <a class="nav-item" href="#authentication"><span class="dot"></span>Authentication</a>
+    <a class="nav-item" href="#lobby"><span class="dot"></span>Lobby Service</a>
+    <a class="nav-item" href="#relay"><span class="dot"></span>Relay Service</a>
+    <a class="nav-item" href="#netcode"><span class="dot"></span>Netcode for GameObjects</a>
+    <a class="nav-item" href="#cloud-save"><span class="dot"></span>Cloud Save</a>
+    <a class="nav-item" href="#remote-config"><span class="dot"></span>Remote Config</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Battle-Hardening</div>
+    <a class="nav-item" href="#errors"><span class="dot"></span>Errors & Fixes</a>
+    <a class="nav-item" href="#scaling"><span class="dot"></span>Scaling Insights</a>
+    <a class="nav-item" href="#production"><span class="dot"></span>Production Checklist</a>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main id="main">
+
+  <div class="hero">
+    <div class="hero-tag">🎮 Soup to Nuts</div>
+    <h1>Unity Cloud<br>Engineering</h1>
+    <p>A hands-on masterclass building a full Unity Gaming Services proof of concept — Auth, Lobby, Relay, Netcode, Cloud Save, Remote Config — with every gotcha, fix, and scaling truth documented.</p>
+    <div class="hero-meta">
+      <div class="hero-chip">🗓 <strong>Unity 2023.2+</strong></div>
+      <div class="hero-chip">📦 <strong>UGS SDK 2.x</strong></div>
+      <div class="hero-chip">🌐 <strong>NGO 1.9+</strong></div>
+      <div class="hero-chip">⚡ <strong>Relay + Lobby</strong></div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 1 -->
+  <section class="section" id="overview">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>Architecture Overview</h2>
+    </div>
+
+    <p>Before writing a single line of C#, you need a mental map of what Unity Cloud actually <em>is</em>. The umbrella brand is <strong>Unity Gaming Services (UGS)</strong>. It's a suite of cloud backend services that Unity maintains so you don't have to spin up your own servers. Here's what we're building and how the pieces connect:</p>
+
+    <div class="arch-svg-wrap">
+      <svg width="100%" viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#00d4ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- CLIENT A -->
+        <rect x="20" y="160" width="120" height="56" rx="8" fill="#1a2030" stroke="#232b3a" stroke-width="0.5"/>
+        <text x="80" y="184" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#e2e8f0">Player A</text>
+        <text x="80" y="200" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Unity Client</text>
+
+        <!-- CLIENT B -->
+        <rect x="20" y="240" width="120" height="56" rx="8" fill="#1a2030" stroke="#232b3a" stroke-width="0.5"/>
+        <text x="80" y="264" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#e2e8f0">Player B</text>
+        <text x="80" y="280" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Unity Client</text>
+
+        <!-- UGS CLOUD REGION -->
+        <rect x="180" y="20" width="460" height="380" rx="14" fill="none" stroke="#2d3a50" stroke-width="1" stroke-dasharray="6 4"/>
+        <text x="410" y="44" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b" letter-spacing="1">UGS CLOUD</text>
+
+        <!-- AUTH -->
+        <rect x="210" y="60" width="140" height="60" rx="8" fill="rgba(124,58,237,0.12)" stroke="rgba(124,58,237,0.4)" stroke-width="0.5"/>
+        <text x="280" y="83" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">Authentication</text>
+        <text x="280" y="100" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#7c3aed">Player ID + Token</text>
+
+        <!-- LOBBY -->
+        <rect x="210" y="150" width="140" height="60" rx="8" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)" stroke-width="0.5"/>
+        <text x="280" y="173" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#7dd3e8">Lobby</text>
+        <text x="280" y="190" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#00d4ff">Room Discovery</text>
+
+        <!-- RELAY -->
+        <rect x="210" y="240" width="140" height="60" rx="8" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="0.5"/>
+        <text x="280" y="263" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#6ee7b7">Relay</text>
+        <text x="280" y="280" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#10b981">P2P Punch-through</text>
+
+        <!-- CLOUD SAVE -->
+        <rect x="440" y="60" width="170" height="60" rx="8" fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.3)" stroke-width="0.5"/>
+        <text x="525" y="83" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#fcd34d">Cloud Save</text>
+        <text x="525" y="100" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#f59e0b">Player Persistence</text>
+
+        <!-- REMOTE CONFIG -->
+        <rect x="440" y="150" width="170" height="60" rx="8" fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.25)" stroke-width="0.5"/>
+        <text x="525" y="173" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#fca5a5">Remote Config</text>
+        <text x="525" y="190" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#ef4444">Live Tuning</text>
+
+        <!-- NETCODE (client side) -->
+        <rect x="440" y="240" width="170" height="60" rx="8" fill="#161b24" stroke="#2d3a50" stroke-width="0.5"/>
+        <text x="525" y="263" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="#94a3b8">NGO Netcode</text>
+        <text x="525" y="280" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Host/Client Logic</text>
+
+        <!-- ARROWS: clients to auth -->
+        <line x1="140" y1="172" x2="208" y2="88" stroke="#7c3aed" stroke-width="1" stroke-opacity="0.6" marker-end="url(#arr2)"/>
+        <line x1="140" y1="265" x2="208" y2="105" stroke="#7c3aed" stroke-width="1" stroke-opacity="0.4" marker-end="url(#arr2)"/>
+
+        <!-- ARROWS: clients to lobby -->
+        <line x1="140" y1="188" x2="208" y2="178" stroke="#00d4ff" stroke-width="1" stroke-opacity="0.5" marker-end="url(#arr)"/>
+        <line x1="140" y1="262" x2="208" y2="200" stroke="#00d4ff" stroke-width="1" stroke-opacity="0.4" marker-end="url(#arr)"/>
+
+        <!-- ARROWS: clients to relay -->
+        <line x1="140" y1="198" x2="208" y2="260" stroke="#10b981" stroke-width="1" stroke-opacity="0.5" marker-end="url(#arr3)"/>
+        <line x1="140" y1="270" x2="208" y2="266" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7" marker-end="url(#arr3)"/>
+
+        <!-- Lobby to Relay (join code flow) -->
+        <line x1="350" y1="180" x2="438" y2="180" stroke="#2d3a50" stroke-width="0.5" stroke-dasharray="4 3"/>
+
+        <!-- Auth to Cloud Save -->
+        <line x1="350" y1="88" x2="438" y2="88" stroke="#2d3a50" stroke-width="0.5" stroke-dasharray="4 3"/>
+
+        <!-- P2P bidirectional -->
+        <line x1="80" y1="216" x2="80" y2="240" stroke="#10b981" stroke-width="1" stroke-opacity="0.5"/>
+        <text x="100" y="232" font-family="JetBrains Mono,monospace" font-size="9" fill="#10b981" opacity="0.7">P2P via Relay</text>
+
+        <!-- Legend -->
+        <rect x="200" y="340" width="400" height="46" rx="6" fill="rgba(255,255,255,0.02)" stroke="#232b3a" stroke-width="0.5"/>
+        <line x1="218" y1="363" x2="248" y2="363" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="254" y="367" font-family="JetBrains Mono,monospace" font-size="10" fill="#94a3b8">Auth flow</text>
+        <line x1="320" y1="363" x2="350" y2="363" stroke="#00d4ff" stroke-width="1.5"/>
+        <text x="356" y="367" font-family="JetBrains Mono,monospace" font-size="10" fill="#94a3b8">Lobby flow</text>
+        <line x1="424" y1="363" x2="454" y2="363" stroke="#10b981" stroke-width="1.5"/>
+        <text x="460" y="367" font-family="JetBrains Mono,monospace" font-size="10" fill="#94a3b8">Relay/P2P flow</text>
+      </svg>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">🧠 Core Insight</div>
+      <p><strong>The mental model that unlocks everything:</strong> Lobby handles <em>discovery</em> (finding each other), Relay handles <em>transport</em> (talking to each other), and Netcode handles <em>logic</em> (what you say). Authentication is the passport that allows access to all three. These are separate services with separate SDKs that you glue together in your code.</p>
+    </div>
+
+    <h3>The Full Flow in Words</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Sign In (Authentication)</div>
+          <div class="step-desc">Both players sign in anonymously or via platform. UGS assigns each a permanent <code>PlayerId</code> and a short-lived JWT access token. Every subsequent API call uses this token.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Create / Join a Lobby</div>
+          <div class="step-desc">Player A creates a Lobby on UGS servers — a JSON document in the cloud listing room settings and players. Player B queries for lobbies and joins by Lobby ID or a short join code.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Allocate a Relay Server</div>
+          <div class="step-desc">The Host (Player A) calls Relay to allocate a relay server slot. Relay returns a <code>JoinCode</code>. Host saves this JoinCode into the Lobby's custom data so all lobby members can read it.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Client Fetches & Joins Relay</div>
+          <div class="step-desc">Player B polls or subscribes to the Lobby, reads the JoinCode, and calls Relay to join. Both sides now have <code>RelayServerData</code> objects they can hand to Netcode.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Start Netcode Transport</div>
+          <div class="step-desc">Both sides configure <code>UnityTransport</code> with their Relay data and call <code>StartHost()</code> / <code>StartClient()</code>. All game traffic now flows through the Relay DTLS tunnel — no IP exposure.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">Persist & Configure</div>
+          <div class="step-desc">Cloud Save stores per-player data (XP, settings, progress). Remote Config lets you tweak game parameters (spawn rates, prices) without a client update.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 2 -->
+  <section class="section" id="prerequisites">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>Prerequisites & Setup</h2>
+    </div>
+
+    <p>Before touching Unity, set up your accounts and tools. Missing any of these is the #1 reason tutorials fail silently.</p>
+
+    <h3>What You Need</h3>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Unity Account (free)</div>
+          <div class="step-desc">Go to <a href="https://id.unity.com">id.unity.com</a> and create an account. This is the identity that owns your cloud project. One account = one dashboard. Keep it secure — it controls your billing.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Unity Hub 3.x</div>
+          <div class="step-desc">Download from <a href="https://unity.com/download">unity.com/download</a>. Hub manages editor versions. Never install Unity editors directly — you'll lose version-switching superpowers.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Unity Editor 2023.2 LTS or 6 (6000.x)</div>
+          <div class="step-desc">Install via Hub. UGS SDK 2.x is best-supported on these versions. <strong>Do not use 2022.x</strong> — several UGS packages require minimum 2023.1 API surface. LTS = Long Term Support = patches keep coming.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Unity Dashboard</div>
+          <div class="step-desc">Navigate to <a href="https://cloud.unity.com">cloud.unity.com</a>. This is the UGS web console where you create projects, enable services, and set credentials. <strong>You will live here.</strong></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Git (Optional but Strongly Recommended)</div>
+          <div class="step-desc">Initialize a git repo before adding packages. The <code>Library/</code> folder will be 3–5 GB after imports. Your <code>.gitignore</code> must exclude it or you'll commit hundreds of megabytes.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-label">⚠ Billing Gotcha</div>
+      <p>UGS has a free tier (Spark plan) that covers ~100 MAU. You will NOT be charged during development, but you need to watch your dashboard. The Relay service bills per GB of relayed data. A single developer testing will never exceed the free tier — but add real players and monitor it.</p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 3 -->
+  <section class="section" id="project-setup">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>Unity Project Setup</h2>
+    </div>
+
+    <p>Create a fresh 3D (or 3D Core) project. The template doesn't matter much for cloud work — we care about the scripting backend and package manager.</p>
+
+    <h3>Critical Project Settings</h3>
+
+    <p>After creating the project, immediately go to <strong>Edit → Project Settings → Player</strong> and configure:</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Project Settings</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre>Company Name:  YourStudio           <span class="cmt">// affects bundle ID</span>
+Product Name:  CloudPOC
+Bundle ID:     com.yourstudio.cloudpoc
+
+Scripting Backend:   IL2CPP          <span class="cmt">// REQUIRED for production builds</span>
+API Compatibility:   .NET Standard 2.1</pre>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-label">⚠ Why IL2CPP Matters</div>
+      <p>Mono scripting backend works fine in the editor, but UGS SDK packages internally depend on IL2CPP code stripping behaviour in builds. Always test your actual build — editor play mode can mask missing assembly definitions that IL2CPP strips away. Add a <code>link.xml</code> if you see serialization errors in builds.</p>
+    </div>
+
+    <h3>The link.xml File</h3>
+    <p>Create this at <code>Assets/link.xml</code> to prevent IL2CPP from stripping UGS assemblies:</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">XML — Assets/link.xml</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="str">&lt;linker&gt;</span>
+  <span class="str">&lt;assembly</span> <span class="kw">fullname</span>=<span class="str">"Unity.Services.Core"</span> <span class="kw">preserve</span>=<span class="str">"all"</span><span class="str">/&gt;</span>
+  <span class="str">&lt;assembly</span> <span class="kw">fullname</span>=<span class="str">"Unity.Services.Authentication"</span> <span class="kw">preserve</span>=<span class="str">"all"</span><span class="str">/&gt;</span>
+  <span class="str">&lt;assembly</span> <span class="kw">fullname</span>=<span class="str">"Unity.Services.Lobby"</span> <span class="kw">preserve</span>=<span class="str">"all"</span><span class="str">/&gt;</span>
+  <span class="str">&lt;assembly</span> <span class="kw">fullname</span>=<span class="str">"Unity.Services.Relay"</span> <span class="kw">preserve</span>=<span class="str">"all"</span><span class="str">/&gt;</span>
+  <span class="str">&lt;assembly</span> <span class="kw">fullname</span>=<span class="str">"Unity.Services.CloudSave"</span> <span class="kw">preserve</span>=<span class="str">"all"</span><span class="str">/&gt;</span>
+  <span class="str">&lt;assembly</span> <span class="kw">fullname</span>=<span class="str">"Unity.Services.RemoteConfig"</span> <span class="kw">preserve</span>=<span class="str">"all"</span><span class="str">/&gt;</span>
+  <span class="str">&lt;assembly</span> <span class="kw">fullname</span>=<span class="str">"Unity.Netcode.Runtime"</span> <span class="kw">preserve</span>=<span class="str">"all"</span><span class="str">/&gt;</span>
+<span class="str">&lt;/linker&gt;</span></pre>
+    </div>
+
+    <h3>Connect to Unity Cloud</h3>
+    <p>Go to <strong>Edit → Project Settings → Services</strong>. Sign in with your Unity account, then either create a new cloud project or link to an existing one. This writes a <code>ProjectID</code> and <code>EnvironmentID</code> into your project settings — the SDK reads these at runtime to know which UGS tenant to hit.</p>
+
+    <div class="insight">
+      <div class="insight-label">🧠 Environments Insight</div>
+      <p>UGS has Environments (Production, Development, custom). <strong>Always develop in a non-Production environment.</strong> Your Lobby data, Cloud Save data, Remote Config values and even your player accounts are siloed per environment. Switching from Dev to Production resets everyone's data. Create a "Development" environment first and never ship builds that point to Production until you're ready.</p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 4 -->
+  <section class="section" id="ugs-dashboard">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>UGS Dashboard</h2>
+    </div>
+
+    <p>The UGS Dashboard at <a href="https://cloud.unity.com">cloud.unity.com</a> is your operations center. Here's what you must do before writing code:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Create a Project</div>
+          <div class="step-desc">Dashboard → Projects → New Project. Name it clearly. The Project ID (a UUID) is what the SDK uses — don't confuse it with the display name.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Enable Each Service</div>
+          <div class="step-desc">Navigate to each service (Authentication, Lobby, Relay, Cloud Save, Remote Config) and click "Enable". Services that aren't enabled return <code>403 Forbidden</code> — a confusing error when you don't know why.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Create Your Environments</div>
+          <div class="step-desc">Dashboard → Environments. Create "development" and later "production". Set <strong>development</strong> as the active environment in Unity editor via Project Settings → Services → Environment.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Configure Authentication Providers</div>
+          <div class="step-desc">Dashboard → Authentication → Settings. Enable "Anonymous" for now. Later add Apple, Google, Steam, etc. Each provider needs its own client ID/secret configured here.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Seed Remote Config Values</div>
+          <div class="step-desc">Dashboard → Remote Config. Add a key like <code>max_players</code> = <code>4</code>. You'll fetch this at runtime. If the key doesn't exist in the dashboard, the SDK returns a default you define in code.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-label">🔥 Do Not Ship</div>
+      <p>Never hardcode your Project ID, API keys, or service credentials in client-side code that ships to players. Your Project ID is semi-public (it's in builds anyway), but any server-side keys or admin tokens must live in Cloud Code or your backend — never in the client binary.</p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 5 -->
+  <section class="section" id="packages">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>Package Installation</h2>
+    </div>
+
+    <p>Open the Package Manager (<strong>Window → Package Manager</strong>). Switch to "Unity Registry". Install these packages in order — some have dependencies that will resolve automatically:</p>
+
+    <div class="pkg-grid">
+      <div class="pkg-card">
+        <div class="pkg-name">com.unity.services.core</div>
+        <div class="pkg-desc">The root SDK. Initializes all UGS services. Must be installed first.</div>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-name">com.unity.services.authentication</div>
+        <div class="pkg-desc">Player sign-in and identity. Depends on core.</div>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-name">com.unity.services.lobby</div>
+        <div class="pkg-desc">Room creation, discovery, and matchmaking metadata.</div>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-name">com.unity.services.relay</div>
+        <div class="pkg-desc">NAT punch-through server allocation for P2P without IP exposure.</div>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-name">com.unity.services.cloudsave</div>
+        <div class="pkg-desc">Per-player (and public) key-value persistence in the cloud.</div>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-name">com.unity.services.remoteconfig</div>
+        <div class="pkg-desc">Fetch server-side config values without a client update.</div>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-name">com.unity.netcode.gameobjects</div>
+        <div class="pkg-desc">The Netcode for GameObjects (NGO) multiplayer framework.</div>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-name">com.unity.transport</div>
+        <div class="pkg-desc">Low-level transport layer. NGO + Relay both depend on this.</div>
+      </div>
+    </div>
+
+    <p>Alternatively, edit your <code>Packages/manifest.json</code> directly — faster and reproducible:</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">JSON — Packages/manifest.json (dependencies section)</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre>{
+  <span class="str">"dependencies"</span>: {
+    <span class="str">"com.unity.services.core"</span>:           <span class="str">"1.13.0"</span>,
+    <span class="str">"com.unity.services.authentication"</span>:  <span class="str">"3.3.3"</span>,
+    <span class="str">"com.unity.services.lobby"</span>:           <span class="str">"1.2.2"</span>,
+    <span class="str">"com.unity.services.relay"</span>:           <span class="str">"1.3.1"</span>,
+    <span class="str">"com.unity.services.cloudsave"</span>:       <span class="str">"3.2.1"</span>,
+    <span class="str">"com.unity.services.remoteconfig"</span>:   <span class="str">"4.1.1"</span>,
+    <span class="str">"com.unity.netcode.gameobjects"</span>:     <span class="str">"1.9.1"</span>,
+    <span class="str">"com.unity.transport"</span>:               <span class="str">"2.3.0"</span>
+  }
+}</pre>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-label">💡 Version Pinning</div>
+      <p>Always pin exact versions in your manifest. UGS packages have had breaking API changes between minor versions (the lobby subscription API changed in 1.1.x → 1.2.x). Pin, then bump intentionally and read the changelog.</p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 6 -->
+  <section class="section" id="authentication">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>Authentication</h2>
+    </div>
+
+    <p>Authentication must succeed before every other UGS call. It's the foundation. Initialize UGS, sign in, and you're done. The SDK caches the session token in <code>PlayerPrefs</code> — the same player ID is restored on subsequent launches.</p>
+
+    <h3>The Initialization Pattern</h3>
+    <p>Create a <code>UGSManager.cs</code> singleton that bootstraps everything from a very early scene (or via a RuntimeInitializeOnLoadMethod):</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — UGSManager.cs</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="kw">using</span> Unity.Services.Core;
+<span class="kw">using</span> Unity.Services.Authentication;
+<span class="kw">using</span> UnityEngine;
+<span class="kw">using</span> System.Threading.Tasks;
+
+<span class="kw">public class</span> <span class="type">UGSManager</span> : <span class="type">MonoBehaviour</span>
+{
+    <span class="kw">public static</span> <span class="type">UGSManager</span> <span class="var">Instance</span> { <span class="kw">get</span>; <span class="kw">private set</span>; }
+
+    <span class="kw">async void</span> <span class="fn">Awake</span>()
+    {
+        <span class="kw">if</span> (<span class="var">Instance</span> != <span class="kw">null</span>) { <span class="fn">Destroy</span>(<span class="fn">gameObject</span>); <span class="kw">return</span>; }
+        <span class="var">Instance</span> = <span class="kw">this</span>;
+        <span class="fn">DontDestroyOnLoad</span>(<span class="fn">gameObject</span>);
+
+        <span class="kw">await</span> <span class="fn">InitializeUGS</span>();
+    }
+
+    <span class="kw">async</span> <span class="type">Task</span> <span class="fn">InitializeUGS</span>()
+    {
+        <span class="kw">try</span>
+        {
+            <span class="cmt">// Step 1: Initialize UGS Core (required before ANY service call)</span>
+            <span class="kw">await</span> <span class="type">UnityServices</span>.<span class="fn">InitializeAsync</span>();
+
+            <span class="cmt">// Step 2: Subscribe to auth events before signing in</span>
+            <span class="type">AuthenticationService</span>.<span class="var">Instance</span>.<span class="var">SignedIn</span> += <span class="fn">OnSignedIn</span>;
+            <span class="type">AuthenticationService</span>.<span class="var">Instance</span>.<span class="var">SignInFailed</span> += <span class="fn">OnSignInFailed</span>;
+            <span class="type">AuthenticationService</span>.<span class="var">Instance</span>.<span class="var">Expired</span> += <span class="fn">OnTokenExpired</span>;
+
+            <span class="cmt">// Step 3: Sign in (anonymous for POC)</span>
+            <span class="kw">if</span> (!<span class="type">AuthenticationService</span>.<span class="var">Instance</span>.<span class="var">IsSignedIn</span>)
+                <span class="kw">await</span> <span class="type">AuthenticationService</span>.<span class="var">Instance</span>.<span class="fn">SignInAnonymouslyAsync</span>();
+        }
+        <span class="kw">catch</span> (<span class="type">AuthenticationException</span> <span class="var">ex</span>)
+        {
+            <span class="cmt">// AuthenticationErrorCode tells you exactly what went wrong</span>
+            <span class="type">Debug</span>.<span class="fn">LogError</span>(<span class="str">$"Auth failed: {ex.ErrorCode} — {ex.Message}"</span>);
+        }
+        <span class="kw">catch</span> (<span class="type">RequestFailedException</span> <span class="var">ex</span>)
+        {
+            <span class="cmt">// Network-level or service errors (503, 429, etc.)</span>
+            <span class="type">Debug</span>.<span class="fn">LogError</span>(<span class="str">$"UGS request failed: {ex.ErrorCode}"</span>);
+        }
+    }
+
+    <span class="kw">void</span> <span class="fn">OnSignedIn</span>()
+    {
+        <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">$"Signed in! PlayerID: {AuthenticationService.Instance.PlayerId}"</span>);
+    }
+
+    <span class="kw">void</span> <span class="fn">OnSignInFailed</span>(<span class="type">RequestFailedException</span> <span class="var">err</span>)
+    {
+        <span class="type">Debug</span>.<span class="fn">LogError</span>(<span class="str">$"Sign in failed: {err.ErrorCode}"</span>);
+    }
+
+    <span class="kw">void</span> <span class="fn">OnTokenExpired</span>()
+    {
+        <span class="cmt">// Token expires after 1 hour. Auto-refresh usually handles this,</span>
+        <span class="cmt">// but for robust apps, show a "session expired" prompt or re-auth.</span>
+        <span class="type">Debug</span>.<span class="fn">LogWarning</span>(<span class="str">"Auth token expired. Re-authenticating..."</span>);
+        _ = <span class="type">AuthenticationService</span>.<span class="var">Instance</span>.<span class="fn">SignInAnonymouslyAsync</span>();
+    }
+}</pre>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">🧠 The PlayerId is Sacred</div>
+      <p>The anonymous player's <code>PlayerId</code> is stored in <code>PlayerPrefs</code> on their device. If you call <code>ClearSessionToken()</code> or the player clears app data, they get a <strong>new</strong> PlayerId — their old Cloud Save data becomes orphaned. In production, link the anonymous account to a platform identity (Apple, Google, Steam) as soon as possible. This is the conversion funnel: anonymous → linked → can restore on any device.</p>
+    </div>
+
+    <h3>Anonymous vs Platform Auth</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">A</div>
+        <div class="step-content">
+          <div class="step-title">SignInAnonymouslyAsync()</div>
+          <div class="step-desc">Fastest, no friction. Creates a session tied to the device. Lose the device = lose the account unless linked. Perfect for POC.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">B</div>
+        <div class="step-content">
+          <div class="step-title">SignInWithSteamAsync(steamTicket)</div>
+          <div class="step-desc">Pass the Steam session ticket (retrieved from Steamworks SDK). The PlayerId is stable across devices as long as the Steam account is the same.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">C</div>
+        <div class="step-content">
+          <div class="step-title">SignInWithAppleAsync() / SignInWithGoogleAsync()</div>
+          <div class="step-desc">Mobile-native SSO. Requires platform SDK setup but gives cross-device stability on mobile. Apple requires the Sign In with Apple entitlement in your provisioning profile.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 7 -->
+  <section class="section" id="lobby">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>Lobby Service</h2>
+    </div>
+
+    <p>The Lobby is essentially a cloud-hosted JSON document that represents a room. Players can list, filter, join, and read/write properties on it. It does <strong>not</strong> send game packets — that's Relay's job. The Lobby tells players how to find each other; Relay lets them talk.</p>
+
+    <h3>Create a Lobby</h3>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — LobbyManager.cs (Host side)</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="kw">using</span> Unity.Services.Lobbies;
+<span class="kw">using</span> Unity.Services.Lobbies.Models;
+<span class="kw">using</span> System.Collections.Generic;
+
+<span class="kw">public class</span> <span class="type">LobbyManager</span>
+{
+    <span class="type">Lobby</span> _currentLobby;
+    <span class="type">ILobbyEvents</span> _lobbyEvents;   <span class="cmt">// for real-time subscriptions</span>
+    <span class="kw">float</span> _heartbeatTimer;
+
+    <span class="kw">public async</span> <span class="type">Task</span><span class="op">&lt;</span><span class="type">Lobby</span><span class="op">&gt;</span> <span class="fn">CreateLobbyAsync</span>(<span class="kw">string</span> <span class="var">lobbyName</span>, <span class="kw">int</span> <span class="var">maxPlayers</span>)
+    {
+        <span class="kw">var</span> <span class="var">options</span> = <span class="kw">new</span> <span class="type">CreateLobbyOptions</span>
+        {
+            <span class="var">IsPrivate</span> = <span class="kw">false</span>,
+            <span class="var">Player</span> = <span class="fn">GetLocalPlayer</span>(),  <span class="cmt">// your player data for the lobby</span>
+            <span class="var">Data</span> = <span class="kw">new</span> <span class="type">Dictionary</span><span class="op">&lt;</span><span class="kw">string</span>, <span class="type">DataObject</span><span class="op">&gt;</span>
+            {
+                <span class="cmt">// We'll set RelayJoinCode here once we have it</span>
+                { <span class="str">"RelayJoinCode"</span>, <span class="kw">new</span> <span class="type">DataObject</span>(<span class="type">DataObject</span>.<span class="var">VisibilityOptions</span>.<span class="var">Member</span>, <span class="str">""</span>) },
+                { <span class="str">"MapName"</span>,      <span class="kw">new</span> <span class="type">DataObject</span>(<span class="type">DataObject</span>.<span class="var">VisibilityOptions</span>.<span class="var">Public</span>,  <span class="str">"Forest"</span>) }
+            }
+        };
+
+        _currentLobby = <span class="kw">await</span> <span class="type">LobbyService</span>.<span class="var">Instance</span>.<span class="fn">CreateLobbyAsync</span>(<span class="var">lobbyName</span>, <span class="var">maxPlayers</span>, <span class="var">options</span>);
+        <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">$"Lobby created: {_currentLobby.Id} | Code: {_currentLobby.LobbyCode}"</span>);
+
+        <span class="cmt">// CRITICAL: Start heartbeating or the lobby deletes itself after 30s</span>
+        <span class="fn">StartHeartbeat</span>();
+
+        <span class="kw">return</span> _currentLobby;
+    }
+
+    <span class="cmt">// Must be called from Update() — lobby heartbeat every 15 seconds</span>
+    <span class="kw">public async</span> <span class="type">Task</span> <span class="fn">HandleHeartbeatAsync</span>(<span class="kw">float</span> <span class="var">deltaTime</span>)
+    {
+        _heartbeatTimer -= <span class="var">deltaTime</span>;
+        <span class="kw">if</span> (_heartbeatTimer <= <span class="num">0f</span> && _currentLobby != <span class="kw">null</span>)
+        {
+            _heartbeatTimer = <span class="num">15f</span>;
+            <span class="kw">await</span> <span class="type">LobbyService</span>.<span class="var">Instance</span>.<span class="fn">SendHeartbeatPingAsync</span>(_currentLobby.Id);
+        }
+    }
+
+    <span class="kw">public async</span> <span class="type">Task</span> <span class="fn">UpdateRelayCodeInLobbyAsync</span>(<span class="kw">string</span> <span class="var">joinCode</span>)
+    {
+        _currentLobby = <span class="kw">await</span> <span class="type">LobbyService</span>.<span class="var">Instance</span>.<span class="fn">UpdateLobbyAsync</span>(
+            _currentLobby.Id,
+            <span class="kw">new</span> <span class="type">UpdateLobbyOptions</span>
+            {
+                <span class="var">Data</span> = <span class="kw">new</span> <span class="type">Dictionary</span><span class="op">&lt;</span><span class="kw">string</span>, <span class="type">DataObject</span><span class="op">&gt;</span>
+                {
+                    { <span class="str">"RelayJoinCode"</span>, <span class="kw">new</span> <span class="type">DataObject</span>(<span class="type">DataObject</span>.<span class="var">VisibilityOptions</span>.<span class="var">Member</span>, <span class="var">joinCode</span>) }
+                }
+            }
+        );
+    }
+}</pre>
+    </div>
+
+    <h3>Join & Query Lobbies</h3>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — Client side</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="cmt">// Join by the 6-character short lobby code shown in your UI</span>
+<span class="kw">public async</span> <span class="type">Task</span><span class="op">&lt;</span><span class="type">Lobby</span><span class="op">&gt;</span> <span class="fn">JoinLobbyByCodeAsync</span>(<span class="kw">string</span> <span class="var">code</span>)
+{
+    <span class="kw">var</span> <span class="var">options</span> = <span class="kw">new</span> <span class="type">JoinLobbyByCodeOptions</span> { <span class="var">Player</span> = <span class="fn">GetLocalPlayer</span>() };
+    _currentLobby = <span class="kw">await</span> <span class="type">LobbyService</span>.<span class="var">Instance</span>.<span class="fn">JoinLobbyByCodeAsync</span>(<span class="var">code</span>, <span class="var">options</span>);
+    <span class="kw">return</span> _currentLobby;
+}
+
+<span class="cmt">// Quick-join: finds any available lobby automatically</span>
+<span class="kw">public async</span> <span class="type">Task</span><span class="op">&lt;</span><span class="type">Lobby</span><span class="op">&gt;</span> <span class="fn">QuickJoinAsync</span>()
+{
+    <span class="kw">var</span> <span class="var">options</span> = <span class="kw">new</span> <span class="type">QuickJoinLobbyOptions</span>
+    {
+        <span class="var">Player</span> = <span class="fn">GetLocalPlayer</span>(),
+        <span class="cmt">// Filter by map (using indexed lobby data)</span>
+        <span class="var">Filter</span> = <span class="kw">new</span> <span class="type">List</span><span class="op">&lt;</span><span class="type">QueryFilter</span><span class="op">&gt;</span>
+        {
+            <span class="kw">new</span> <span class="type">QueryFilter</span>(<span class="type">QueryFilter</span>.<span class="var">FieldOptions</span>.<span class="var">AvailableSlots</span>,
+                           <span class="str">"0"</span>, <span class="type">QueryFilter</span>.<span class="var">OpOptions</span>.<span class="var">GT</span>)
+        }
+    };
+    <span class="kw">return await</span> <span class="type">LobbyService</span>.<span class="var">Instance</span>.<span class="fn">QuickJoinLobbyAsync</span>(<span class="var">options</span>);
+}
+
+<span class="cmt">// Subscribe to real-time lobby changes (v1.2+ of Lobby SDK)</span>
+<span class="kw">public async</span> <span class="type">Task</span> <span class="fn">SubscribeToLobbyEventsAsync</span>()
+{
+    <span class="kw">var</span> <span class="var">callbacks</span> = <span class="kw">new</span> <span class="type">LobbyEventCallbacks</span>();
+    <span class="var">callbacks</span>.<span class="var">LobbyChanged</span> += <span class="fn">OnLobbyChanged</span>;
+    <span class="var">callbacks</span>.<span class="var">KickedFromLobby</span> += <span class="fn">OnKicked</span>;
+    <span class="var">callbacks</span>.<span class="var">LobbyEventConnectionStateChanged</span> += <span class="fn">OnConnectionStateChanged</span>;
+    _lobbyEvents = <span class="kw">await</span> <span class="type">LobbyService</span>.<span class="var">Instance</span>.<span class="fn">SubscribeToLobbyEventsAsync</span>(_currentLobby.Id, <span class="var">callbacks</span>);
+}
+
+<span class="kw">void</span> <span class="fn">OnLobbyChanged</span>(<span class="type">ILobbyChanges</span> <span class="var">changes</span>)
+{
+    <span class="kw">if</span> (<span class="var">changes</span>.<span class="var">LobbyDeleted</span>) { <span class="cmt">/* host left, handle cleanup */</span> <span class="kw">return</span>; }
+    <span class="var">changes</span>.<span class="fn">ApplyToLobby</span>(_currentLobby);  <span class="cmt">// mutates the local copy</span>
+    
+    <span class="cmt">// Check if host set the relay code</span>
+    <span class="kw">if</span> (_currentLobby.Data.TryGetValue(<span class="str">"RelayJoinCode"</span>, <span class="kw">out var</span> <span class="var">relay</span>) && !<span class="kw">string</span>.<span class="fn">IsNullOrEmpty</span>(<span class="var">relay</span>.<span class="var">Value</span>))
+    {
+        <span class="cmt">// Time to join relay and start netcode!</span>
+        _ = <span class="fn">JoinRelayAndStartClientAsync</span>(<span class="var">relay</span>.<span class="var">Value</span>);
+    }
+}</pre>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-label">🔥 The Heartbeat Trap</div>
+      <p>If the host does not send a heartbeat ping every 30 seconds, the Lobby service automatically deletes the lobby. Clients that are polling will then get a 404 and crash if you don't handle it. Always start a heartbeat coroutine when you create a lobby, and always catch <code>LobbyServiceException</code> with reason <code>LobbyNotFound</code> to redirect clients back to the main menu.</p>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-label">⚠ Rate Limits</div>
+      <p>Lobby queries are rate-limited at 1 request/second per player. Do not poll <code>GetLobbyAsync()</code> in <code>Update()</code>. Poll at most every 1.5 seconds if not using subscriptions, or better: use <code>SubscribeToLobbyEventsAsync()</code> for push-based updates (available in SDK 1.2+).</p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 8 -->
+  <section class="section" id="relay">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>Relay Service</h2>
+    </div>
+
+    <p>Relay is Unity's NAT punch-through infrastructure. Instead of exposing the host's IP address (which is often behind a firewall and changes), traffic routes through Unity-operated relay servers. The cost is modest latency overhead (~10–20ms). For most games this is acceptable. For ultra-competitive shooters requiring &lt;50ms RTT, you'd want Multiplay dedicated servers instead.</p>
+
+    <h3>Host: Allocate a Relay Slot</h3>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — RelayManager.cs</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="kw">using</span> Unity.Services.Relay;
+<span class="kw">using</span> Unity.Services.Relay.Models;
+<span class="kw">using</span> Unity.Networking.Transport.Relay;
+<span class="kw">using</span> Unity.Netcode;
+<span class="kw">using</span> Unity.Netcode.Transports.UTP;
+
+<span class="kw">public class</span> <span class="type">RelayManager</span>
+{
+    <span class="kw">public async</span> <span class="type">Task</span><span class="op">&lt;</span><span class="kw">string</span><span class="op">&gt;</span> <span class="fn">StartHostWithRelayAsync</span>(<span class="kw">int</span> <span class="var">maxConnections</span>)
+    {
+        <span class="cmt">// maxConnections = max number of OTHER players (not counting host)</span>
+        <span class="type">Allocation</span> <span class="var">allocation</span> = <span class="kw">await</span> <span class="type">RelayService</span>.<span class="var">Instance</span>.<span class="fn">CreateAllocationAsync</span>(<span class="var">maxConnections</span>);
+        
+        <span class="cmt">// Get the join code clients will use to find this relay slot</span>
+        <span class="kw">string</span> <span class="var">joinCode</span> = <span class="kw">await</span> <span class="type">RelayService</span>.<span class="var">Instance</span>.<span class="fn">GetJoinCodeAsync</span>(<span class="var">allocation</span>.<span class="var">AllocationId</span>);
+
+        <span class="cmt">// Convert to Unity Transport relay data</span>
+        <span class="type">RelayServerData</span> <span class="var">relayData</span> = <span class="fn">AllocationUtils</span>.<span class="fn">ToRelayServerData</span>(<span class="var">allocation</span>, <span class="str">"dtls"</span>);
+        <span class="cmt">// Note: use "wss" protocol for WebGL builds instead of "dtls"</span>
+
+        <span class="cmt">// Wire up the Netcode transport with relay data</span>
+        <span class="kw">var</span> <span class="var">transport</span> = <span class="type">NetworkManager</span>.<span class="var">Singleton</span>.<span class="fn">GetComponent</span><span class="op">&lt;</span><span class="type">UnityTransport</span><span class="op">&gt;</span>();
+        <span class="var">transport</span>.<span class="fn">SetRelayServerData</span>(<span class="kw">new</span> <span class="type">RelayServerData</span>(<span class="var">allocation</span>, <span class="str">"dtls"</span>));
+
+        <span class="type">NetworkManager</span>.<span class="var">Singleton</span>.<span class="fn">StartHost</span>();
+
+        <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">$"Host started. Relay join code: {joinCode}"</span>);
+        <span class="kw">return</span> <span class="var">joinCode</span>;
+    }
+
+    <span class="kw">public async</span> <span class="type">Task</span> <span class="fn">JoinRelayAndStartClientAsync</span>(<span class="kw">string</span> <span class="var">joinCode</span>)
+    {
+        <span class="type">JoinAllocation</span> <span class="var">joinAllocation</span> = <span class="kw">await</span> <span class="type">RelayService</span>.<span class="var">Instance</span>.<span class="fn">JoinAllocationAsync</span>(<span class="var">joinCode</span>);
+
+        <span class="kw">var</span> <span class="var">transport</span> = <span class="type">NetworkManager</span>.<span class="var">Singleton</span>.<span class="fn">GetComponent</span><span class="op">&lt;</span><span class="type">UnityTransport</span><span class="op">&gt;</span>();
+        <span class="var">transport</span>.<span class="fn">SetRelayServerData</span>(<span class="kw">new</span> <span class="type">RelayServerData</span>(<span class="var">joinAllocation</span>, <span class="str">"dtls"</span>));
+
+        <span class="type">NetworkManager</span>.<span class="var">Singleton</span>.<span class="fn">StartClient</span>();
+        <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">"Client connected via Relay."</span>);
+    }
+}</pre>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">🧠 Relay Allocation Lifetime</div>
+      <p>A Relay allocation lasts 60 seconds if no one connects, then it expires. Once the host connects, the allocation stays alive as long as the host is connected. If the host disconnects, the relay allocation is destroyed and all clients are dropped. Design your reconnection flow around this: clients need to be able to return to the lobby and get a new relay join code if the host migrates or restarts.</p>
+    </div>
+
+    <h3>Protocol Choice: dtls vs udp vs wss</h3>
+    <table class="err-table">
+      <thead>
+        <tr><th>Protocol</th><th>Use When</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fix-code">dtls</td>
+          <td>Desktop &amp; Mobile builds</td>
+          <td>Encrypted UDP. The default. Best performance for PC/mobile.</td>
+        </tr>
+        <tr>
+          <td class="fix-code">udp</td>
+          <td>LAN / trusted networks only</td>
+          <td>No encryption. Never use for internet-facing games.</td>
+        </tr>
+        <tr>
+          <td class="fix-code">wss</td>
+          <td>WebGL builds</td>
+          <td>WebSockets over TLS. Required by browsers. Higher overhead.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 9 -->
+  <section class="section" id="netcode">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <h2>Netcode for GameObjects (NGO)</h2>
+    </div>
+
+    <p>NGO is Unity's first-party multiplayer framework layered on top of Unity Transport. It handles object spawning, ownership, NetworkVariables, RPCs, and scene management. After wiring up Relay in the previous step, NGO runs on top with no further configuration.</p>
+
+    <h3>Scene Setup</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Add NetworkManager to Your Bootstrap Scene</div>
+          <div class="step-desc">Create an empty GameObject named "NetworkManager". Add the <code>NetworkManager</code> component. Add <code>UnityTransport</code> component to the same object. In NetworkManager, set the Transport field to your UnityTransport component.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Register Network Prefabs</div>
+          <div class="step-desc">Any GameObject you want to spawn over the network must have a <code>NetworkObject</code> component and be registered in NetworkManager's "Network Prefabs" list. Unregistered prefabs cause a "Prefab hash mismatch" disconnect.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Add Network Scenes</div>
+          <div class="step-desc">Any scene loaded additively after the game starts must be in NetworkManager's "Registered Scenes for Network" list, or scene-load sync will fail silently on clients.</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>NetworkBehaviour Fundamentals</h3>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — PlayerController.cs (networked)</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="kw">using</span> Unity.Netcode;
+<span class="kw">using</span> UnityEngine;
+
+<span class="kw">public class</span> <span class="type">PlayerController</span> : <span class="type">NetworkBehaviour</span>
+{
+    <span class="cmt">// NetworkVariable: server writes, all clients read. Synced automatically.</span>
+    <span class="kw">public</span> <span class="type">NetworkVariable</span><span class="op">&lt;</span><span class="type">Vector3</span><span class="op">&gt;</span> <span class="var">NetworkPosition</span> = <span class="kw">new</span>(<span class="type">Vector3</span>.<span class="var">zero</span>,
+        <span class="type">NetworkVariableReadPermission</span>.<span class="var">Everyone</span>,
+        <span class="type">NetworkVariableWritePermission</span>.<span class="var">Server</span>);
+
+    <span class="kw">public</span> <span class="type">NetworkVariable</span><span class="op">&lt;</span><span class="kw">int</span><span class="op">&gt;</span> <span class="var">Health</span> = <span class="kw">new</span>(<span class="num">100</span>,
+        <span class="type">NetworkVariableReadPermission</span>.<span class="var">Everyone</span>,
+        <span class="type">NetworkVariableWritePermission</span>.<span class="var">Server</span>);
+
+    <span class="kw">void</span> <span class="fn">Update</span>()
+    {
+        <span class="cmt">// IsOwner = true only on the client that owns this object</span>
+        <span class="kw">if</span> (!<span class="var">IsOwner</span>) <span class="kw">return</span>;
+
+        <span class="type">Vector3</span> <span class="var">input</span> = <span class="kw">new</span>(<span class="type">Input</span>.<span class="fn">GetAxisRaw</span>(<span class="str">"Horizontal"</span>), <span class="num">0</span>, <span class="type">Input</span>.<span class="fn">GetAxisRaw</span>(<span class="str">"Vertical"</span>));
+        <span class="kw">if</span> (<span class="var">input</span>.<span class="var">sqrMagnitude</span> > <span class="num">0.1f</span>)
+        {
+            <span class="cmt">// Tell the server to move us — server validates, then writes NetworkPosition</span>
+            <span class="fn">MoveServerRpc</span>(<span class="var">input</span>.<span class="fn">normalized</span>);
+        }
+    }
+
+    <span class="cmt">// [ServerRpc] runs on the server. Called from owner client.</span>
+    <span class="cmt">// RequireOwnership = true is the default. It rejects calls from non-owners.</span>
+    [<span class="type">ServerRpc</span>]
+    <span class="kw">void</span> <span class="fn">MoveServerRpc</span>(<span class="type">Vector3</span> <span class="var">direction</span>)
+    {
+        <span class="type">Vector3</span> <span class="var">newPos</span> = <span class="var">transform</span>.<span class="var">position</span> + <span class="var">direction</span> * <span class="num">5f</span> * <span class="type">Time</span>.<span class="var">deltaTime</span>;
+        <span class="cmt">// Server validates (check walls, etc.) then commits</span>
+        <span class="var">NetworkPosition</span>.<span class="var">Value</span> = <span class="var">newPos</span>;
+        <span class="var">transform</span>.<span class="var">position</span> = <span class="var">newPos</span>;
+    }
+
+    <span class="cmt">// [ClientRpc] runs on ALL clients. Called from server only.</span>
+    [<span class="type">ClientRpc</span>]
+    <span class="kw">public void</span> <span class="fn">PlayHitEffectClientRpc</span>(<span class="type">Vector3</span> <span class="var">hitPoint</span>)
+    {
+        <span class="cmt">// Spawn VFX locally on every client</span>
+        <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">$"Hit effect at {hitPoint} on {gameObject.name}"</span>);
+    }
+
+    <span class="kw">public override void</span> <span class="fn">OnNetworkSpawn</span>()
+    {
+        <span class="cmt">// Called on all clients when this object is networked-spawned</span>
+        <span class="kw">if</span> (<span class="var">IsOwner</span>)
+        {
+            <span class="cmt">// Enable camera follow, input, etc. only for local player</span>
+            <span class="type">Camera</span>.<span class="var">main</span>.<span class="fn">GetComponent</span><span class="op">&lt;</span><span class="type">CameraFollow</span><span class="op">&gt;</span>().<span class="fn">SetTarget</span>(<span class="var">transform</span>);
+        }
+    }
+}</pre>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">🧠 The Ownership Model</div>
+      <p><strong>IsServer</strong> is true on the machine running the game logic. <strong>IsOwner</strong> is true on the client that "owns" the NetworkObject (usually the spawning client). <strong>IsLocalPlayer</strong> is true for player-owned objects on the local machine. Always gate your input reads with <code>IsOwner</code>, not <code>IsLocalPlayer</code> — otherwise you'll process input for player objects you don't control. Design rule: clients send intent via ServerRpcs, server validates and writes NetworkVariables, clients read NetworkVariables to render.</p>
+    </div>
+
+    <h3>Spawning Players</h3>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — GameManager.cs (server-side player spawning)</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="kw">using</span> Unity.Netcode;
+
+<span class="kw">public class</span> <span class="type">GameManager</span> : <span class="type">NetworkBehaviour</span>
+{
+    [<span class="type">SerializeField</span>] <span class="type">GameObject</span> <span class="var">playerPrefab</span>;
+
+    <span class="kw">public override void</span> <span class="fn">OnNetworkSpawn</span>()
+    {
+        <span class="kw">if</span> (!<span class="var">IsServer</span>) <span class="kw">return</span>;
+        <span class="type">NetworkManager</span>.<span class="var">Singleton</span>.<span class="var">OnClientConnectedCallback</span> += <span class="fn">OnClientConnected</span>;
+    }
+
+    <span class="kw">void</span> <span class="fn">OnClientConnected</span>(<span class="kw">ulong</span> <span class="var">clientId</span>)
+    {
+        <span class="type">Vector3</span> <span class="var">spawnPoint</span> = <span class="fn">GetSpawnPoint</span>();
+        <span class="type">GameObject</span> <span class="var">player</span> = <span class="type">Instantiate</span>(<span class="var">playerPrefab</span>, <span class="var">spawnPoint</span>, <span class="type">Quaternion</span>.<span class="var">identity</span>);
+        
+        <span class="cmt">// Spawn with ownership assigned to the connecting client</span>
+        <span class="var">player</span>.<span class="fn">GetComponent</span><span class="op">&lt;</span><span class="type">NetworkObject</span><span class="op">&gt;</span>().<span class="fn">SpawnAsPlayerObject</span>(<span class="var">clientId</span>);
+    }
+}</pre>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 10 -->
+  <section class="section" id="cloud-save">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2>Cloud Save</h2>
+    </div>
+
+    <p>Cloud Save gives each player a key-value store in the cloud. Values are JSON blobs. It survives device changes, reinstalls, and platform migrations — as long as the player re-authenticates with the same identity.</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — CloudSaveManager.cs</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="kw">using</span> Unity.Services.CloudSave;
+<span class="kw">using</span> Unity.Services.CloudSave.Models;
+<span class="kw">using</span> System.Collections.Generic;
+<span class="kw">using</span> Newtonsoft.Json;  <span class="cmt">// comes with UGS core</span>
+
+[<span class="type">System.Serializable</span>]
+<span class="kw">public class</span> <span class="type">PlayerSaveData</span>
+{
+    <span class="kw">public int</span>    <span class="var">Level</span>   = <span class="num">1</span>;
+    <span class="kw">public int</span>    <span class="var">XP</span>      = <span class="num">0</span>;
+    <span class="kw">public string</span> <span class="var">Skin</span>    = <span class="str">"default"</span>;
+}
+
+<span class="kw">public class</span> <span class="type">CloudSaveManager</span>
+{
+    <span class="kw">const string</span> <span class="var">SAVE_KEY</span> = <span class="str">"player_data"</span>;
+
+    <span class="kw">public async</span> <span class="type">Task</span> <span class="fn">SaveAsync</span>(<span class="type">PlayerSaveData</span> <span class="var">data</span>)
+    {
+        <span class="kw">var</span> <span class="var">payload</span> = <span class="kw">new</span> <span class="type">Dictionary</span><span class="op">&lt;</span><span class="kw">string</span>, <span class="kw">object</span><span class="op">&gt;</span>
+        {
+            { <span class="var">SAVE_KEY</span>, <span class="var">data</span> }  <span class="cmt">// UGS serializes this to JSON automatically</span>
+        };
+        <span class="kw">await</span> <span class="type">CloudSaveService</span>.<span class="var">Instance</span>.<span class="var">Data</span>.<span class="var">Player</span>.<span class="fn">SaveAsync</span>(<span class="var">payload</span>);
+        <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">"Player data saved to cloud."</span>);
+    }
+
+    <span class="kw">public async</span> <span class="type">Task</span><span class="op">&lt;</span><span class="type">PlayerSaveData</span><span class="op">&gt;</span> <span class="fn">LoadAsync</span>()
+    {
+        <span class="kw">var</span> <span class="var">keys</span> = <span class="kw">new</span> <span class="type">HashSet</span><span class="op">&lt;</span><span class="kw">string</span><span class="op">&gt;</span> { <span class="var">SAVE_KEY</span> };
+        <span class="kw">var</span> <span class="var">results</span> = <span class="kw">await</span> <span class="type">CloudSaveService</span>.<span class="var">Instance</span>.<span class="var">Data</span>.<span class="var">Player</span>.<span class="fn">LoadAsync</span>(<span class="var">keys</span>);
+
+        <span class="kw">if</span> (<span class="var">results</span>.<span class="fn">TryGetValue</span>(<span class="var">SAVE_KEY</span>, <span class="kw">out var</span> <span class="var">item</span>))
+            <span class="kw">return</span> <span class="var">item</span>.<span class="fn">Value</span>.<span class="fn">GetAs</span><span class="op">&lt;</span><span class="type">PlayerSaveData</span><span class="op">&gt;</span>();
+
+        <span class="cmt">// First time player: return defaults</span>
+        <span class="kw">return new</span> <span class="type">PlayerSaveData</span>();
+    }
+}</pre>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-label">💡 Public vs Protected vs Private Data</div>
+      <p>Cloud Save has three visibility levels: <strong>Player</strong> (only that player can read/write — default), <strong>Protected</strong> (player writes via Cloud Code only, preventing cheating), and <strong>Public</strong> (any authenticated player can read it — great for leaderboards or player profiles). Use Protected for anything affecting game balance.</p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 11 -->
+  <section class="section" id="remote-config">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2>Remote Config</h2>
+    </div>
+
+    <p>Remote Config lets you change game parameters (prices, balance values, feature flags, event durations) from the dashboard without pushing a client update. At runtime, the SDK fetches a JSON config keyed to your project and environment. You define fallback defaults in code so it works offline or if the fetch fails.</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — RemoteConfigManager.cs</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="kw">using</span> Unity.Services.RemoteConfig;
+<span class="kw">using</span> System.Threading.Tasks;
+
+<span class="kw">public class</span> <span class="type">RemoteConfigManager</span>
+{
+    <span class="kw">struct</span> <span class="type">UserAttributes</span> { }   <span class="cmt">// optional: AB test targeting</span>
+    <span class="kw">struct</span> <span class="type">AppAttributes</span>  { }
+
+    <span class="cmt">// Local defaults — used if fetch fails or key doesn't exist in dashboard</span>
+    <span class="kw">public int</span>   <span class="var">MaxPlayers</span>    = <span class="num">4</span>;
+    <span class="kw">public float</span> <span class="var">RespawnDelay</span>  = <span class="num">3f</span>;
+    <span class="kw">public bool</span>  <span class="var">EventEnabled</span>  = <span class="kw">false</span>;
+
+    <span class="kw">public async</span> <span class="type">Task</span> <span class="fn">FetchAndApplyAsync</span>()
+    {
+        <span class="cmt">// RemoteConfigService listens to this event when fetch completes</span>
+        <span class="type">RemoteConfigService</span>.<span class="var">Instance</span>.<span class="var">FetchCompleted</span> += <span class="fn">OnFetchCompleted</span>;
+        <span class="kw">await</span> <span class="type">RemoteConfigService</span>.<span class="var">Instance</span>.<span class="fn">FetchConfigsAsync</span>(<span class="kw">new</span> <span class="type">UserAttributes</span>(), <span class="kw">new</span> <span class="type">AppAttributes</span>());
+    }
+
+    <span class="kw">void</span> <span class="fn">OnFetchCompleted</span>(<span class="type">ConfigResponse</span> <span class="var">response</span>)
+    {
+        <span class="kw">switch</span> (<span class="var">response</span>.<span class="var">requestOrigin</span>)
+        {
+            <span class="kw">case</span> <span class="type">ConfigOrigin</span>.<span class="var">Default</span>:
+                <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">"RemoteConfig: using hardcoded defaults"</span>); <span class="kw">break</span>;
+            <span class="kw">case</span> <span class="type">ConfigOrigin</span>.<span class="var">Cached</span>:
+                <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">"RemoteConfig: using cached values"</span>); <span class="kw">break</span>;
+            <span class="kw">case</span> <span class="type">ConfigOrigin</span>.<span class="var">Remote</span>:
+                <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">"RemoteConfig: fresh from server"</span>); <span class="kw">break</span>;
+        }
+
+        <span class="var">MaxPlayers</span>   = <span class="type">RemoteConfigService</span>.<span class="var">Instance</span>.<span class="var">appConfig</span>.<span class="fn">GetInt</span>(<span class="str">"max_players"</span>,   <span class="num">4</span>);
+        <span class="var">RespawnDelay</span> = <span class="type">RemoteConfigService</span>.<span class="var">Instance</span>.<span class="var">appConfig</span>.<span class="fn">GetFloat</span>(<span class="str">"respawn_delay"</span>, <span class="num">3f</span>);
+        <span class="var">EventEnabled</span> = <span class="type">RemoteConfigService</span>.<span class="var">Instance</span>.<span class="var">appConfig</span>.<span class="fn">GetBool</span>(<span class="str">"event_active"</span>,   <span class="kw">false</span>);
+
+        <span class="type">Debug</span>.<span class="fn">Log</span>(<span class="str">$"Config: MaxPlayers={MaxPlayers} Respawn={RespawnDelay} Event={EventEnabled}"</span>);
+    }
+}</pre>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">🧠 Remote Config as a Feature Flag System</div>
+      <p>The real power of Remote Config isn't balance tweaks — it's <strong>feature flags</strong>. Ship a new feature behind a boolean. Roll it out to 5% of players. If it breaks something, flip it off from the dashboard in seconds without an emergency hotfix. This pattern (ship dark, roll out gradually) is standard at every large game studio. Build that discipline from day one.</p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 12 -->
+  <section class="section" id="errors">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <h2>Errors, Gotchas & Fixes</h2>
+    </div>
+
+    <p>These are the errors you <em>will</em> hit. Every single one. Document them here so you recognize them in &lt;30 seconds next time.</p>
+
+    <h3>UGS Core Errors</h3>
+    <table class="err-table">
+      <thead>
+        <tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="err-code">ServicesNotInitializedException</td>
+          <td>Called a service before <code>UnityServices.InitializeAsync()</code></td>
+          <td class="fix-code">Always await InitializeAsync() first. Use a UGSManager that inits in Awake.</td>
+        </tr>
+        <tr>
+          <td class="err-code">RequestFailedException (401)</td>
+          <td>Not authenticated, or token expired</td>
+          <td class="fix-code">Check IsSignedIn before calls. Handle the Expired event to re-auth silently.</td>
+        </tr>
+        <tr>
+          <td class="err-code">RequestFailedException (403)</td>
+          <td>Service not enabled in dashboard, or calling from wrong environment</td>
+          <td class="fix-code">Go to cloud.unity.com, enable the service. Check your active Environment matches.</td>
+        </tr>
+        <tr>
+          <td class="err-code">RequestFailedException (429)</td>
+          <td>Rate limit exceeded — usually polling too fast</td>
+          <td class="fix-code">Add exponential backoff. Use subscriptions instead of polling for Lobby.</td>
+        </tr>
+        <tr>
+          <td class="err-code">InvalidOperationException: Not initialized</td>
+          <td>Calling UGS in the editor without a linked cloud project</td>
+          <td class="fix-code">Edit → Project Settings → Services. Link your Unity account and project.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Lobby Errors</h3>
+    <table class="err-table">
+      <thead>
+        <tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="err-code">LobbyServiceException: LobbyNotFound</td>
+          <td>Heartbeat stopped → lobby expired. Or wrong lobby ID.</td>
+          <td class="fix-code">Start heartbeat immediately on CreateLobby. Catch this exception and return players to main menu.</td>
+        </tr>
+        <tr>
+          <td class="err-code">LobbyServiceException: LobbyFull</td>
+          <td>Lobby at max capacity</td>
+          <td class="fix-code">Expected. Show "Lobby Full" UI. Use QuickJoin with AvailableSlots GT 0 filter.</td>
+        </tr>
+        <tr>
+          <td class="err-code">LobbyServiceException: Unauthorized</td>
+          <td>Trying to update a lobby you're not the host of, or modifying another player's data</td>
+          <td class="fix-code">Only the host can update lobby Data. Clients can update their own Player data inside the lobby.</td>
+        </tr>
+        <tr>
+          <td class="err-code">LobbyEventConnectionStateChanged: Unsubscribed</td>
+          <td>Subscription lost (network hiccup or lobby deleted)</td>
+          <td class="fix-code">Re-subscribe on Unsubscribed. If lobby was deleted, route to menu.</td>
+        </tr>
+        <tr>
+          <td class="err-code">No lobbies found in QueryLobbiesAsync</td>
+          <td>Wrong environment, filter too strict, or all lobbies are private</td>
+          <td class="fix-code">Check environment. Log the QueryResponse.Results count. Remove extra filters first.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Relay Errors</h3>
+    <table class="err-table">
+      <thead>
+        <tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="err-code">RelayServiceException: AllocationNotFound</td>
+          <td>JoinCode expired (60s with no host) or join code was wrong</td>
+          <td class="fix-code">Host must allocate AND start hosting before sharing the code. Clients should join within ~50s.</td>
+        </tr>
+        <tr>
+          <td class="err-code">Relay connection timeout</td>
+          <td>DTLS blocked by firewall (common in enterprise/school networks)</td>
+          <td class="fix-code">For affected networks, switch to WSS protocol. Or test on mobile data to confirm it's a firewall issue.</td>
+        </tr>
+        <tr>
+          <td class="err-code">StartHost() returns false</td>
+          <td>NetworkManager already running, or transport not configured</td>
+          <td class="fix-code">Call NetworkManager.Shutdown() and await its completion before calling StartHost() again.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>NGO (Netcode) Errors</h3>
+    <table class="err-table">
+      <thead>
+        <tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="err-code">Prefab hash mismatch on client</td>
+          <td>NetworkObject prefab not registered in NetworkManager, or client has different version</td>
+          <td class="fix-code">Add all network prefabs to NetworkManager's list. Ensure all clients run the same build.</td>
+        </tr>
+        <tr>
+          <td class="err-code">ServerRpc dropped silently</td>
+          <td>Calling ServerRpc from non-owner without RequireOwnership = false</td>
+          <td class="fix-code">Set [ServerRpc(RequireOwnership = false)] for RPCs any client should call (e.g. game events).</td>
+        </tr>
+        <tr>
+          <td class="err-code">NetworkVariable not syncing</td>
+          <td>Modified NetworkVariable on client instead of server</td>
+          <td class="fix-code">Only the server (or owner, if permission allows) can write. Route changes through a ServerRpc.</td>
+        </tr>
+        <tr>
+          <td class="err-code">NullRef on NetworkManager.Singleton in OnDestroy</td>
+          <td>Object destroyed during shutdown when NetworkManager is already null</td>
+          <td class="fix-code">Guard with: if (NetworkManager.Singleton != null) before any NGO calls in OnDestroy.</td>
+        </tr>
+        <tr>
+          <td class="err-code">Client immediately disconnects after connecting</td>
+          <td>Server scene is different from client scene, or server-side NullRef on spawn</td>
+          <td class="fix-code">Add logging in OnClientConnectedCallback. Wrap spawn in try/catch to surface the real error.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout success">
+      <div class="callout-label">✅ Debug Tip</div>
+      <p>Enable NGO's built-in logging via <code>NetworkManager.LogLevel = LogLevel.Developer</code>. It prints every RPC, spawn event, and connection state change. Verbose, but it tells you exactly what's happening. Turn it off before shipping — it generates megabytes of logs per session.</p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 13 -->
+  <section class="section" id="scaling">
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <h2>Scaling Insights</h2>
+    </div>
+
+    <p>Your POC works. Now you want to ship it. Here's what changes when you go from 2 players to 20,000.</p>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-val">100</div>
+        <div class="metric-label">Free MAU (Spark)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">10k</div>
+        <div class="metric-label">Lobby max players/room</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">~200ms</div>
+        <div class="metric-label">Relay extra latency</div>
+      </div>
+    </div>
+
+    <h3>Connection Architecture Choices</h3>
+    <p>As you scale, you'll face three architectural paths. Choose intentionally:</p>
+
+    <table class="err-table">
+      <thead>
+        <tr><th>Architecture</th><th>Best For</th><th>Trade-offs</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Relay (POC)</strong></td>
+          <td>Small groups, quick launch, no dedicated server budget</td>
+          <td>Host migration pain, host cheating, extra latency, host leaves = session dies</td>
+        </tr>
+        <tr>
+          <td><strong>Multiplay (Dedicated Servers)</strong></td>
+          <td>Competitive games, 10+ players, anti-cheat requirements</td>
+          <td>Higher cost, ops complexity, but: authoritative server, no host advantage, host migration trivial</td>
+        </tr>
+        <tr>
+          <td><strong>Cloud Code + Custom Backend</strong></td>
+          <td>Turn-based, async games, economy systems</td>
+          <td>No real-time transport. Use for leaderboards, economies, matchmaking logic, not live gameplay.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Host Migration (The Hard Problem)</h3>
+    <p>When the host disconnects in a Relay game, everyone is kicked. There is no automatic host migration in NGO. You must build it:</p>
+    <ul>
+      <li>When the host leaves, the client with the lowest latency (or longest session) becomes the new host candidate.</li>
+      <li>That client calls <code>NetworkManager.Shutdown()</code>, allocates a new Relay, writes the new JoinCode to the Lobby, and calls <code>StartHost()</code>.</li>
+      <li>Other clients see the Lobby update, pick up the new JoinCode, and reconnect.</li>
+      <li>Game state must be serialized and handed to the new host — NGO does not do this automatically. Use <code>NetworkVariable</code> snapshots or a custom state sync message.</li>
+    </ul>
+
+    <div class="insight">
+      <div class="insight-label">🧠 The Real Scaling Bottleneck</div>
+      <p>At scale, your bottleneck won't be Unity's infrastructure — it'll be your <strong>matchmaking logic</strong> and <strong>region latency</strong>. Relay is globally distributed; automatically route players to the nearest region by calling <code>RelayService.Instance.ListRegionsAsync()</code> and selecting the region with the lowest ping before allocating. A player in Tokyo in a US relay server adds 150ms of artificial latency — unacceptable for action games.</p>
+    </div>
+
+    <h3>Region-Aware Relay Allocation</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">C# — Best region selection</span><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="kw">var</span> <span class="var">regions</span> = <span class="kw">await</span> <span class="type">RelayService</span>.<span class="var">Instance</span>.<span class="fn">ListRegionsAsync</span>();
+
+<span class="cmt">// Ping each region and pick the fastest</span>
+<span class="kw">string</span> <span class="var">bestRegion</span> = <span class="str">"auto"</span>;
+<span class="kw">long</span>   <span class="var">bestLatency</span> = <span class="kw">long</span>.<span class="var">MaxValue</span>;
+
+<span class="kw">foreach</span> (<span class="kw">var</span> <span class="var">region</span> <span class="kw">in</span> <span class="var">regions</span>)
+{
+    <span class="kw">long</span> <span class="var">ping</span> = <span class="kw">await</span> <span class="fn">PingRegionAsync</span>(<span class="var">region</span>.<span class="var">Id</span>);
+    <span class="kw">if</span> (<span class="var">ping</span> < <span class="var">bestLatency</span>) { <span class="var">bestLatency</span> = <span class="var">ping</span>; <span class="var">bestRegion</span> = <span class="var">region</span>.<span class="var">Id</span>; }
+}
+
+<span class="kw">var</span> <span class="var">allocation</span> = <span class="kw">await</span> <span class="type">RelayService</span>.<span class="var">Instance</span>.<span class="fn">CreateAllocationAsync</span>(
+    <span class="var">maxConnections</span>: <span class="num">3</span>,
+    <span class="var">region</span>: <span class="var">bestRegion</span>  <span class="cmt">// null or "auto" lets Unity pick — usually fine</span>
+);</pre>
+    </div>
+
+    <h3>Lobby Performance at Scale</h3>
+    <ul>
+      <li><strong>Use indexes.</strong> Lobby Data fields have a <code>Visibility</code> and an <code>Index</code> option. Fields marked with an index can be used in <code>QueryFilter</code>. Non-indexed fields cannot be filtered — you'd have to pull all lobbies and filter client-side. Index the fields you'll query on (e.g. game mode, region, ELO band).</li>
+      <li><strong>Don't store large data in Lobby.</strong> The Lobby is limited to ~2KB of custom data. Don't put full game state or large player profiles in it. Use Cloud Save for that. Lobby is for matchmaking metadata only.</li>
+      <li><strong>Delete lobbies explicitly.</strong> When a game session ends naturally, call <code>LobbyService.Instance.DeleteLobbyAsync(id)</code>. Otherwise the lobby lingers for 30 seconds after heartbeat stops. At scale, ghost lobbies pollute your lobby list and waste query results.</li>
+    </ul>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 14 -->
+  <section class="section" id="production">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <h2>Production Checklist</h2>
+    </div>
+
+    <p>Before you ship anything beyond friends and family testers, work through this list:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Switch to Production Environment</div>
+          <div class="step-desc">Create a Production environment in the UGS dashboard. Ship builds pointing to Production. Keep Development for internal QA only. Player data does not transfer between environments.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Link Anonymous Accounts to Platform Identities</div>
+          <div class="step-desc">Prompt users to link to Apple/Google/Steam after they've invested time. Use <code>LinkWithAppleAsync()</code>, <code>LinkWithGoogleAsync()</code>, etc. This prevents account loss on reinstall.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Handle Token Expiry Gracefully</div>
+          <div class="step-desc">Subscribe to <code>AuthenticationService.Instance.Expired</code> and silently re-authenticate. Show a UI only if re-auth fails after 3 retries.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Add Exponential Backoff on 429 Errors</div>
+          <div class="step-desc">Wrap all UGS calls in a retry loop with jitter: wait 1s, 2s, 4s, 8s, give up. Without this, a brief rate-limit spike causes a cascade of retries that worsens the problem.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Test IL2CPP Builds on Real Devices</div>
+          <div class="step-desc">Do not ship having only tested in Editor. IL2CPP strips assemblies differently. Always do at least one QA pass on a real device with a release build before launch.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Set Up Cloud Code for Server-Authoritative Logic</div>
+          <div class="step-desc">Any game economy, anti-cheat validation, or leaderboard update should go through Cloud Code (Unity's serverless JS/C# functions) — not directly from the client. Clients that call Cloud Save directly with hacked values will corrupt your economy.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Monitor Your Dashboard</div>
+          <div class="step-desc">Set up billing alerts in the Unity Dashboard. Watch your MAU, Relay GB transferred, and Cloud Save operation counts. The Spark free tier is generous but has hard limits that will cause <code>403</code> errors when exceeded.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-content">
+          <div class="step-title">Implement a Maintenance Mode</div>
+          <div class="step-desc">Use a Remote Config boolean <code>maintenance_mode: true</code>. On app launch, fetch this before showing the main menu. If true, show a "down for maintenance" screen. This lets you take the game offline without a patch.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">🧠 Final Wisdom</div>
+      <p>The biggest mistake Unity Cloud beginners make is treating these services as a monolith. They're not. Each service has its own rate limits, its own failure modes, its own billing, and its own regional availability. <strong>Build defensive code from day one.</strong> Every UGS call can fail. Wrap every single one in try/catch with meaningful error handling. The games that succeed in production are not the ones that never have errors — they're the ones that handle errors gracefully so players never notice.</p>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color: var(--text3); font-size: 13px;">Unity Cloud Masterclass · Built to be referenced again and again · Go ship something.</p>
+  </section>
+
+</main>
+
+<script>
+// Sidebar nav highlighting
+const sections = document.querySelectorAll('.section');
+const navItems = document.querySelectorAll('.nav-item');
+const progressBar = document.getElementById('progressBar');
+const readProgress = document.getElementById('readProgress');
+
+function updateNav() {
+  const scrollY = window.scrollY + 120;
+  const docHeight = document.body.scrollHeight - window.innerHeight;
+  const progress = (window.scrollY / docHeight) * 100;
+
+  progressBar.style.width = Math.min(progress, 100) + '%';
+  readProgress.style.transform = `scaleX(${Math.min(progress, 100) / 100})`;
+
+  let currentId = '';
+  sections.forEach(s => { if (scrollY >= s.offsetTop) currentId = s.id; });
+
+  navItems.forEach(item => {
+    const isActive = item.getAttribute('href') === '#' + currentId;
+    item.classList.toggle('active', isActive);
+  });
+}
+
+window.addEventListener('scroll', updateNav, { passive: true });
+updateNav();
+
+// Copy code button
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>

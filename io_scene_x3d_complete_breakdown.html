@@ -1,0 +1,395 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.wrap { padding: 1.5rem 0; }
+h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.tab { background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 14px; font-size: 13px; font-weight: 400; color: var(--color-text-secondary); cursor: pointer; transition: all .15s; }
+.tab.active { border-color: var(--color-border-primary); color: var(--color-text-primary); background: var(--color-background-secondary); font-weight: 500; }
+.tab:hover:not(.active) { background: var(--color-background-secondary); }
+.panel { display: none; }
+.panel.active { display: block; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.card h2 { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+.card h3 { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .04em; }
+.card p, .card li { font-size: 13px; line-height: 1.7; color: var(--color-text-secondary); }
+.card ul { padding-left: 1.2rem; }
+code { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 1px 5px; color: var(--color-text-primary); }
+.badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; margin-right: 4px; }
+.b-blue { background: var(--color-background-info); color: var(--color-text-info); }
+.b-green { background: var(--color-background-success); color: var(--color-text-success); }
+.b-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
+.b-red { background: var(--color-background-danger); color: var(--color-text-danger); }
+.fn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fn-card { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; cursor: pointer; transition: border-color .15s; }
+.fn-card:hover { border-color: var(--color-border-primary); }
+.fn-card .fn-name { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+.fn-card .fn-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.detail-box { background: var(--color-background-secondary); border-left: 3px solid var(--color-border-info); border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; line-height: 1.7; color: var(--color-text-secondary); display: none; }
+.detail-box.open { display: block; }
+.detail-box strong { color: var(--color-text-primary); font-weight: 500; }
+.flow-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.flow-box { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 12px; font-size: 12px; color: var(--color-text-primary); white-space: nowrap; }
+.flow-arrow { color: var(--color-text-secondary); font-size: 14px; }
+.prop-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 0.5px solid var(--color-border-tertiary); padding: 5px 0; font-size: 13px; }
+.prop-row:last-child { border-bottom: none; }
+.prop-name { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-primary); }
+.prop-val { color: var(--color-text-secondary); font-size: 12px; text-align: right; max-width: 60%; }
+.sec-head { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .05em; margin: 1.2rem 0 .5rem; }
+.warn { background: var(--color-background-warning); border: 0.5px solid var(--color-border-warning, var(--color-border-tertiary)); border-radius: var(--border-radius-md); padding: 8px 12px; font-size: 12px; color: var(--color-text-warning); margin-top: 8px; }
+@media (max-width: 500px) { .fn-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+<h1>io_scene_x3d — Complete Code Breakdown</h1>
+<p class="sub">Blender X3D/VRML2 Import-Export Addon · v2.3.1 (legacy) → v2.5.x (extensions repo) · GPL-2.0</p>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('overview')">Overview</button>
+  <button class="tab" onclick="show('init')">__init__.py</button>
+  <button class="tab" onclick="show('export')">export_x3d.py</button>
+  <button class="tab" onclick="show('import')">import_x3d.py</button>
+  <button class="tab" onclick="show('arch')">Architecture</button>
+  <button class="tab" onclick="show('extend')">Extension Points</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="panel-overview" class="panel active">
+  <div class="card">
+    <h2>What this addon does</h2>
+    <p>Bidirectional bridge between Blender and the <strong>X3D</strong> (Extensible 3D) and <strong>VRML2/VRML97</strong> open web3D formats. Original authors: Campbell Barton, Bart, Bastien Montagne, Seva Alekseyev. Now maintained by the Web3D Consortium.</p>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge b-blue">Import: .x3d .wrl</span>
+      <span class="badge b-green">Export: .x3d</span>
+      <span class="badge b-amber">Optional H3D shader export</span>
+      <span class="badge b-blue">VRML2 parser included</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>File structure</h2>
+    <div class="prop-row"><span class="prop-name">__init__.py</span><span class="prop-val">292 lines — Blender operator registration, UI panels, entry points</span></div>
+    <div class="prop-row"><span class="prop-name">export_x3d.py</span><span class="prop-val">~1590 lines — scene-to-X3D serialiser, geometry, lights, materials</span></div>
+    <div class="prop-row"><span class="prop-name">import_x3d.py</span><span class="prop-val">~3640 lines — dual-format parser (X3D XML + VRML2 text), Blender object builder</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Supported X3D nodes (export)</h2>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+      <code>Transform</code><code>Group</code><code>Shape</code><code>Appearance</code><code>Material</code>
+      <code>IndexedFaceSet</code><code>IndexedTriangleSet</code><code>Coordinate</code><code>Normal</code>
+      <code>TextureCoordinate</code><code>ImageTexture</code><code>PointLight</code><code>DirectionalLight</code>
+      <code>SpotLight</code><code>Viewpoint</code><code>Fog</code><code>NavigationInfo</code>
+      <code>Background</code><code>Collision</code>
+    </div>
+    <div class="warn">Known gaps: no multi-material per mesh support; no multiple UV channels per mesh; no animation export; texture export limited (PBR nodes not mapped — major extension point)</div>
+  </div>
+
+  <div class="card">
+    <h2>Supported X3D/VRML nodes (import)</h2>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+      <code>Transform</code><code>Group</code><code>Shape</code><code>Appearance</code><code>Material</code>
+      <code>ImageTexture</code><code>PixelTexture</code><code>IndexedFaceSet</code><code>IndexedLineSet</code>
+      <code>PointSet</code><code>Box</code><code>Cone</code><code>Cylinder</code><code>Sphere</code>
+      <code>ElevationGrid</code><code>Extrusion</code><code>Inline</code><code>Switch</code>
+      <code>PointLight</code><code>DirectionalLight</code><code>SpotLight</code>
+      <code>DEF/USE</code><code>ROUTE</code><code>PROTO/EXTERNPROTO</code>
+    </div>
+  </div>
+</div>
+
+<!-- INIT -->
+<div id="panel-init" class="panel">
+  <div class="card">
+    <h2>Role of __init__.py</h2>
+    <p>The registration hub. It never does 3D math — it only wires Blender's operator system to the two worker modules and defines the UI sidebar panels that appear in the File Browser during export/import.</p>
+  </div>
+
+  <div class="card">
+    <h2>Classes registered</h2>
+    <div class="fn-grid">
+      <div class="fn-card" onclick="toggle('ImportX3D')">
+        <div class="fn-name">ImportX3D</div>
+        <div class="fn-desc">Operator (import_scene.x3d). Handles .x3d and .wrl files. Calls import_x3d.load()</div>
+      </div>
+      <div id="d-ImportX3D" class="detail-box"><strong>bl_idname:</strong> import_scene.x3d<br><strong>filter_glob:</strong> *.x3d;*.wrl<br><strong>execute():</strong> builds keyword dict from properties, constructs axis_conversion global_matrix, calls <code>import_x3d.load(context, **keywords)</code><br><strong>Key point:</strong> uses @orientation_helper(axis_forward='Z', axis_up='Y') decorator — default Blender Y-up, forward Z</div>
+
+      <div class="fn-card" onclick="toggle('ExportX3D')">
+        <div class="fn-name">ExportX3D</div>
+        <div class="fn-desc">Operator (export_scene.x3d). Delegates to export_x3d.save(). Exposes all export properties.</div>
+      </div>
+      <div id="d-ExportX3D" class="detail-box"><strong>bl_idname:</strong> export_scene.x3d<br><strong>Properties:</strong> use_selection, use_mesh_modifiers, use_triangulate, use_normals, use_compress, use_hierarchy, name_decorations, use_h3d, global_scale, path_mode<br><strong>execute():</strong> builds global_matrix via axis_conversion @ Matrix.Scale(global_scale, 4), calls <code>export_x3d.save(context, **keywords)</code></div>
+
+      <div class="fn-card" onclick="toggle('panels')">
+        <div class="fn-name">UI Panels (×4)</div>
+        <div class="fn-desc">X3D_PT_export_include, _transform, _geometry; X3D_PT_import_transform. FILE_BROWSER region panels.</div>
+      </div>
+      <div id="d-panels" class="detail-box"><strong>Pattern:</strong> All use poll() to check operator bl_idname. Parented to FILE_PT_operator.<br><strong>Export Include:</strong> use_selection, use_hierarchy, name_decorations, use_h3d<br><strong>Export Transform:</strong> global_scale, axis_forward, axis_up<br><strong>Export Geometry:</strong> use_mesh_modifiers, use_triangulate, use_normals, use_compress<br><strong>Import Transform:</strong> axis_forward, axis_up</div>
+
+      <div class="fn-card" onclick="toggle('regfn')">
+        <div class="fn-name">register() / unregister()</div>
+        <div class="fn-desc">Standard Blender addon lifecycle. Appends menu items to TOPBAR_MT_file_import and _export.</div>
+      </div>
+      <div id="d-regfn" class="detail-box">Iterates <code>classes</code> tuple calling <code>bpy.utils.register_class()</code>. On unregister, removes menu items first then unregisters classes in order. Hot-reload pattern: checks <code>if "bpy" in locals()</code> and importlib.reload()s submodules — so you can F8 reload scripts mid-session.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Export property reference</h2>
+    <div class="prop-row"><span class="prop-name">use_selection</span><span class="prop-val">Bool · export only selected objects</span></div>
+    <div class="prop-row"><span class="prop-name">use_mesh_modifiers</span><span class="prop-val">Bool · apply modifiers before export</span></div>
+    <div class="prop-row"><span class="prop-name">use_triangulate</span><span class="prop-val">Bool · write IndexedTriangleSet instead of IndexedFaceSet</span></div>
+    <div class="prop-row"><span class="prop-name">use_normals</span><span class="prop-val">Bool · include Normal node in geometry</span></div>
+    <div class="prop-row"><span class="prop-name">use_compress</span><span class="prop-val">Bool · gzip compress output (.x3dz)</span></div>
+    <div class="prop-row"><span class="prop-name">use_hierarchy</span><span class="prop-val">Bool · preserve parent-child Transform nesting</span></div>
+    <div class="prop-row"><span class="prop-name">name_decorations</span><span class="prop-val">Bool · prefix DEF IDs with CA_, OB_, ME_, etc.</span></div>
+    <div class="prop-row"><span class="prop-name">use_h3d</span><span class="prop-val">Bool · emit H3D GLSL shader extensions</span></div>
+    <div class="prop-row"><span class="prop-name">global_scale</span><span class="prop-val">Float 0.01–1000 · uniform scale multiplier</span></div>
+    <div class="prop-row"><span class="prop-name">path_mode</span><span class="prop-val">Enum · AUTO/ABSOLUTE/RELATIVE/COPY/STRIP for texture paths</span></div>
+  </div>
+</div>
+
+<!-- EXPORT -->
+<div id="panel-export" class="panel">
+  <div class="card">
+    <h2>export_x3d.py — top-level structure</h2>
+    <p>One giant <code>export()</code> function (≈1400 lines) with all write functions defined as closures inside it, plus a thin <code>save()</code> entry-point that opens the file and calls <code>export()</code>. The closure design gives every inner function direct access to <code>fw</code> (file.write), all UUID caches, and all export flags with zero argument passing.</p>
+  </div>
+
+  <p class="sec-head">Utility functions (module-level)</p>
+  <div class="fn-grid">
+    <div class="fn-card" onclick="toggle('clamp_color')"><div class="fn-name">clamp_color(col)</div><div class="fn-desc">Clamps each channel to [0,1]. Guards against Blender's HDR color values.</div></div>
+    <div id="d-clamp_color" class="detail-box">Returns tuple. Used by all light and material colour writes.</div>
+
+    <div class="fn-card" onclick="toggle('clean_def')"><div class="fn-name">clean_def(txt)</div><div class="fn-desc">Sanitises a string into a valid X3D DEF identifier. Replaces ~60 illegal chars with underscores.</div></div>
+    <div id="d-clean_def" class="detail-box">Prepends '_' if starts with digit. Uses str.translate() with a 60-entry table. Covers control chars, spaces, quotes, brackets, backslash. Critical: X3D DEF names have strict grammar; bad names silently break USE references in viewers.</div>
+
+    <div class="fn-card" onclick="toggle('build_hierarchy')"><div class="fn-name">build_hierarchy(objects)</div><div class="fn-desc">Builds parent→children tree, skipping parents not in the export set.</div></div>
+    <div id="d-build_hierarchy" class="detail-box">Uses a local <code>par_lookup</code> dict. <code>test_parent()</code> walks up obj.parent chain until it finds a parent in the export objects set. Returns list of (obj, children) tuples rooted at None (top-level objects). Used when use_hierarchy=True.</div>
+
+    <div class="fn-card" onclick="toggle('matrix_direction_neg_z')"><div class="fn-name">matrix_direction_neg_z(matrix)</div><div class="fn-desc">Extracts the -Z world direction from a matrix. Used for light orientation.</div></div>
+    <div id="d-matrix_direction_neg_z" class="detail-box">Computes <code>(matrix.to_3x3() @ Vector(0,0,-1)).normalized()</code>. Returns xyz tuple. Blender lights point down -Z local axis; X3D lights use a 'direction' field in world space.</div>
+  </div>
+
+  <p class="sec-head">Write functions (closures inside export())</p>
+  <div class="fn-grid">
+    <div class="fn-card" onclick="toggle('writeHeader')"><div class="fn-name">writeHeader(ident)</div><div class="fn-desc">Writes XML declaration, DOCTYPE, X3D root, head meta tags, Scene tag.</div></div>
+    <div id="d-writeHeader" class="detail-box">Outputs X3D 3.0 Immersive profile by default; H3DAPI profile when use_h3d. Writes meta filename and generator (Blender version). If use_h3d, inserts TransformInfo DEF="TOP_LEVEL_TI". Returns incremented ident string.</div>
+
+    <div class="fn-card" onclick="toggle('writeViewpoint')"><div class="fn-name">writeViewpoint(ident, obj, matrix, scene)</div><div class="fn-desc">Exports a Camera as an X3D Viewpoint node.</div></div>
+    <div id="d-writeViewpoint" class="detail-box">Decomposes matrix to loc+rot+scale. Converts quaternion to axis-angle via rot.to_axis_angle(). Uses obj.data.angle for fieldOfView. DEF name prefixed with CA_.</div>
+
+    <div class="fn-card" onclick="toggle('writeTransform')"><div class="fn-name">writeTransform_begin / _end</div><div class="fn-desc">Wraps child nodes in a Transform with translation/scale/rotation decomposed from the object matrix.</div></div>
+    <div id="d-writeTransform" class="detail-box">Decomposes matrix → loc, rot (quaternion→axis-angle), scale. Writes 6-decimal floats. Increments ident. _end decrements ident and closes tag. Core of hierarchy export.</div>
+
+    <div class="fn-card" onclick="toggle('writeLights')"><div class="fn-name">writeSpotLight / writeDirectionalLight / writePointLight</div><div class="fn-desc">Three light type handlers. Each writes the corresponding X3D light node.</div></div>
+    <div id="d-writeLights" class="detail-box">SpotLight: computes beamWidth = spot_size*0.37, cutOffAngle = beamWidth*1.3, radius = lamp.distance*cos(beamWidth). All clamp energy to [0,1] by dividing by 1.75. ambientIntensity is computed from world.ambient_color but the conditional is `if world and 0:` — <strong>always zero in practice (dead code)</strong>. Intentional or oversight.</div>
+
+    <div class="fn-card" onclick="toggle('writeIndexedFaceSet')"><div class="fn-name">writeIndexedFaceSet()</div><div class="fn-desc">The largest function ~500 lines. Exports mesh geometry as IndexedFaceSet or IndexedTriangleSet.</div></div>
+    <div id="d-writeIndexedFaceSet" class="detail-box"><strong>Key steps:</strong><br>1. Generates unique DEF IDs for obj, mesh, group, coords, normals<br>2. Checks for COLLISION modifier → wraps in Collision node<br>3. Uses mesh.tag to deduplicate mesh data (USE reference if already written)<br>4. Groups polygons by (material_index, image) pairs<br>5. For each group writes a Shape → Appearance → Material/ImageTexture → IndexedFaceSet<br>6. Vertex dedup: builds vertex_hash[vidx][key] where key=(normal, uv, col tuple) per loop<br>7. Handles USE_TRIANGULATE path via loop_triangles<br>8. Writes per-vertex or per-face vertex colours<br><strong>Notable:</strong> creaseAngle not supported for IndexedTriangleSet, forces normals in that case</div>
+
+    <div class="fn-card" onclick="toggle('writeBackground')"><div class="fn-name">writeBackground(ident, world, world_id)</div><div class="fn-desc">Exports Blender World horizon/zenith as X3D Background node.</div></div>
+    <div id="d-writeBackground" class="detail-box">Writes skyColor, groundColor from world.horizon_color / world.zenith_color. Single colour each (no gradient skybox). Wrapped in DEF for USE.</div>
+
+    <div class="fn-card" onclick="toggle('h3d')"><div class="fn-name">h3d_shader_glsl_frag_patch()</div><div class="fn-desc">Post-processes GLSL fragment shader files for H3D compatibility.</div></div>
+    <div id="d-h3d" class="detail-box">Reads a GLSL .frag file, injects global var declarations after "void main(void)", patches light_visibility_* calls to transform world-space positions using H3D's view_matrix. Hacky string manipulation — searches for specific function call patterns and rewrites the argument lists. Only active when use_h3d=True.</div>
+  </div>
+
+  <div class="card">
+    <h2>UUID / DEF name system</h2>
+    <p>To avoid duplicate DEF IDs in the X3D output, the exporter maintains per-type caches:</p>
+    <div style="margin-top:8px">
+      <code>uuid_cache_object</code> <code>uuid_cache_light</code> <code>uuid_cache_view</code>
+      <code>uuid_cache_mesh</code> <code>uuid_cache_material</code> <code>uuid_cache_image</code> <code>uuid_cache_world</code>
+    </div>
+    <p style="margin-top:8px">With <code>name_decorations=True</code>, each type gets its own dict (safe for collision across types). With <code>False</code>, all share one dict. Uniqueness enforced by <code>bpy_extras.io_utils.unique_name()</code>.</p>
+    <p style="margin-top:6px">Prefix constants: <code>CA_</code> cameras, <code>OB_</code> objects, <code>ME_</code> meshes, <code>IM_</code> images, <code>WO_</code> world, <code>MA_</code> materials, <code>LA_</code> lights, <code>group_</code> group wrappers.</p>
+  </div>
+</div>
+
+<!-- IMPORT -->
+<div id="panel-import" class="panel">
+  <div class="card">
+    <h2>import_x3d.py — dual-format parser</h2>
+    <p>The largest and most complex file. Handles two completely different syntaxes — X3D's XML and VRML2's curly-brace text format — by converting both into a shared internal <code>vrmlNode</code> tree, then walking that tree to build Blender objects.</p>
+  </div>
+
+  <div class="card">
+    <h2>Parsing pipeline</h2>
+    <div class="flow-row">
+      <div class="flow-box">.x3d / .wrl file</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">detect format</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">VRML: vrmlFormat() pre-processor</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">build vrmlNode tree</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">importScene()</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Blender objects</div>
+    </div>
+    <p style="margin-top:8px">X3D XML files are parsed with Python's <code>xml.dom.minidom</code>, then each DOM element is wrapped in a <code>vrmlNode</code>. VRML text files go through a multi-pass pre-processor first.</p>
+  </div>
+
+  <p class="sec-head">VRML pre-processor stages</p>
+  <div class="fn-grid">
+    <div class="fn-card" onclick="toggle('vrmlFormat')"><div class="fn-name">vrmlFormat(data)</div><div class="fn-desc">Multi-pass text normaliser. Produces one token-per-line canonical form that the node parser can handle.</div></div>
+    <div id="d-vrmlFormat" class="detail-box">
+      <strong>Stage 1:</strong> Strip comments (# outside strings)<br>
+      <strong>Stage 2:</strong> EXTRACT_STRINGS — extract all quoted string literals, replace with empty "" placeholders (preserves URL content which may contain commas/braces)<br>
+      <strong>Stage 3:</strong> Normalise braces/brackets — replace {, }, [, ] with \n...\n versions<br>
+      <strong>Stage 4:</strong> vrml_split_fields() — re-split so each property is on its own line<br>
+      <strong>Stage 5:</strong> Restore extracted strings into their placeholders<br>
+      Returns list of non-empty lines.
+    </div>
+
+    <div class="fn-card" onclick="toggle('vrml_split_fields')"><div class="fn-name">vrml_split_fields(value)</div><div class="fn-desc">Splits a VRML token list into separate field entries. Handles DEF/USE keywords specially.</div></div>
+    <div id="d-vrml_split_fields" class="detail-box">iskey() detects field-name tokens (starts with alpha, not TRUE/FALSE). Iterates tokens, collecting a field_context; flushes to field_list when a new key is found after a value. Handles DEF/USE pairs as a unit (two tokens). Returns list of token lists.</div>
+  </div>
+
+  <p class="sec-head">Node parser</p>
+  <div class="fn-grid">
+    <div class="fn-card" onclick="toggle('vrmlNode')"><div class="fn-name">vrmlNode (class)</div><div class="fn-desc">Core IR node. Holds id, fields, children, array_data, DEF/PROTO/ROUTE namespaces. Bridges both X3D XML and VRML text.</div></div>
+    <div id="d-vrmlNode" class="detail-box">
+      <strong>Slots:</strong> id, fields, proto_node, proto_field_defs, proto_fields, node_type, parent, children, array_data, reference, lineno, filename, blendObject, blendData, DEF_NAMESPACE, ROUTE_IPO_NAMESPACE, PROTO_NAMESPACE, x3dNode, parsed<br><br>
+      <strong>Three node types:</strong> NODE_NORMAL ({}), NODE_ARRAY ([]), NODE_REFERENCE (USE)<br><br>
+      <strong>Namespace chain:</strong> DEF_NAMESPACE, PROTO_NAMESPACE, ROUTE_IPO_NAMESPACE stored only on root nodes (identified by having a filename). Non-root nodes walk up parent chain via getDefDict(), getProtoDict(), getRouteIpoDict().<br><br>
+      <strong>parsed field:</strong> Stores the built Blender object so mesh/material data can be reused when the same DEF is USEd multiple times.
+    </div>
+
+    <div class="fn-card" onclick="toggle('getNodePreText')"><div class="fn-name">getNodePreText / is_nodeline / is_numline</div><div class="fn-desc">Line-classification helpers used by the recursive VRML parser to decide if a line begins a node, array, or numeric data.</div></div>
+    <div id="d-getNodePreText" class="detail-box">
+      <code>getNodePreText(i, words)</code> — scans forward from line i collecting words until it finds '{' (NODE_NORMAL) or detects a USE keyword (NODE_REFERENCE). Returns (node_type, next_line_index).<br><br>
+      <code>is_nodeline(i, words)</code> — calls getNodePreText, validates that all collected words are alphabetic (not numeric), handles PROTO/EXTERNPROTO specially.<br><br>
+      <code>is_numline(i)</code> — fast float-parse check. Tries float() on the first token (skipping leading ', '). Used to detect raw numeric array data lines.
+    </div>
+  </div>
+
+  <p class="sec-head">Scene builder functions</p>
+  <div class="fn-grid">
+    <div class="fn-card" onclick="toggle('importScene')"><div class="fn-name">importScene(vrml_node, bpyscene)</div><div class="fn-desc">Top-level walker. Recursively dispatches node types to specialised import functions.</div></div>
+    <div id="d-importScene" class="detail-box">Iterates vrml_node.children. Dispatches by node name (e.g. 'Transform', 'Shape', 'PointLight', etc.) to the appropriate importXxx() function. Handles coordinate system conversion via global_matrix. Manages collection linking for imported objects.</div>
+
+    <div class="fn-card" onclick="toggle('appearance_Create')"><div class="fn-name">appearance_Create()</div><div class="fn-desc">Builds a Blender material + optional image texture from an X3D Appearance/Material node.</div></div>
+    <div id="d-appearance_Create" class="detail-box">Reads diffuseColor, specularColor, emissiveColor, shininess, transparency, ambientIntensity from Material node. Optionally reads ImageTexture or PixelTexture. Uses texture_cache and material_cache dicts to reuse already-built materials/images. Creates Blender Material with Principled BSDF or simple diffuse depending on Blender version.</div>
+
+    <div class="fn-card" onclick="toggle('importMesh')"><div class="fn-name">importMesh / mesh_*</div><div class="fn-desc">Builds bpy.data.meshes from IndexedFaceSet, IndexedTriangleSet, Box, Sphere, Cylinder, Cone, ElevationGrid, Extrusion, PointSet, IndexedLineSet.</div></div>
+    <div id="d-importMesh" class="detail-box">For IndexedFaceSet: reads coordIndex, reads Coordinate point, optionally reads Normal, TextureCoordinate, Color. Builds mesh via bpy.data.meshes.new(), assigns vertices, loops, polygons. Handles -1 polygon terminator in coordIndex. For primitives (Box/Sphere/etc.), builds the geometry from scratch using math. ElevationGrid generates a height-map grid. Extrusion sweeps a 2D cross-section along a spine.</div>
+
+    <div class="fn-card" onclick="toggle('importLamp')"><div class="fn-name">importLamp (Point/Directional/Spot)</div><div class="fn-desc">Creates bpy.data.lights from X3D light nodes. Maps intensity, color, radius, beamWidth/cutOffAngle.</div></div>
+    <div id="d-importLamp" class="detail-box">SpotLight: reads beamWidth → spot_size, cutOffAngle → spot_blend. PointLight: reads radius → cutoff_distance. DirectionalLight: creates SUN type. All map intensity * color → light energy. on=False → object hide.</div>
+  </div>
+
+  <div class="card">
+    <h2>DEF / USE system</h2>
+    <p>X3D's instancing system maps directly to the import. Each node with a <code>DEF="name"</code> attribute is stored in the root's <code>DEF_NAMESPACE</code> dict. A <code>USE="name"</code> node is a <code>NODE_REFERENCE</code> that looks up the previously parsed node and reuses its <code>.parsed</code> result (the already-built Blender object/mesh). This is how X3D achieves geometry instancing without re-building identical meshes.</p>
+  </div>
+
+  <div class="card">
+    <h2>Inline / PROTO support</h2>
+    <p><code>Inline</code> nodes trigger a recursive file load. Each inline gets its own root <code>vrmlNode</code> with its own <code>DEF_NAMESPACE</code> so names don't collide across files. <code>PROTO</code> definitions are stored in <code>PROTO_NAMESPACE</code>; proto instances resolve field IS-mappings at instantiation time.</p>
+    <div class="warn">ROUTE animation data is parsed into ROUTE_IPO_NAMESPACE but animation import is not fully implemented — it's a known TODO in the source comments.</div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div id="panel-arch" class="panel">
+  <div class="card">
+    <h2>Execution flow — Export</h2>
+    <div class="flow-row"><div class="flow-box">File → Export → X3D</div><span class="flow-arrow">→</span><div class="flow-box">ExportX3D.execute()</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row"><div class="flow-box">build global_matrix</div><span class="flow-arrow">→</span><div class="flow-box">export_x3d.save()</div><span class="flow-arrow">→</span><div class="flow-box">open file</div><span class="flow-arrow">→</span><div class="flow-box">export()</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row"><div class="flow-box">writeHeader()</div><span class="flow-arrow">→</span><div class="flow-box">write world/fog/navinfo</div><span class="flow-arrow">→</span><div class="flow-box">iterate objects</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓ (per object)</span></div>
+    <div class="flow-row"><div class="flow-box">writeTransform_begin()</div><span class="flow-arrow">→</span><div class="flow-box">dispatch by type (MESH/CAMERA/LIGHT)</div><span class="flow-arrow">→</span><div class="flow-box">writeTransform_end()</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓ (MESH path)</span></div>
+    <div class="flow-row"><div class="flow-box">writeIndexedFaceSet()</div><span class="flow-arrow">→</span><div class="flow-box">group polys by material+image</div><span class="flow-arrow">→</span><div class="flow-box">per-group: Shape/Appearance/Material/IFS</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row"><div class="flow-box">copy_set path handling</div><span class="flow-arrow">→</span><div class="flow-box">writeFooter()</div><span class="flow-arrow">→</span><div class="flow-box">path_reference_mode file copy</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Execution flow — Import</h2>
+    <div class="flow-row"><div class="flow-box">File → Import → X3D/VRML2</div><span class="flow-arrow">→</span><div class="flow-box">ImportX3D.execute()</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row"><div class="flow-box">import_x3d.load()</div><span class="flow-arrow">→</span><div class="flow-box">detect XML vs VRML</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓ VRML path</span><span style="margin-left:80px" class="flow-arrow">↓ X3D path</span></div>
+    <div class="flow-row"><div class="flow-box">read file text</div><span class="flow-arrow" style="margin-left:50px"></span><div class="flow-box">minidom.parse()</div></div>
+    <div class="flow-row"><div class="flow-box">vrmlFormat() normalise</div><span class="flow-arrow" style="margin-left:40px">→</span><div class="flow-box">DOM → vrmlNode tree</div></div>
+    <div class="flow-row"><div class="flow-box">VRML → vrmlNode tree</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓ (both merge here)</span></div>
+    <div class="flow-row"><div class="flow-box">importScene(root, bpyscene)</div><span class="flow-arrow">→</span><div class="flow-box">recursive node dispatch</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓ (per node type)</span></div>
+    <div class="flow-row"><div class="flow-box">importMesh / importLamp / importCamera / etc.</div><span class="flow-arrow">→</span><div class="flow-box">bpy.data.* creation</div></div>
+    <div class="flow-row" style="margin-left:20px"><span class="flow-arrow">↓</span></div>
+    <div class="flow-row"><div class="flow-box">link to scene collection</div><span class="flow-arrow">→</span><div class="flow-box">apply global_matrix</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Coordinate system handling</h2>
+    <p>X3D uses a right-handed, Y-up coordinate system. Blender uses right-handed Z-up. The <code>global_matrix</code> (built from <code>axis_conversion()</code> in <code>__init__.py</code>) handles this. Default settings: <code>axis_forward='Z'</code>, <code>axis_up='Y'</code> converts Blender Z-up to X3D Y-up on export, and reverses on import.</p>
+    <p style="margin-top:8px">Internally the exporter applies <code>global_matrix @ obj.matrix_world</code> for each object before decomposing to translation/rotation/scale for the Transform node.</p>
+  </div>
+</div>
+
+<!-- EXTENSION POINTS -->
+<div id="panel-extend" class="panel">
+  <div class="card">
+    <h2>Key extension points for your custom code</h2>
+    <p>These are the hooks, gaps, and patterns you'll want to understand for extending or integrating this addon.</p>
+  </div>
+
+  <div class="fn-grid">
+    <div class="fn-card" onclick="toggle('ext-texture')"><div class="fn-name">Texture / PBR export (gap)</div><div class="fn-desc">The exporter has no PBR material node support. A major extension point.</div></div>
+    <div id="d-ext-texture" class="detail-box"><strong>Current state:</strong> writeIndexedFaceSet() groups polygons by material + image, but the material writing only handles basic Phong properties (diffuse, specular, emissive, shininess, transparency). PBR nodes (Principled BSDF) are not traversed.<br><br><strong>Extension:</strong> In the per-material Shape write, after the Material node, add a custom material inspector that walks the node_tree of the Blender material and maps Principled BSDF inputs → X3D v4 PhysicalMaterial fields (baseColor, metallic, roughness, etc.).</div>
+
+    <div class="fn-card" onclick="toggle('ext-animation')"><div class="fn-name">Animation export (gap)</div><div class="fn-desc">No animation export. X3D has TimeSensor, PositionInterpolator, OrientationInterpolator, etc.</div></div>
+    <div id="d-ext-animation" class="detail-box"><strong>Extension approach:</strong> After writing each Transform node, check if the corresponding object has animation data. Bake the action to a set of frames, write X3D TimeSensor + PositionInterpolator/OrientationInterpolator/ScalarInterpolator nodes, and connect with ROUTE statements. The import side has ROUTE_IPO_NAMESPACE infrastructure already but unused.</div>
+
+    <div class="fn-card" onclick="toggle('ext-collection')"><div class="fn-name">Collection-based export (gap)</div><div class="fn-desc">Current exporter treats all objects flat (or with object parent hierarchy). No Blender Collection → X3D Group mapping.</div></div>
+    <div id="d-ext-collection" class="detail-box">The newer extensions version (v2.5+) adds per-collection export modes. To extend the legacy version: modify the object iteration in export() to group objects by collection, wrapping each collection in a named X3D Group node before writing its child objects.</div>
+
+    <div class="fn-card" onclick="toggle('ext-inline')"><div class="fn-name">Inline / external file export (gap)</div><div class="fn-desc">Exporter always writes everything inline. X3D Inline node references external files.</div></div>
+    <div id="d-ext-inline" class="detail-box">Could be extended to write large meshes to separate .x3d files and reference them via Inline nodes. Useful for web streaming. The importer already handles reading Inline nodes.</div>
+
+    <div class="fn-card" onclick="toggle('ext-h3d')"><div class="fn-name">H3D shader path (use_h3d=True)</div><div class="fn-desc">Special H3D profile output. Writes GPU shader export and patches GLSL frag files.</div></div>
+    <div id="d-ext-h3d" class="detail-box"><strong>Flow:</strong> use_h3d=True triggers: (1) gpu.export_shader() call per material, (2) writes X3D ComposedShader nodes with GLSL vert/frag, (3) post-processes .frag files via h3d_shader_glsl_frag_patch() to inject view_matrix transforms for light calculations. The Blender gpu module changed significantly in 3.x — this path may be broken in modern Blender.</div>
+
+    <div class="fn-card" onclick="toggle('ext-vertex-color')"><div class="fn-name">Vertex colour pipeline</div><div class="fn-desc">Both import and export handle vertex colours. Understanding the loop vs vertex distinction matters.</div></div>
+    <div id="d-ext-vertex-color" class="detail-box"><strong>Export:</strong> calc_vertex_color() checks if each vertex has one consistent colour across all its loops. If yes, uses per-vertex Color node (is_col_per_vertex=True). If not, uses per-face-vertex (loop-indexed) Color. X3D ColorRGBA vs Color depends on whether alpha varies.<br><br><strong>Import:</strong> Color/ColorRGBA read from X3D mapped back to Blender vertex_colors attribute layer.</div>
+
+    <div class="fn-card" onclick="toggle('ext-dedup')"><div class="fn-name">Mesh deduplication (mesh.tag)</div><div class="fn-desc">The exporter deduplicates identical meshes using mesh.tag = True and USE references.</div></div>
+    <div id="d-ext-dedup" class="detail-box">Before exporting geometry, checks <code>if mesh.tag:</code> — if True, writes a USE reference to the mesh_id_group. Otherwise writes the full geometry and sets mesh.tag=True. At end of export, all tags must be reset. This is why the exporter calls depsgraph.update() — to work with evaluated meshes that have unique mesh data even for linked objects.</div>
+  </div>
+
+  <div class="card">
+    <h2>Gotchas when extending</h2>
+    <ul>
+      <li style="margin-bottom:6px">The <strong>ambient intensity</strong> code in light writers has <code>if world and 0:</code> — a deliberate short-circuit. Both branches exist but the amb_intensity is always 0. If you need ambient, fix this conditional.</li>
+      <li style="margin-bottom:6px">The <strong>H3D gpu.export_shader()</strong> API was removed in Blender 3.x. The h3d path will crash on modern Blender without a reimplementation using the new GPU shader introspection APIs.</li>
+      <li style="margin-bottom:6px">The <strong>vertex hash key</strong> in writeIndexedFaceSet uses tuples of (normal, uv, color) — changing any of these per loop creates a new X3D vertex. This is correct for X3D but means vertex counts can explode. Be aware when adding new per-loop attributes.</li>
+      <li style="margin-bottom:6px">The import parser uses a <strong>module-level <code>lines</code> list</strong> — a global that's set once per parse. Not thread-safe.</li>
+      <li style="margin-bottom:6px">The VRML pre-processor assumes <strong>EXTRACT_STRINGS=True</strong> always (the False branch is present but unreachable). The string extraction is needed for URLs containing commas or brackets.</li>
+    </ul>
+  </div>
+</div>
+
+</div>
+
+<script>
+function show(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+function toggle(id) {
+  const el = document.getElementById('d-' + id);
+  if (!el) return;
+  el.classList.toggle('open');
+}
+</script>

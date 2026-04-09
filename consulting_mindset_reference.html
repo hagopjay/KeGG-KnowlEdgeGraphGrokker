@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Consulting Mindset — Complete Reference</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:     #1a1a18;
+  --ink2:    #3d3d3a;
+  --ink3:    #6b6b67;
+  --ink4:    #9b9b96;
+  --bg:      #faf9f7;
+  --bg2:     #f2f0ec;
+  --bg3:     #e8e5df;
+  --line:    #d8d4cc;
+  --amber:   #c47c00;
+  --amber-bg:#fef3dc;
+  --teal:    #0f6e56;
+  --teal-bg: #e1f5ee;
+  --red:     #993c1d;
+  --red-bg:  #fdf0eb;
+  --blue:    #1a5fa8;
+  --blue-bg: #e8f1fb;
+  --purple:  #5b3db5;
+  --pur-bg:  #f0edfb;
+}
+
+body {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 2.5rem 2rem;
+  line-height: 1.7;
+}
+
+.container { max-width: 940px; margin: 0 auto; }
+
+/* Header */
+.masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1rem; margin-bottom: 2rem; }
+.masthead h1 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
+}
+.masthead .sub { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; color: var(--ink3); margin-top: 4px; }
+.section-pills {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px;
+}
+.pill {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px; padding: 5px 14px; border-radius: 20px;
+  border: 1.5px solid var(--line); background: var(--bg);
+  color: var(--ink3); cursor: pointer; transition: all .15s;
+}
+.pill:hover { border-color: var(--ink3); color: var(--ink2); }
+.pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* Sections */
+.sec { display: none; }
+.sec.active { display: block; }
+
+/* Typography inside sections */
+h2 {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 17px; font-weight: 700; color: var(--ink);
+  margin: 2rem 0 .75rem; letter-spacing: -.01em;
+}
+h2:first-child { margin-top: 0; }
+h3 {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--ink2);
+  margin: 1.5rem 0 .4rem; text-transform: uppercase; letter-spacing: .06em;
+}
+p { font-size: 15px; color: var(--ink2); margin-bottom: .9rem; }
+p b { color: var(--ink); font-weight: 600; }
+
+/* Callout boxes */
+.box {
+  border-radius: 6px; padding: 14px 16px; margin: 1rem 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13.5px;
+  line-height: 1.6;
+}
+.box.amber { background: var(--amber-bg); border-left: 3px solid var(--amber); }
+.box.teal  { background: var(--teal-bg);  border-left: 3px solid var(--teal); }
+.box.red   { background: var(--red-bg);   border-left: 3px solid var(--red); }
+.box.blue  { background: var(--blue-bg);  border-left: 3px solid var(--blue); }
+.box.pur   { background: var(--pur-bg);   border-left: 3px solid var(--purple); }
+.box.gray  { background: var(--bg2);      border-left: 3px solid var(--line); }
+.box-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; margin-bottom: 6px;
+}
+.amber .box-label { color: var(--amber); }
+.teal  .box-label { color: var(--teal); }
+.red   .box-label { color: var(--red); }
+.blue  .box-label { color: var(--blue); }
+.pur   .box-label { color: var(--purple); }
+.gray  .box-label { color: var(--ink4); }
+.box p { font-family: inherit; font-size: inherit; margin: 0; }
+.box p + p { margin-top: 6px; }
+.box code {
+  font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+  background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 3px;
+}
+
+/* Grid */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1rem 0; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 1rem 0; }
+
+/* Template blocks */
+.tmpl {
+  background: var(--bg2); border: 1px solid var(--line); border-radius: 6px;
+  overflow: hidden; margin: 1rem 0;
+}
+.tmpl-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; border-bottom: 1px solid var(--line); background: var(--bg3);
+}
+.tmpl-title {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--ink2);
+}
+.tmpl-badge {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 10px; padding: 2px 8px; border-radius: 10px;
+  border: 1px solid var(--line); color: var(--ink4); background: var(--bg);
+  margin-right: 8px;
+}
+.copy-btn {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px; color: var(--ink4); background: transparent;
+  border: 1px solid var(--line); border-radius: 4px; padding: 3px 9px;
+  cursor: pointer; transition: all .15s;
+}
+.copy-btn:hover { color: var(--ink2); border-color: var(--ink3); }
+.tmpl-body {
+  padding: 14px 16px; font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px; line-height: 1.75; color: var(--ink2);
+  white-space: pre-wrap; max-height: 400px; overflow-y: auto;
+}
+.tmpl-body .fill { color: var(--blue); font-style: italic; }
+.tmpl-body .comm { color: var(--ink4); }
+.tmpl-body .warn { color: var(--red); font-weight: 600; }
+.tmpl-body .ok   { color: var(--teal); font-weight: 600; }
+
+/* Worked example cards */
+.example {
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 1.25rem 0;
+}
+.ex-header {
+  padding: 10px 16px; background: var(--bg2); border-bottom: 1px solid var(--line);
+  display: flex; align-items: baseline; gap: 10px;
+}
+.ex-tag {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  padding: 2px 8px; border-radius: 10px; border: 1.5px solid;
+  white-space: nowrap;
+}
+.ex-tag.before { color: var(--red); border-color: var(--red); background: var(--red-bg); }
+.ex-tag.after  { color: var(--teal); border-color: var(--teal); background: var(--teal-bg); }
+.ex-tag.scenario { color: var(--blue); border-color: var(--blue); background: var(--blue-bg); }
+.ex-title {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px; font-weight: 600; color: var(--ink2);
+}
+.ex-body {
+  padding: 14px 16px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13.5px; line-height: 1.65; color: var(--ink2);
+}
+.ex-body b { color: var(--ink); }
+
+/* MECE tree */
+.tree { margin: 1rem 0; }
+.tree-node {
+  display: flex; align-items: flex-start; gap: 8px; padding: 7px 12px;
+  border-left: 2px solid var(--line); margin-left: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px;
+  color: var(--ink2); line-height: 1.5;
+}
+.tree-node.root {
+  border-left: 2px solid var(--amber); margin-left: 0;
+  background: var(--amber-bg); border-radius: 4px 0 0 4px; font-weight: 600;
+  color: var(--ink);
+}
+.tree-node .node-label { font-weight: 600; color: var(--ink); min-width: 160px; }
+.tree-node .node-desc  { color: var(--ink3); font-size: 12px; }
+.tree-child { margin-left: 28px; border-left: 1px dashed var(--line); }
+
+/* Pyramid diagram */
+.pyramid { margin: 1.25rem 0; }
+.pyr-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 6px;
+}
+.pyr-block {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px; font-weight: 600; padding: 10px 16px;
+  border-radius: 4px; text-align: center; min-width: 120px;
+}
+.pyr-row:nth-child(1) .pyr-block { background: var(--ink); color: #fff; width: 240px; }
+.pyr-row:nth-child(2) .pyr-block { background: var(--bg3); color: var(--ink2); width: 300px; }
+.pyr-row:nth-child(3) .pyr-block { background: var(--bg2); color: var(--ink2); width: 380px; font-weight: 400; font-size: 12px; }
+.pyr-note { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 12px; color: var(--ink4); }
+
+/* Trust formula */
+.formula {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 15px; text-align: center; padding: 16px;
+  background: var(--pur-bg); border: 1px solid var(--purple);
+  border-radius: 6px; margin: 1rem 0; color: var(--purple);
+}
+.formula .var { color: var(--ink); font-weight: 600; }
+.formula .def { font-size: 11px; color: var(--ink4); display: block; margin-top: 8px; font-family: -apple-system, sans-serif; }
+
+/* Red flags */
+.flag-list { list-style: none; margin: .5rem 0 1rem; }
+.flag-list li {
+  display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13.5px; color: var(--ink2);
+}
+.flag-list li:last-child { border-bottom: none; }
+.flag-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+.flag-list li b { color: var(--ink); }
+
+/* Divider */
+.divider { border: none; border-top: 1px solid var(--line); margin: 2rem 0; }
+
+/* Three whys chain */
+.why-chain { margin: 1rem 0; }
+.why-step {
+  display: flex; gap: 12px; margin-bottom: 6px; align-items: flex-start;
+}
+.why-num {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px; font-weight: 700; color: #fff;
+  background: var(--blue); border-radius: 50%;
+  width: 22px; height: 22px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; margin-top: 2px;
+}
+.why-q {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.why-a {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px; color: var(--ink2); margin-top: 2px;
+}
+.why-crux {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--teal); margin-left: 34px;
+  padding: 5px 10px; background: var(--teal-bg); border-radius: 4px;
+  display: inline-block; margin-bottom: 12px;
+}
+
+/* UAT table */
+.uat-table { width: 100%; border-collapse: collapse; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; }
+.uat-table th {
+  text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--line);
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink3);
+  font-weight: 700;
+}
+.uat-table td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink2); }
+.uat-table tr:last-child td { border-bottom: none; }
+.uat-table .pass { color: var(--teal); font-weight: 700; }
+.uat-table .fail { color: var(--red); font-weight: 700; }
+.uat-table .pend { color: var(--amber); font-weight: 700; }
+.uat-table code { font-family: 'SF Mono', monospace; font-size: 11px; background: var(--bg2); padding: 1px 4px; border-radius: 3px; }
+
+@media (max-width: 680px) {
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  body { padding: 1.5rem 1rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="masthead">
+  <h1>The Consulting Mindset — Phase 3 Reference</h1>
+  <div class="sub">Five frameworks. Worked examples from real AI/data deployments. Copy-paste templates.</div>
+  <div class="section-pills">
+    <button class="pill active" data-sec="mece">MECE</button>
+    <button class="pill" data-sec="pyramid">Pyramid Principle</button>
+    <button class="pill" data-sec="sow">SOW + MVA</button>
+    <button class="pill" data-sec="whys">Three Whys</button>
+    <button class="pill" data-sec="uat">UAT</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ MECE ══ -->
+<div class="sec active" id="sec-mece">
+
+<h2>MECE — Mutually Exclusive, Collectively Exhaustive</h2>
+
+<p>MECE is how you turn a vague mess of work into a structured plan where every task belongs in exactly one bucket, and all buckets together cover the entire problem. It was popularized by McKinsey, but its value for data/AI work is concrete: a MECE breakdown prevents both duplicated effort (two engineers building the same thing from different angles) and invisible gaps (entire categories of work no one owns).</p>
+
+<div class="box amber">
+  <div class="box-label">The Test</div>
+  <p><b>Mutually Exclusive:</b> Could a single task live in two buckets? If yes, your categories overlap. Overlap creates confusion about ownership and scope.</p>
+  <p><b>Collectively Exhaustive:</b> If you completed every task in every bucket, would the entire problem be solved? If not, something is missing from your breakdown.</p>
+</div>
+
+<hr class="divider">
+
+<h3>Worked Example — "Build an AI agent for our ops team"</h3>
+
+<p>A client CTO says: <b>"We want AI to make our operations team more efficient."</b> That statement is not a project plan. A non-MECE engineer turns it into a list of tasks that overlap and leave gaps. A MECE breakdown turns it into a tree where every leaf is actionable and ownable.</p>
+
+<div class="example">
+  <div class="ex-header">
+    <span class="ex-tag before">Non-MECE</span>
+    <span class="ex-title">Overlapping, ungrouped, gaps invisible</span>
+  </div>
+  <div class="ex-body">
+    <b>Tasks someone might write down:</b><br>
+    • Connect to the database<br>
+    • Build the chat interface<br>
+    • Write prompts<br>
+    • Handle user authentication<br>
+    • Test the AI responses<br>
+    • Set up BigQuery<br>
+    • Deploy to GKE<br>
+    • Train the model<br>
+    • Write documentation<br><br>
+    Problems: "Connect to the database" and "Set up BigQuery" overlap. "Monitoring" and "alerting" are missing entirely. "Train the model" is probably wrong (you're fine-tuning, not training). No one knows which tasks are blocked by which others.
+  </div>
+</div>
+
+<div class="example">
+  <div class="ex-header">
+    <span class="ex-tag after">MECE</span>
+    <span class="ex-title">Four exclusive buckets, nothing missing</span>
+  </div>
+  <div class="ex-body">
+    <div class="tree">
+      <div class="tree-node root">
+        <span class="node-label">AI Ops Agent</span>
+        <span class="node-desc">— complete problem decomposition</span>
+      </div>
+      <div class="tree-child">
+        <div class="tree-node">
+          <span class="node-label">1. Data Layer</span>
+          <span class="node-desc">GCS Bronze ingestion · BQ Silver/Gold models · Pub/Sub streaming · dbt pipeline · data quality tests</span>
+        </div>
+        <div class="tree-node">
+          <span class="node-label">2. Agent Layer</span>
+          <span class="node-desc">ADK agent definition · tools (BQ query, GCS read) · prompts · RAG pipeline · Vertex AI Search grounding</span>
+        </div>
+        <div class="tree-node">
+          <span class="node-label">3. Platform Layer</span>
+          <span class="node-desc">GKE deployment · IAM + Workload Identity · VPC networking · CI/CD pipeline · Artifact Registry</span>
+        </div>
+        <div class="tree-node">
+          <span class="node-label">4. Validation Layer</span>
+          <span class="node-desc">Eval harness (golden dataset) · AutoSxS pairwise eval · Vertex AI monitoring · UAT with 5 ops users · Day 2 runbook</span>
+        </div>
+      </div>
+    </div>
+    <br>
+    <b>Why this works:</b> Each task belongs in exactly one bucket. A new task that arrives mid-project slots unambiguously into one category — you immediately know who owns it and whether it was already scoped. The four buckets together cover the entire problem: no data, no agent. No platform, no deployment. No validation, no client sign-off.
+  </div>
+</div>
+
+<hr class="divider">
+
+<h3>MECE for Scope Creep Defense</h3>
+
+<p>MECE isn't just a planning tool — it's a scope management tool. When a client says "can you also add a Slack integration?", your MECE breakdown immediately answers the question: <b>which bucket does this belong to, and was it in the original decomposition?</b> If it's not in any bucket, it's new scope. If it is in a bucket, check whether the original estimate for that bucket accounted for it.</p>
+
+<div class="box teal">
+  <div class="box-label">The Scope Creep Script</div>
+  <p>"Great idea. That would live in our Platform Layer. Looking at our current scope for that bucket, we have [X, Y, Z] committed. A Slack integration would add approximately [N] days. Should we deprioritize something in the existing scope to fit it in, or add it to the backlog for Phase 2?"</p>
+  <p>This response is non-defensive, constructive, and forces the client to make a tradeoff decision rather than just adding work to your plate.</p>
+</div>
+
+<hr class="divider">
+
+<h3>The 80/20 MECE Prioritization</h3>
+
+<p>Once you have a MECE breakdown, the next question is ordering. The FDE doc calls this <b>80/20 Value Scoping</b>: identify the 20% of tasks that will deliver 80% of the client's value, and build those first. The method:</p>
+
+<div class="grid2">
+  <div class="box blue">
+    <div class="box-label">Score each task on two axes</div>
+    <p><b>Value:</b> How much does this move the client's success metric? (High / Medium / Low)</p>
+    <p><b>Effort:</b> How long does this take? (High / Medium / Low)</p>
+    <p>Build High Value + Low Effort tasks first. These are your quick wins. They build trust and buy time for the harder work.</p>
+  </div>
+  <div class="box red">
+    <div class="box-label">Gold-plating: the FDE failure mode</div>
+    <p>"Gold-plating" means building features nobody asked for because they're technically interesting. A MECE breakdown with 80/20 scoring prevents this: if "real-time streaming dashboard" is Low Value to the client but High Effort for you, it drops to the bottom of the list — regardless of how cool it is to build.</p>
+  </div>
+</div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ PYRAMID ══ -->
+<div class="sec" id="sec-pyramid">
+
+<h2>The Pyramid Principle</h2>
+
+<p>The Pyramid Principle is a communication framework from Barbara Minto (McKinsey). The core idea is simple and counterintuitive: <b>lead with the conclusion, then support it with evidence</b>. Most engineers naturally do the opposite — they build up context, explain their methodology, describe their analysis, and arrive at the conclusion at the end. Executives experience this as frustrating and unclear.</p>
+
+<p>The reason it's called the Pyramid: the conclusion sits at the apex. Below it are the 2-4 key supporting arguments. Below each argument are the detailed facts and data. You present top-down. You justify bottom-up.</p>
+
+<hr class="divider">
+
+<h3>The Structure</h3>
+
+<div class="pyramid">
+  <div class="pyr-row">
+    <div class="pyr-block">Governing Thought (the answer)</div>
+    <div class="pyr-note">Lead with this. Always.</div>
+  </div>
+  <div class="pyr-row">
+    <div class="pyr-block">Key Line (2-4 supporting arguments)</div>
+    <div class="pyr-note">The "why" behind the answer</div>
+  </div>
+  <div class="pyr-row">
+    <div class="pyr-block">Supporting detail / data / evidence for each argument</div>
+    <div class="pyr-note">Only if they ask. Don't volunteer.</div>
+  </div>
+</div>
+
+<div class="box amber">
+  <div class="box-label">BLUF — Bottom Line Up Front</div>
+  <p>The military variant of the same principle. Every memo, email, and briefing starts with the conclusion: <b>"We recommend X. Here's why."</b> Not: "We analyzed A, B, and C, and after considering D and E, arrived at the conclusion that X may be appropriate."</p>
+  <p>Apply BLUF to every Slack message, every status email, every discovery readout. The reader immediately knows the conclusion. If they want detail, they read on. If they're busy, they already have what they need.</p>
+</div>
+
+<hr class="divider">
+
+<h3>Worked Example — The Same Message, Two Ways</h3>
+
+<p>Scenario: Your BigQuery pipeline is running 6 hours late. You need to tell the client CTO.</p>
+
+<div class="example">
+  <div class="ex-header">
+    <span class="ex-tag before">Engineer's natural instinct</span>
+    <span class="ex-title">Bottom-up. Confusing. No clear ask.</span>
+  </div>
+  <div class="ex-body">
+    "So we were running the dbt transform last night and noticed that the Pub/Sub subscription had a backlog building up from around 2am. We looked into it and it seems like the upstream CRM export changed its schema — there's a new field called `order_category_v2` that broke our Bronze model validation. We've been debugging since 6am and we think we have a fix but we need to test it first, and also we might need you to check with the CRM team about whether this schema change was intentional. The dashboard is currently showing yesterday's data."
+    <br><br>
+    The CTO heard: lots of words, something broke, unclear if they need to do anything, unclear when it's fixed, unclear what the business impact is.
+  </div>
+</div>
+
+<div class="example">
+  <div class="ex-header">
+    <span class="ex-tag after">Pyramid / BLUF</span>
+    <span class="ex-title">Conclusion first. Clear ask. Confidence.</span>
+  </div>
+  <div class="ex-body">
+    <b>Subject: Dashboard delay — 6 hours — fix deploying at 2pm | Action needed</b><br><br>
+    "The analytics dashboard is showing yesterday's data due to an upstream schema change in your CRM export. We'll have it current by 2pm today.<br><br>
+    Three things to know:<br>
+    1. <b>Root cause:</b> A new CRM field (`order_category_v2`) broke our ingestion validation at 2am — expected behavior; our circuit breakers caught it before bad data reached the dashboard.<br>
+    2. <b>Fix:</b> Schema update is tested and deploying now. Dashboard will refresh at 2pm.<br>
+    3. <b>Action needed:</b> Can you confirm with the CRM team whether `order_category_v2` is permanent? If yes, we'll add it to our Silver model this week."<br><br>
+    <b>What changed:</b> Conclusion in subject line. 3 numbered points (not a paragraph). Explicit ask at the end. The CTO reads this in 20 seconds and knows exactly what happened, when it's fixed, and what they need to do.
+  </div>
+</div>
+
+<hr class="divider">
+
+<h3>The Pyramid for Technical Recommendations</h3>
+
+<p>When recommending an architecture decision to a technical stakeholder:</p>
+
+<div class="tmpl">
+  <div class="tmpl-header">
+    <span class="tmpl-title">Architecture recommendation — Pyramid structure</span>
+    <div>
+      <span class="tmpl-badge">template</span>
+      <button class="copy-btn" data-copy="pyr-tmpl">copy</button>
+    </div>
+  </div>
+  <div class="tmpl-body" id="pyr-tmpl">
+<span class="comm"># GOVERNING THOUGHT (lead with this — one sentence)</span>
+We should use Pub/Sub + Cloud Run instead of Dataflow for this pipeline.
+
+<span class="comm"># KEY LINE (2-4 supporting arguments — parallel structure)</span>
+1. Cost: Pub/Sub + Cloud Run is ~$200/month at our volume vs $1,400 for Dataflow
+2. Complexity: Dataflow requires managing Apache Beam, increasing on-call burden
+3. Fit: Our latency requirement (5 min) doesn't justify Dataflow's streaming capabilities
+
+<span class="comm"># SUPPORTING DETAIL (only if asked)</span>
+— Volume analysis: 50K events/day × 365 = 18M events/year → 18 Cloud Run invocations/min
+— Dataflow minimum: 1 worker × $0.048/vCPU-hr = $34/day = $1,240/year
+— Cloud Run: 18M invocations × $0.0000004 = $7.20/month + CPU time ≈ $180/year
+— Beam complexity: requires Java/Python pipeline code, job monitoring, autoscaling tuning
+
+<span class="comm"># PRE-ANSWER OBJECTIONS</span>
+"But what if volume grows 10x?" → Cloud Run scales automatically; reassess at 500K events/day
+"What about exactly-once delivery?" → Pub/Sub + idempotent subscriber achieves this
+  </div>
+</div>
+
+<hr class="divider">
+
+<h3>Pyramid for Discovery Readouts</h3>
+
+<p>After your Week 1 site survey, you present findings to the client. This is the highest-stakes Pyramid use case: the client is deciding whether to continue the engagement, expand scope, or both.</p>
+
+<div class="tmpl">
+  <div class="tmpl-header">
+    <span class="tmpl-title">Discovery readout — Pyramid structure (15-min slot)</span>
+    <div>
+      <span class="tmpl-badge">presentation template</span>
+      <button class="copy-btn" data-copy="disc-tmpl">copy</button>
+    </div>
+  </div>
+  <div class="tmpl-body" id="disc-tmpl">
+<span class="ok">Slide 1 — The Answer (spend 2 minutes here)</span>
+"Your biggest risk is not the AI — it's the data.
+ We can deploy the agent in 6 weeks, but data quality issues
+ will prevent it from being useful until Week 4.
+ Here's our recommended path."
+
+<span class="ok">Slide 2 — Three Supporting Arguments (spend 8 minutes here)</span>
+1. Data Risk: 40% of records in the CRM export are missing timestamps
+   → Impact: Silver deduplication will fail; Gold will have stale records
+   → Fix: 2-day cleanup sprint with the CRM team (we'll provide the queries)
+
+2. Architecture Gap: No streaming pipeline exists; all data is batch
+   → Impact: 24-hour dashboard lag vs the "real-time" requirement in the SOW
+   → Fix: Pub/Sub + Cloud Run adds 1 week but satisfies the requirement
+
+3. Organizational Risk: No internal "Run Team" identified for Day 2
+   → Impact: Agent becomes shelfware when we leave
+   → Fix: Identify one internal owner by Week 2; we'll train them by Week 5
+
+<span class="ok">Slide 3 — The Ask (spend 5 minutes here)</span>
+Three decisions needed from this room today:
+1. Approve the 2-day CRM data cleanup (blocks everything else)
+2. Confirm streaming vs batch requirement (impacts cost by $800/month)
+3. Name the internal Run Team owner by Friday
+
+<span class="comm">Note: slides 4-10 are appendix — present only if asked.
+They contain the technical detail. Most executives never ask to see them.
+The fact that they exist is enough to establish credibility.</span>
+  </div>
+</div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SOW ══ -->
+<div class="sec" id="sec-sow">
+
+<h2>SOW + Minimum Viable Architecture</h2>
+
+<p>The Statement of Work is the legally binding fence around your project. The FDE doc defines it simply: <b>"If it's not in the SOW, it's scope creep."</b> But a SOW is only as useful as its precision. A vague SOW ("build an AI agent for operations") is worse than no SOW — it creates false confidence while leaving every disputed boundary unresolved.</p>
+
+<p>The Minimum Viable Architecture (MVA) is the technical complement to the SOW. It answers: what is the simplest possible system that proves value within 30 days? The MVA becomes the deliverable definition in the SOW.</p>
+
+<hr class="divider">
+
+<h3>The SOW Anatomy</h3>
+
+<div class="grid2">
+  <div class="box teal">
+    <div class="box-label">What goes IN the SOW</div>
+    <p>Specific deliverables with measurable acceptance criteria. Named integrations. Explicit performance targets (latency, accuracy, uptime). Timeline with milestones. Environments covered. Team responsibilities.</p>
+  </div>
+  <div class="box red">
+    <div class="box-label">What goes OUT of the SOW</div>
+    <p>Everything else. "Future phases." Verbal commitments made in meetings. Feature requests added after signing. Systems not explicitly named. Performance targets not explicitly stated. If it wasn't written and signed, it doesn't exist.</p>
+  </div>
+</div>
+
+<div class="tmpl">
+  <div class="tmpl-header">
+    <span class="tmpl-title">SOW — production template with FDE-specific clauses</span>
+    <div>
+      <span class="tmpl-badge">legal template · adapt with counsel</span>
+      <button class="copy-btn" data-copy="sow-tmpl">copy</button>
+    </div>
+  </div>
+  <div class="tmpl-body" id="sow-tmpl">
+<span class="ok">STATEMENT OF WORK</span>
+Project: <span class="fill">[Project Name]</span>
+Client:  <span class="fill">[Client Organization]</span>
+FDE:     <span class="fill">[Your Name / Company]</span>
+Date:    <span class="fill">[Date]</span>    Version: 1.0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. OBJECTIVE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Enable <span class="fill">[User Group]</span> to <span class="fill">[Action]</span> by deploying a
+<span class="fill">[Technology]</span> integrated with <span class="fill">[Named Systems]</span>.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. DELIVERABLES (the "fence")
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D1: Data Pipeline
+    — Bronze ingestion from <span class="fill">[named source systems]</span>
+    — Silver cleaning (dedup, type casting, normalization)
+    — Gold aggregates powering the agent context
+    — dbt models with automated quality tests
+
+D2: AI Agent
+    — Single-agent architecture using <span class="fill">[ADK / LangChain / etc.]</span>
+    — Grounded on <span class="fill">[Gold BQ tables]</span> via Vertex AI Search
+    — Tools: <span class="fill">[list each tool — BQ query, GCS read, etc.]</span>
+    — System prompt reviewed and approved by Client
+
+D3: Deployment
+    — Cloud Run service in <span class="fill">[GCP project]</span>
+    — IAM with least-privilege service accounts
+    — Basic monitoring dashboard (Cloud Monitoring)
+
+D4: Handover
+    — Runbook for Day 2 operations (written documentation)
+    — 2-hour training session with named Run Team
+    — 30-day hypercare period (5 hrs/week support)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. ACCEPTANCE CRITERIA (measurable success)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The project is complete when ALL of the following are met:
+<span class="ok">✓</span> Retrieval hit rate ≥ 90% on client-approved golden dataset (30 queries)
+<span class="ok">✓</span> End-to-end agent response latency < 8 seconds (p95)
+<span class="ok">✓</span> Zero hallucinations on golden dataset (Groundedness score ≥ 0.95)
+<span class="ok">✓</span> UAT sign-off from ≥ 3 of 5 named pilot users
+<span class="ok">✓</span> Run Team can independently restart the service per runbook (demonstrated)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. OUT OF SCOPE <span class="warn">← READ THIS SECTION FIRST IN EVERY DISPUTE</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The following are explicitly NOT included in this engagement:
+— Integration with <span class="fill">[legacy AS400 / SAP / any unnamed system]</span>
+— Fine-tuning or training of foundation models
+— Multi-agent or parallel agent architectures
+— Mobile or native application development
+— Data science / statistical modeling
+— Any work related to <span class="fill">[system]</span> not listed in Section 2
+
+Any request outside this scope requires a written Change Order
+signed by both parties before work begins.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. CLIENT RESPONSIBILITIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Client agrees to provide, by the dates shown:
+— GCP project with Editor access       [Week 1, Day 1]
+— Named internal Run Team owner        [Week 2, Day 1]
+— Golden dataset (30 labeled Q&A)      [Week 3, Day 1]
+— 5 pilot users for UAT                [Week 5, Day 1]
+— Firewall / VPN access for FDE        [Week 1, Day 1]
+
+<span class="warn">BLOCKER CLAUSE: If Client fails to provide any item above
+within 5 business days of the listed date, the timeline
+extends by 1 day for each day of delay. No penalties apply.</span>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. TIMELINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Week 1:  Site survey + data audit + access provisioning
+Week 2:  Bronze/Silver pipeline + GCP landing zone
+Week 3:  Gold layer + agent MVP (basic Q&A, no eval)
+Week 4:  Eval harness + iteration + first UAT session
+Week 5:  UAT sign-off + hardening + Run Team training
+Week 6:  Production deployment + hypercare begins
+  </div>
+</div>
+
+<hr class="divider">
+
+<h3>The Minimum Viable Architecture</h3>
+
+<p>The MVA is the technical answer to "what's the simplest thing that proves value?" The FDE impulse is to design the full production-grade system immediately. The MVA discipline says: resist that impulse. A proof of value in 2 weeks beats a perfect architecture in 8.</p>
+
+<div class="grid2">
+  <div class="box gray">
+    <div class="box-label">MVA Design Rules</div>
+    <p><b>Swap managed services for custom.</b> Use Cloud Run instead of GKE. Use Vertex AI Search instead of custom RAG. Use CSV exports instead of real-time Pub/Sub. Complexity comes in Phase 2, after you've proven value.</p>
+    <p><b>Hard-code the things you'll later parameterize.</b> One client, one dataset, one agent, one tool. Generalization is a Phase 2 problem.</p>
+    <p><b>30-day value window.</b> If you can't show a demo in 30 days, the MVA is too ambitious. Cut scope, not quality.</p>
+  </div>
+  <div class="box gray">
+    <div class="box-label">MVA vs Full Architecture</div>
+    <p><b>MVA:</b> CSV → Cloud Run (Python + DuckDB) → Vertex AI Search → Cloud Run Agent → Chat UI</p>
+    <p><b>Phase 2:</b> Pub/Sub → Dataflow → BigQuery (partitioned/clustered) → GKE Agent Cluster → Internal portal</p>
+    <p>The MVA is 1 week to build. Phase 2 is 4 weeks. The client sees value in Week 2. The engagement continues. That's the ROI of the MVA pattern.</p>
+  </div>
+</div>
+
+<hr class="divider">
+
+<h3>Change Order — The Scope Creep Firewall</h3>
+
+<div class="tmpl">
+  <div class="tmpl-header">
+    <span class="tmpl-title">Change Order template</span>
+    <div>
+      <span class="tmpl-badge">1-page template</span>
+      <button class="copy-btn" data-copy="co-tmpl">copy</button>
+    </div>
+  </div>
+  <div class="tmpl-body" id="co-tmpl">
+CHANGE ORDER #<span class="fill">[N]</span>
+SOW Reference: <span class="fill">[SOW date / version]</span>
+Date: <span class="fill">[Date]</span>
+
+REQUESTED CHANGE:
+<span class="fill">[One paragraph describing the new request exactly as the client stated it]</span>
+
+IMPACT ANALYSIS:
+— Scope: <span class="fill">[What new work is required, specifically]</span>
+— Timeline: <span class="fill">[+N days/weeks to delivery]</span>
+— Cost: <span class="fill">[$X additional or N additional hours at $Y/hr]</span>
+— Dependencies: <span class="fill">[What client must provide for this to proceed]</span>
+
+TRADEOFF OPTIONS:
+Option A: Add this scope — +<span class="fill">[N]</span> days, +<span class="fill">[$X]</span>
+Option B: Defer to Phase 2 — no impact to current timeline
+Option C: Replace <span class="fill">[existing deliverable]</span> with this — no timeline impact
+
+DECISION REQUIRED BY: <span class="fill">[Date — typically 2 business days]</span>
+
+Approved by Client: _______________  Date: ________
+Approved by FDE:    _______________  Date: ________
+
+<span class="comm">Note: Work does not begin until both signatures are obtained.
+Verbal approval is not sufficient.</span>
+  </div>
+</div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ 3 WHYS ══ -->
+<div class="sec" id="sec-whys">
+
+<h2>The Three Whys — Diagnostic Mindset</h2>
+
+<p>The FDE doc's version of "the Three Whys" is a structured diagnostic framework for uncovering the real business problem behind a client's stated request. A client rarely asks for what they actually need — they ask for a solution they've already imagined, based on an incomplete understanding of what's possible. The Three Whys excavate the actual problem.</p>
+
+<p>The three questions are specific — not the generic "ask why five times" of lean manufacturing:</p>
+
+<div class="box blue">
+  <div class="box-label">The Three FDE Whys</div>
+  <p><b>1. "What is the System of Record?"</b> — Where does the ground truth actually live? If the answer is an Excel file on someone's desktop, the project is already fragile.</p>
+  <p><b>2. "What is the Cost of Inaction?"</b> — If we don't build this, what happens? This defines the project's political priority and your negotiating leverage.</p>
+  <p><b>3. "What does Day 2 look like?"</b> — Who maintains this when you leave? If there is no internal owner, the project will die after you leave — regardless of how good the code is.</p>
+</div>
+
+<hr class="divider">
+
+<h3>Worked Example — "We want AI to help our analysts"</h3>
+
+<p>A head of analytics says: <b>"We want to use AI to help our analysts work faster."</b> This is a reasonable starting point. What does it actually mean?</p>
+
+<div class="why-chain">
+  <div class="why-step">
+    <div class="why-num">1</div>
+    <div>
+      <div class="why-q">What is the System of Record?</div>
+      <div class="why-a">"Our analysts use a combination of Salesforce exports, internal SQL reports they run manually, and a shared Excel tracker on SharePoint."</div>
+    </div>
+  </div>
+  <div class="why-crux">Diagnosis: the System of Record is fragmented. Three sources with no single truth. Any AI built on top of this will produce inconsistent answers depending on which source it queries. The real work isn't building the agent — it's consolidating the sources first.</div>
+
+  <div class="why-step">
+    <div class="why-num">2</div>
+    <div>
+      <div class="why-q">What is the Cost of Inaction?</div>
+      <div class="why-a">"Each analyst spends about 2 hours per day pulling data from these systems and formatting it into reports. We have 12 analysts. That's 24 analyst-hours per day of manual work. At $80K average salary, that's roughly $600K/year in manual data work."</div>
+    </div>
+  </div>
+  <div class="why-crux">Diagnosis: this project has a $600K CoI — meaning you can justify $150K of engineering investment for a 4x ROI. This number also becomes your political weapon: when the IT department resists giving you access, you can say "this access delay is costing the organization $25K per week."</div>
+
+  <div class="why-step">
+    <div class="why-num">3</div>
+    <div>
+      <div class="why-q">What does Day 2 look like?</div>
+      <div class="why-a">"Honestly, we haven't thought about that. We'd probably just hand it to the IT team?"</div>
+    </div>
+  </div>
+  <div class="why-crux">Diagnosis: no internal owner. This is the most common reason AI projects become shelfware. The answer "hand it to IT" means no one with domain knowledge will maintain it, prompt-tune it, or update the golden dataset. You need to negotiate an internal owner before week 2 — ideally the most technical analyst on the team.</div>
+</div>
+
+<div class="box amber">
+  <div class="box-label">What the Three Whys produced</div>
+  <p>You started with "we want AI to help analysts." You now know:</p>
+  <p>1. The real problem is fragmented data, not missing AI. Fix the data architecture first.</p>
+  <p>2. The project has a $600K annual CoI — you can justify meaningful engineering investment and use the number to unblock political resistance.</p>
+  <p>3. The project needs an internal owner or it dies. Make this a Week 2 milestone in the SOW, not an afterthought.</p>
+  <p>None of this would have surfaced from a technical architecture discussion. It only surfaces from asking business-level questions.</p>
+</div>
+
+<hr class="divider">
+
+<h3>The Discovery Checklist — Running the Three Whys at Scale</h3>
+
+<p>For a full engagement, the Three Whys expand into a pre-build discovery checklist. Never write a line of code before these are answered:</p>
+
+<div class="tmpl">
+  <div class="tmpl-header">
+    <span class="tmpl-title">Pre-build discovery checklist</span>
+    <div>
+      <span class="tmpl-badge">Week 1 · site survey</span>
+      <button class="copy-btn" data-copy="disc-check">copy</button>
+    </div>
+  </div>
+  <div class="tmpl-body" id="disc-check">
+<span class="ok">ADMINISTRATIVE + POLITICAL</span>
+[ ] Champion: Who is the internal person fighting for this project?
+    If no one internally wants this, it will die regardless of quality.
+[ ] Blocker: Which dept (IT, Legal, Compliance) is most likely to stop us?
+    Meet them in Week 1. Don't discover their objection in Week 4.
+[ ] Success metric: What number moves for this to be a success?
+    "Better" is not a metric. "40% reduction in manual lookup time" is.
+[ ] Executive sponsor: Who can unblock when the IT team delays our firewall request?
+
+<span class="ok">DATA + SYSTEMS OF RECORD</span>
+[ ] Named source systems: List every system whose data we'll touch.
+    Generic ("our CRM") is not enough. Salesforce? HubSpot? Legacy Oracle?
+[ ] Data classification: Is any data PII, PHI, or otherwise regulated?
+    HIPAA / GDPR / SOC2 requirements change the architecture significantly.
+[ ] Data volume: How many rows/GB/TB? Current and projected growth?
+    50GB = DuckDB. 50TB = BigQuery. The answer changes the stack.
+[ ] Data quality: What are the known quality issues?
+    Every client has them. Finding out in Week 3 is expensive.
+[ ] Data latency: Is batch (daily) acceptable, or do we need streaming (<5min)?
+    Streaming adds 1 week and $X/month. Get the requirement in writing.
+
+<span class="ok">INFRASTRUCTURE</span>
+[ ] Cloud access: Do we have GCP Project Editor or Owner?
+    Without this, nothing starts. Day 1 blocker.
+[ ] Connectivity: Is this a private VPC? VPN? Air-gapped?
+    Air-gapped = bring your own container registry and offline model weights.
+[ ] Existing infra: What's already running in the project?
+    Don't clobber their existing systems.
+[ ] GPU quota: If deploying models, does the project have A100/H100 quota?
+    Quota increases take 48-72 hours. Request on Day 1.
+
+<span class="ok">PEOPLE</span>
+[ ] Run Team owner: Who maintains this after we leave?
+    Name. Title. Technical level. Must be identified by Week 2.
+[ ] UAT users: Who are the 3-5 pilot users for acceptance testing?
+    Must be real end users, not managers. Named by Week 3.
+[ ] Stakeholder comms: How often does the exec sponsor want status updates?
+    Weekly WES or biweekly? Slack or email? Right format = no surprises.
+
+<span class="warn">RED FLAGS — escalate immediately if you see these:</span>
+[ ] "Data will be ready in 2 weeks" → It never is. Build with what exists now.
+[ ] "We don't need a PM on our side" → The project will lose direction.
+[ ] "Can we just run this on-prem for now?" → Deep cloud distrust. Surface it early.
+[ ] No named Run Team owner by Week 2 → The project will die when you leave.
+[ ] "The CEO wants this by Friday" → Unrealistic deadlines produce bad systems.
+  </div>
+</div>
+
+<hr class="divider">
+
+<h3>Cost of Inaction — The Political Lever</h3>
+
+<div class="grid2">
+  <div class="box teal">
+    <div class="box-label">How to calculate CoI</div>
+    <p><b>Time saved × headcount × fully-loaded cost = annual CoI</b></p>
+    <p>Example: 2 hrs/day × 12 analysts × $80K salary × 1.4 benefits multiplier ÷ 250 working days = $1,075/day CoI = $269K/year.</p>
+    <p>Add risk costs: "If our pipeline produces a bad report and a trader acts on it, the potential loss is $X." Now you have a ceiling for engineering investment.</p>
+  </div>
+  <div class="box pur">
+    <div class="box-label">Using CoI in conversations</div>
+    <p>"The IT team's 2-week delay on the firewall request is costing the organization approximately $21,500 in analyst time. I wanted to make sure you had that context before our next check-in."</p>
+    <p>Said to the right executive, this unlocks the firewall approval in 24 hours. Never say it confrontationally — frame it as "context," not accusation.</p>
+  </div>
+</div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ UAT ══ -->
+<div class="sec" id="sec-uat">
+
+<h2>UAT — User Acceptance Testing</h2>
+
+<p>User Acceptance Testing is the moment of truth. The FDE doc states it plainly: <b>if the users don't accept it, the project isn't done — regardless of how good the code is.</b> UAT is not QA (your team testing your own work). It's not a demo (you driving the system for an audience). It's 3-5 real end users, in their actual work environment, completing real tasks without your help, and signing off that the system meets their needs.</p>
+
+<p>Most engineering teams treat UAT as a formality — a box to check before deployment. FDEs treat it as the project's most important milestone, because failing UAT is the only thing that definitively stops you from getting paid.</p>
+
+<hr class="divider">
+
+<h3>The UAT Setup — What Most Engineers Get Wrong</h3>
+
+<div class="grid2">
+  <div class="box red">
+    <div class="box-label">UAT anti-patterns</div>
+    <p><b>You driving the demo.</b> If you're clicking the buttons, you're doing a demo, not UAT. Seat the user in front of the keyboard and step back.</p>
+    <p><b>Managers as UAT users.</b> Managers approve things. End users find problems. The analyst who will use this daily is your UAT user — not their director.</p>
+    <p><b>Perfect test data.</b> If UAT uses clean, curated data you prepared, it will pass. The real data will fail. UAT must use real production data.</p>
+    <p><b>No success criteria defined in advance.</b> If you haven't defined what "pass" looks like before UAT, the goalposts move during the session.</p>
+  </div>
+  <div class="box teal">
+    <div class="box-label">UAT done right</div>
+    <p><b>5 real users, real tasks, real data.</b> No demo mode. No curated examples. The user tries to do their actual job with the new tool.</p>
+    <p><b>Pre-defined acceptance criteria.</b> The SOW acceptance criteria are the UAT pass/fail criteria. UAT doesn't end until every criterion is met or explicitly waived.</p>
+    <p><b>Structured observation.</b> You take notes. You do not explain, coach, or justify. Every point of confusion the user hits is a UX bug.</p>
+    <p><b>Written sign-off.</b> Email or form, timestamped. "UAT passed" said verbally doesn't count. You need this for the contract milestone.</p>
+  </div>
+</div>
+
+<hr class="divider">
+
+<h3>The UAT Scorecard</h3>
+
+<div class="tmpl">
+  <div class="tmpl-header">
+    <span class="tmpl-title">UAT scorecard — one per pilot user</span>
+    <div>
+      <span class="tmpl-badge">template</span>
+      <button class="copy-btn" data-copy="uat-score">copy</button>
+    </div>
+  </div>
+  <div class="tmpl-body" id="uat-score">
+UAT SCORECARD
+Project: <span class="fill">[Project Name]</span>     Date: <span class="fill">[Date]</span>
+User:    <span class="fill">[Name / Role]</span>        FDE Observer: <span class="fill">[Your Name]</span>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TASK COMPLETION (from SOW acceptance criteria)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Task 1: Query agent for [specific use case]
+  Result: [ ] PASS  [ ] FAIL  [ ] PARTIAL
+  Notes: <span class="fill">______________________________</span>
+  Time to complete: <span class="fill">__ min</span>   (target: <8 min)
+
+Task 2: Retrieve report from [named dataset]
+  Result: [ ] PASS  [ ] FAIL  [ ] PARTIAL
+  Notes: <span class="fill">______________________________</span>
+
+Task 3: Interpret agent response for [business decision]
+  Result: [ ] PASS  [ ] FAIL  [ ] PARTIAL
+  Notes: <span class="fill">______________________________</span>
+
+Task 4: [Client-specific task from golden dataset]
+  Result: [ ] PASS  [ ] FAIL  [ ] PARTIAL
+  Notes: <span class="fill">______________________________</span>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUALITY DIMENSIONS (1-5 scale)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Response accuracy:    <span class="fill">__/5</span>  (Do answers match known correct answers?)
+Response latency:     <span class="fill">__/5</span>  (Is the response time acceptable?)
+Ease of use:          <span class="fill">__/5</span>  (Could user complete tasks without help?)
+Trust in output:      <span class="fill">__/5</span>  (Would user act on the agent's answer?)
+Overall satisfaction: <span class="fill">__/5</span>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VERBATIM FEEDBACK (write what they say, not your interpretation)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<span class="fill">______________________________</span>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BLOCKING ISSUES (must fix before sign-off)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<span class="fill">______________________________</span>
+
+SIGN-OFF
+[ ] I accept this system for production use as described in the SOW.
+[ ] I accept with the following conditions: <span class="fill">______</span>
+[ ] I do not accept. Blocking issues listed above must be resolved first.
+
+User signature: _______________   Date: ________
+  </div>
+</div>
+
+<hr class="divider">
+
+<h3>The Live UAT Tracking Table</h3>
+
+<p>For a 5-user UAT session, track pass/fail in real time. The table below shows what a mid-UAT status looks like — three users done, two pending, one blocking issue identified.</p>
+
+<table class="uat-table">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Task 1</th>
+      <th>Task 2</th>
+      <th>Task 3</th>
+      <th>Task 4</th>
+      <th>Avg Score</th>
+      <th>Sign-off</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Ana R.</b><br><code>Senior Analyst</code></td>
+      <td><span class="pass">PASS</span></td>
+      <td><span class="pass">PASS</span></td>
+      <td><span class="pass">PASS</span></td>
+      <td><span class="pass">PASS</span></td>
+      <td>4.6 / 5</td>
+      <td><span class="pass">✓ Signed</span></td>
+    </tr>
+    <tr>
+      <td><b>Marcus T.</b><br><code>Analyst II</code></td>
+      <td><span class="pass">PASS</span></td>
+      <td><span class="fail">FAIL</span><br><code>wrong date range</code></td>
+      <td><span class="pass">PASS</span></td>
+      <td><span class="pass">PASS</span></td>
+      <td>3.8 / 5</td>
+      <td><span class="fail">✗ Blocking</span></td>
+    </tr>
+    <tr>
+      <td><b>Priya K.</b><br><code>Lead Analyst</code></td>
+      <td><span class="pass">PASS</span></td>
+      <td><span class="pass">PASS</span></td>
+      <td><span class="pass">PASS</span></td>
+      <td><span class="pass">PASS</span></td>
+      <td>4.9 / 5</td>
+      <td><span class="pass">✓ Signed</span></td>
+    </tr>
+    <tr>
+      <td><b>James O.</b><br><code>Analyst I</code></td>
+      <td colspan="5" style="color:var(--ink4);font-style:italic">Scheduled: Tomorrow 2pm</td>
+      <td><span class="pend">Pending</span></td>
+    </tr>
+    <tr>
+      <td><b>Sofia M.</b><br><code>Ops Manager</code></td>
+      <td colspan="5" style="color:var(--ink4);font-style:italic">Scheduled: Tomorrow 3pm</td>
+      <td><span class="pend">Pending</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+<div class="box amber">
+  <div class="box-label">The blocking issue — Marcus Task 2</div>
+  <p>Marcus queried the agent for "Q1 revenue" and the agent returned Q4 of the prior year. Root cause: the agent's date parsing prompt assumed the current quarter without grounding to <code>CURRENT_DATE</code>. Fix: add <code>Today is {date}</code> to the system prompt and re-run the golden dataset eval. Estimated fix time: 2 hours. UAT resumes tomorrow at original schedule.</p>
+  <p><b>This is the value of UAT.</b> This bug would have been invisible in a demo (you would have queried with an explicit date range). It was found because a real user asked a natural language question the way they actually think about their work.</p>
+</div>
+
+<hr class="divider">
+
+<h3>UAT → Day 2 Transition</h3>
+
+<p>UAT sign-off is not the end — it's the beginning of the Day 2 operations period. The FDE doc defines Day 2 as everything that happens after you leave: monitoring, retraining models as data drifts, training the internal Run Team, and handling incidents without you.</p>
+
+<div class="tmpl">
+  <div class="tmpl-header">
+    <span class="tmpl-title">Day 2 handover checklist</span>
+    <div>
+      <span class="tmpl-badge">Week 5-6</span>
+      <button class="copy-btn" data-copy="d2-tmpl">copy</button>
+    </div>
+  </div>
+  <div class="tmpl-body" id="d2-tmpl">
+<span class="ok">DOCUMENTATION (must exist before you leave)</span>
+[ ] Runbook: how to restart the agent service
+[ ] Runbook: how to update the golden dataset for re-evaluation
+[ ] Runbook: how to add a new data source to Bronze
+[ ] Architecture diagram: current state (not aspirational)
+[ ] Incident playbook: what to do when the dashboard is stale
+[ ] Access inventory: who has access to what and via which SA
+
+<span class="ok">RUN TEAM TRAINING (must be demonstrated, not just documented)</span>
+[ ] Run Team owner can restart Cloud Run service from GCP Console
+[ ] Run Team owner can run dbt manually for a backfill
+[ ] Run Team owner can read Cloud Logging to diagnose an issue
+[ ] Run Team owner knows who to contact (and how) if they're stuck
+[ ] Run Team owner has received Slack/PagerDuty alert credentials
+
+<span class="ok">MONITORING (must be live before hypercare ends)</span>
+[ ] Cloud Monitoring dashboard for agent latency + error rate
+[ ] dbt source freshness check running on schedule
+[ ] Circuit breaker alerts → Slack channel (not just logs)
+[ ] Weekly BQ cost report (INFORMATION_SCHEMA query on schedule)
+[ ] Vertex AI prediction drift monitoring (if applicable)
+
+<span class="ok">HYPERCARE PERIOD (30 days post-launch)</span>
+[ ] 5 hours/week FDE availability agreed and in calendar
+[ ] Weekly WES continuing through hypercare
+[ ] Escalation path: how does client reach you for P1 incidents?
+[ ] Hypercare end date: <span class="fill">[Date]</span>
+    After this date: support is via standard SLA, not hypercare
+
+<span class="warn">THE OBSOLESCENCE TEST:</span>
+"Could the Run Team handle the 5 most likely incidents without calling me?"
+If yes → Day 2 is set up correctly. You've done your job.
+If no  → More training or documentation needed before hypercare ends.
+
+The FDE's goal is to become obsolete at the client site —
+because the system you built is so good, it runs itself.
+  </div>
+</div>
+
+<div class="box teal">
+  <div class="box-label">The Obsolescence Principle</div>
+  <p>The FDE doc's final line: <b>"The FDE's goal is to become obsolete at a client site — because the system you built is so good, it runs itself."</b></p>
+  <p>This is the counterintuitive success condition of consulting work. A consultant who makes themselves indispensable has failed. A system that requires the original FDE to operate every time is a liability to the client, not an asset. The evidence of a successful engagement is that the client team runs it confidently without you — and calls you back for the next engagement because of how well the first one went.</p>
+</div>
+
+</div>
+</div><!-- .container -->
+
+<script>
+// Section pills
+document.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => {
+    const sec = p.dataset.sec;
+    document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
+    document.querySelectorAll('.sec').forEach(s => s.classList.toggle('active', s.id === 'sec-' + sec));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// Copy buttons
+document.querySelectorAll('.copy-btn[data-copy]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const el = document.getElementById(btn.dataset.copy);
+    if (!el) return;
+    // Strip HTML tags for plain text copy
+    const text = el.innerText || el.textContent;
+    navigator.clipboard.writeText(text.trim()).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  });
+});
+</script>
+</body>
+</html>

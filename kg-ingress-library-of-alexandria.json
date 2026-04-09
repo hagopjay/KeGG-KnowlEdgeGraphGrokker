@@ -1,0 +1,1458 @@
+{
+  "title": "Library of Alexandria — KG Ingress ToC",
+  "generated": "2026-04-09T22:56:19.439Z",
+  "total_datasets": 138,
+  "total_domains": 13,
+  "domains": [
+    {
+      "id": "math",
+      "name": "Mathematics",
+      "categories": [
+        "Pure mathematics",
+        "Applied mathematics",
+        "Statistics & probability",
+        "Logic & proof theory",
+        "Number theory",
+        "Graph theory",
+        "Combinatorics",
+        "Topology & geometry"
+      ],
+      "datasets": [
+        {
+          "name": "MATH Benchmark",
+          "source": "HuggingFace",
+          "identifier": "hendrycks/MATH",
+          "scale": "12.5K problems",
+          "format": "Parquet",
+          "kg_node_type": "Problem",
+          "description": "Competition math with step-by-step solutions across 5 difficulty levels"
+        },
+        {
+          "name": "OpenWebMath",
+          "source": "HuggingFace",
+          "identifier": "open-web-math/open-web-math",
+          "scale": "6.3M docs",
+          "format": "Parquet",
+          "kg_node_type": "Document",
+          "description": "High-quality mathematical web text for pre-training"
+        },
+        {
+          "name": "Proof-Pile 2",
+          "source": "HuggingFace",
+          "identifier": "EleutherAI/proof-pile-2",
+          "scale": "55B tokens",
+          "format": "Parquet",
+          "kg_node_type": "ProofCorpus",
+          "description": "Formal proofs, arXiv papers, textbooks and code"
+        },
+        {
+          "name": "NuminaMath-CoT",
+          "source": "HuggingFace",
+          "identifier": "AI-MO/NuminaMath-CoT",
+          "scale": "860K problems",
+          "format": "JSON",
+          "kg_node_type": "Problem",
+          "description": "Competition problems with chain-of-thought solutions"
+        },
+        {
+          "name": "DeepMind Mathematics",
+          "source": "HuggingFace",
+          "identifier": "deepmind/math_dataset",
+          "scale": "2M problems",
+          "format": "TFRecord",
+          "kg_node_type": "Problem",
+          "description": "Synthetic problems across 56 mathematical modules"
+        },
+        {
+          "name": "MetaMathQA",
+          "source": "HuggingFace",
+          "identifier": "meta-math/MetaMathQA",
+          "scale": "395K pairs",
+          "format": "JSON",
+          "kg_node_type": "QAPair",
+          "description": "GSM8K + MATH augmented via question rewriting"
+        },
+        {
+          "name": "MathOverflow (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.stackoverflow",
+          "scale": "18M rows",
+          "format": "SQL",
+          "kg_node_type": "Thread",
+          "description": "Q&A threads from math.stackexchange.com, SQL-queryable"
+        },
+        {
+          "name": "Lean 4 Mathlib",
+          "source": "Academic",
+          "identifier": "leanprover-community/mathlib4",
+          "scale": "1M+ theorems",
+          "format": "Lean4",
+          "kg_node_type": "Theorem",
+          "description": "Formally verified mathematics in Lean 4"
+        },
+        {
+          "name": "OEIS Integer Sequences",
+          "source": "Academic",
+          "identifier": "oeis.org",
+          "scale": "370K+ sequences",
+          "format": "JSON/TXT",
+          "kg_node_type": "Sequence",
+          "description": "On-Line Encyclopedia of Integer Sequences"
+        },
+        {
+          "name": "arXiv Mathematics",
+          "source": "Academic",
+          "identifier": "arxiv.org/list/math",
+          "scale": "450K+ papers",
+          "format": "LaTeX/PDF",
+          "kg_node_type": "Paper",
+          "description": "Preprints across all mathematical subfields"
+        },
+        {
+          "name": "IMO / USAMO Problems",
+          "source": "Kaggle",
+          "identifier": "kaggle/math-olympiad-problems",
+          "scale": "1.5K+ problems",
+          "format": "CSV",
+          "kg_node_type": "OlympiadProblem",
+          "description": "International Mathematical Olympiad historical problems"
+        }
+      ]
+    },
+    {
+      "id": "physics",
+      "name": "Physics & Cosmology",
+      "categories": [
+        "Classical mechanics",
+        "Quantum physics",
+        "Astrophysics & cosmology",
+        "Thermodynamics",
+        "Particle physics",
+        "Electromagnetism",
+        "Condensed matter",
+        "Materials science"
+      ],
+      "datasets": [
+        {
+          "name": "CERN Open Data",
+          "source": "Government",
+          "identifier": "opendata.cern.ch",
+          "scale": "2+ PB",
+          "format": "ROOT / CSV",
+          "kg_node_type": "Collision",
+          "description": "LHC particle collision events from CMS, ATLAS and more"
+        },
+        {
+          "name": "NASA Exoplanet Archive",
+          "source": "Government",
+          "identifier": "exoplanetarchive.ipac.caltech.edu",
+          "scale": "5.5K planets",
+          "format": "VOTable / CSV",
+          "kg_node_type": "Exoplanet",
+          "description": "Confirmed exoplanets with orbital and stellar parameters"
+        },
+        {
+          "name": "SDSS DR17",
+          "source": "Academic",
+          "identifier": "skyserver.sdss.org",
+          "scale": "930M objects",
+          "format": "SQL / FITS",
+          "kg_node_type": "AstroObject",
+          "description": "Sloan Digital Sky Survey photometry and spectra"
+        },
+        {
+          "name": "NOAA GSOD Weather",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.noaa_gsod",
+          "scale": "1B rows",
+          "format": "SQL",
+          "kg_node_type": "WeatherObs",
+          "description": "Global surface daily observations since 1929"
+        },
+        {
+          "name": "Materials Project",
+          "source": "Academic",
+          "identifier": "materialsproject.org",
+          "scale": "150K+ materials",
+          "format": "JSON / REST",
+          "kg_node_type": "Material",
+          "description": "DFT-computed electronic and structural properties"
+        },
+        {
+          "name": "LIGO Open Science",
+          "source": "Academic",
+          "identifier": "gw-openscience.org",
+          "scale": "TB-scale",
+          "format": "HDF5",
+          "kg_node_type": "GravWave",
+          "description": "Gravitational wave strain time series from O1–O3"
+        },
+        {
+          "name": "NIST Physical Constants",
+          "source": "Government",
+          "identifier": "physics.nist.gov/constants",
+          "scale": "400+ constants",
+          "format": "JSON / CSV",
+          "kg_node_type": "PhysicsConstant",
+          "description": "CODATA 2022 fundamental physical constants"
+        },
+        {
+          "name": "arXiv Physics",
+          "source": "Academic",
+          "identifier": "arxiv.org/list/physics",
+          "scale": "800K+ papers",
+          "format": "LaTeX / PDF",
+          "kg_node_type": "Paper",
+          "description": "Preprints: hep, cond-mat, astro, gr-qc, quant-ph"
+        },
+        {
+          "name": "CDS Strasbourg",
+          "source": "Academic",
+          "identifier": "cds.u-strasbg.fr",
+          "scale": "30K+ catalogs",
+          "format": "VOTable",
+          "kg_node_type": "AstroCatalog",
+          "description": "Centre de Données astronomiques — master astronomical catalog"
+        },
+        {
+          "name": "PhysicsQA (GQA)",
+          "source": "HuggingFace",
+          "identifier": "Vikhrmodels/GQA-Physics",
+          "scale": "5K problems",
+          "format": "Parquet",
+          "kg_node_type": "Problem",
+          "description": "Physics problems with detailed reasoning chains"
+        },
+        {
+          "name": "IRIS Seismology",
+          "source": "Government",
+          "identifier": "iris.edu/hq/ds/nodes/dmc",
+          "scale": "50PB waveforms",
+          "format": "SEED / miniSEED",
+          "kg_node_type": "SeismicWaveform",
+          "description": "Global seismic waveform archive since 1963"
+        }
+      ]
+    },
+    {
+      "id": "cs",
+      "name": "Computer Science & AI",
+      "categories": [
+        "Algorithms & data structures",
+        "Machine learning & AI",
+        "Distributed systems",
+        "Programming languages",
+        "Computer vision",
+        "NLP & speech",
+        "Security & cryptography",
+        "Theory of computation"
+      ],
+      "datasets": [
+        {
+          "name": "The Stack (BigCode)",
+          "source": "HuggingFace",
+          "identifier": "bigcode/the-stack",
+          "scale": "6.4 TB",
+          "format": "Parquet",
+          "kg_node_type": "CodeFile",
+          "description": "358 programming languages, near-deduplicated source code"
+        },
+        {
+          "name": "GitHub Repos (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.github_repos",
+          "scale": "3 TB source",
+          "format": "SQL",
+          "kg_node_type": "Repository",
+          "description": "SQL-queryable open-source code: files, commits, languages"
+        },
+        {
+          "name": "Stack Overflow (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.stackoverflow",
+          "scale": "20M+ Q&A",
+          "format": "SQL",
+          "kg_node_type": "Thread",
+          "description": "All posts, answers, comments, and tags since 2008"
+        },
+        {
+          "name": "The Pile",
+          "source": "HuggingFace",
+          "identifier": "EleutherAI/pile",
+          "scale": "825 GB",
+          "format": "JSONL",
+          "kg_node_type": "Document",
+          "description": "22 diverse high-quality text sources for LLM training"
+        },
+        {
+          "name": "Papers With Code",
+          "source": "Academic",
+          "identifier": "paperswithcode.com",
+          "scale": "100K+ papers",
+          "format": "JSON / REST",
+          "kg_node_type": "MLResult",
+          "description": "ML papers linked to benchmarks, results and code repos"
+        },
+        {
+          "name": "CodeSearchNet",
+          "source": "HuggingFace",
+          "identifier": "code_search_net",
+          "scale": "2M pairs",
+          "format": "JSON",
+          "kg_node_type": "CodeDocPair",
+          "description": "Code + docstring pairs in Python, Java, JS, Ruby, PHP, Go"
+        },
+        {
+          "name": "BIG-Bench",
+          "source": "HuggingFace",
+          "identifier": "google/BIG-bench",
+          "scale": "214 tasks",
+          "format": "JSON",
+          "kg_node_type": "Benchmark",
+          "description": "Beyond the Imitation Game — diverse LLM evaluation tasks"
+        },
+        {
+          "name": "arXiv CS",
+          "source": "Academic",
+          "identifier": "arxiv.org/list/cs",
+          "scale": "500K+ papers",
+          "format": "LaTeX / PDF",
+          "kg_node_type": "Paper",
+          "description": "CS preprints: ML, AI, systems, theory, security, vision"
+        },
+        {
+          "name": "RedPajama v2",
+          "source": "HuggingFace",
+          "identifier": "togethercomputer/RedPajama-Data-V2",
+          "scale": "30T tokens",
+          "format": "Parquet",
+          "kg_node_type": "WebDocument",
+          "description": "Massive pre-training corpus with quality annotations"
+        },
+        {
+          "name": "GLUE / SuperGLUE",
+          "source": "HuggingFace",
+          "identifier": "nyu-mll/glue",
+          "scale": "9 / 8 tasks",
+          "format": "Parquet",
+          "kg_node_type": "Benchmark",
+          "description": "General language understanding evaluation benchmarks"
+        },
+        {
+          "name": "Common Crawl",
+          "source": "Academic",
+          "identifier": "commoncrawl.org",
+          "scale": "PB-scale",
+          "format": "WARC",
+          "kg_node_type": "WebPage",
+          "description": "Monthly crawls of 5B+ pages since 2008 — the ur-corpus"
+        }
+      ]
+    },
+    {
+      "id": "eng",
+      "name": "Engineering",
+      "categories": [
+        "Civil & structural",
+        "Mechanical & aerospace",
+        "Chemical & process",
+        "Electrical & power",
+        "Environmental engineering",
+        "Materials & manufacturing",
+        "Robotics & control",
+        "Systems engineering"
+      ],
+      "datasets": [
+        {
+          "name": "OpenStreetMap",
+          "source": "Academic",
+          "identifier": "openstreetmap.org",
+          "scale": "8B+ features",
+          "format": "PBF / XML",
+          "kg_node_type": "GeoFeature",
+          "description": "Global roads, infrastructure, buildings and land use"
+        },
+        {
+          "name": "NBI Bridge Inventory",
+          "source": "Government",
+          "identifier": "fhwa.dot.gov/bridge/nbi",
+          "scale": "620K bridges",
+          "format": "CSV",
+          "kg_node_type": "Bridge",
+          "description": "US National Bridge Inventory condition and geometry data"
+        },
+        {
+          "name": "USGS 3DEP Elevation",
+          "source": "Government",
+          "identifier": "nationalmap.gov/3dep",
+          "scale": "TB-scale",
+          "format": "LAS / GeoTIFF",
+          "kg_node_type": "ElevationPoint",
+          "description": "3D elevation program — 1m lidar coverage for entire US"
+        },
+        {
+          "name": "PubChem Compounds",
+          "source": "Government",
+          "identifier": "pubchem.ncbi.nlm.nih.gov",
+          "scale": "115M+ compounds",
+          "format": "SDF / JSON",
+          "kg_node_type": "Compound",
+          "description": "Chemical structures, properties, safety and bioassay data"
+        },
+        {
+          "name": "ChEMBL Database",
+          "source": "Academic",
+          "identifier": "ebi.ac.uk/chembl",
+          "scale": "2.4M molecules",
+          "format": "SQL / SDF",
+          "kg_node_type": "Molecule",
+          "description": "Bioactive drug-like small molecules with target activity"
+        },
+        {
+          "name": "NASA Technical Reports",
+          "source": "Government",
+          "identifier": "ntrs.nasa.gov",
+          "scale": "900K+ docs",
+          "format": "PDF / XML",
+          "kg_node_type": "TechReport",
+          "description": "Aerospace engineering reports from NACA 1915 to present"
+        },
+        {
+          "name": "NREL Energy Atlas",
+          "source": "Government",
+          "identifier": "data.nrel.gov",
+          "scale": "Varied",
+          "format": "CSV / GeoJSON",
+          "kg_node_type": "EnergyResource",
+          "description": "Solar, wind, and geothermal resource data for the US"
+        },
+        {
+          "name": "EPA Air Quality (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.epa_historical_air_quality",
+          "scale": "100M+ rows",
+          "format": "SQL",
+          "kg_node_type": "AirMeasure",
+          "description": "US historical air quality monitoring stations since 1980"
+        },
+        {
+          "name": "Cambridge Structural DB",
+          "source": "Academic",
+          "identifier": "ccdc.cam.ac.uk/structures",
+          "scale": "1.2M crystals",
+          "format": "CIF",
+          "kg_node_type": "CrystalStructure",
+          "description": "Organic and metal-organic crystal structure determinations"
+        },
+        {
+          "name": "OpenEI Utility Rate DB",
+          "source": "Government",
+          "identifier": "openei.org/wiki/Utility_Rate_Database",
+          "scale": "30K+ rates",
+          "format": "JSON / CSV",
+          "kg_node_type": "UtilityRate",
+          "description": "US electricity tariff structures and rate schedules"
+        },
+        {
+          "name": "ASTM / ISO Standards (via NIST)",
+          "source": "Government",
+          "identifier": "mds.nist.gov",
+          "scale": "Varied",
+          "format": "XML / PDF",
+          "kg_node_type": "Standard",
+          "description": "Materials Data Series — standardized engineering properties"
+        }
+      ]
+    },
+    {
+      "id": "bio",
+      "name": "Biology & Life Sciences",
+      "categories": [
+        "Genomics & genetics",
+        "Proteomics",
+        "Ecology & biodiversity",
+        "Cell biology",
+        "Evolutionary biology",
+        "Neuroscience",
+        "Systems biology",
+        "Microbiology"
+      ],
+      "datasets": [
+        {
+          "name": "Human Genome Variants (BQ)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.human_genome_variants",
+          "scale": "10B+ variants",
+          "format": "SQL",
+          "kg_node_type": "GenomicVariant",
+          "description": "gnomAD variant data — population allele frequencies in BigQuery"
+        },
+        {
+          "name": "Open Targets Genetics (BQ)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.open_targets_genetics",
+          "scale": "50M+ associations",
+          "format": "SQL",
+          "kg_node_type": "GeneticAssoc",
+          "description": "Gene-disease associations from GWAS and functional genomics"
+        },
+        {
+          "name": "UniProt Swiss-Prot",
+          "source": "Academic",
+          "identifier": "uniprot.org",
+          "scale": "250M sequences",
+          "format": "FASTA / XML",
+          "kg_node_type": "Protein",
+          "description": "Curated protein sequence, function, and domain annotations"
+        },
+        {
+          "name": "RCSB Protein Data Bank",
+          "source": "Government",
+          "identifier": "rcsb.org",
+          "scale": "210K+ structures",
+          "format": "PDB / mmCIF",
+          "kg_node_type": "ProteinStructure",
+          "description": "3D macromolecular structures: proteins, RNA, complexes"
+        },
+        {
+          "name": "GBIF Biodiversity",
+          "source": "Government",
+          "identifier": "gbif.org",
+          "scale": "2.4B occurrences",
+          "format": "DwC-A / CSV",
+          "kg_node_type": "SpeciesOccurrence",
+          "description": "Global biodiversity species occurrence records, 1700s–present"
+        },
+        {
+          "name": "NCBI Gene Database",
+          "source": "Government",
+          "identifier": "ncbi.nlm.nih.gov/gene",
+          "scale": "56M+ genes",
+          "format": "XML / TXT",
+          "kg_node_type": "Gene",
+          "description": "Curated gene information across thousands of species"
+        },
+        {
+          "name": "Allen Brain Atlas",
+          "source": "Government",
+          "identifier": "brain-map.org",
+          "scale": "50 TB imagery",
+          "format": "OME-TIFF / JSON",
+          "kg_node_type": "GeneExpression",
+          "description": "Spatial gene expression maps in mouse and human brain"
+        },
+        {
+          "name": "BioGRID Interactions",
+          "source": "Academic",
+          "identifier": "thebiogrid.org",
+          "scale": "2.3M+ interactions",
+          "format": "TSV",
+          "kg_node_type": "Interaction",
+          "description": "Curated protein–protein and genetic interaction network"
+        },
+        {
+          "name": "iNaturalist Observations",
+          "source": "Academic",
+          "identifier": "inaturalist.org",
+          "scale": "170M+ observations",
+          "format": "CSV / JSON",
+          "kg_node_type": "NaturalistObs",
+          "description": "Citizen science species identification with geolocations"
+        },
+        {
+          "name": "ClinVar Variants",
+          "source": "Government",
+          "identifier": "ncbi.nlm.nih.gov/clinvar",
+          "scale": "3M+ variants",
+          "format": "VCF / XML",
+          "kg_node_type": "ClinicalVariant",
+          "description": "Clinical significance and evidence for genomic variants"
+        },
+        {
+          "name": "TreeOfLife / OpenTree",
+          "source": "HuggingFace",
+          "identifier": "OpenTreeOfLife/synthetic-tree",
+          "scale": "2.3M taxa",
+          "format": "Newick / JSON",
+          "kg_node_type": "TaxonNode",
+          "description": "Comprehensive synthetic phylogenetic tree of life"
+        }
+      ]
+    },
+    {
+      "id": "med",
+      "name": "Medicine & Health",
+      "categories": [
+        "Clinical medicine",
+        "Epidemiology",
+        "Pharmacology",
+        "Medical imaging",
+        "Public health",
+        "Oncology",
+        "Mental health",
+        "Global burden of disease"
+      ],
+      "datasets": [
+        {
+          "name": "MIMIC-IV Clinical",
+          "source": "Academic",
+          "identifier": "physionet.org/content/mimiciv",
+          "scale": "70K patients",
+          "format": "CSV / Parquet",
+          "kg_node_type": "ClinicalRecord",
+          "description": "De-identified ICU electronic health records, Beth Israel"
+        },
+        {
+          "name": "CDC WONDER",
+          "source": "Government",
+          "identifier": "wonder.cdc.gov",
+          "scale": "40+ datasets",
+          "format": "REST / CSV",
+          "kg_node_type": "EpiRecord",
+          "description": "US mortality, natality, cancer, and chronic disease data"
+        },
+        {
+          "name": "FDA Drug Dataset (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.fda_drug",
+          "scale": "100K+ drugs",
+          "format": "SQL",
+          "kg_node_type": "DrugApproval",
+          "description": "FDA drug approval history, labels and adverse events"
+        },
+        {
+          "name": "PubMed Abstracts",
+          "source": "Government",
+          "identifier": "pubmed.ncbi.nlm.nih.gov",
+          "scale": "35M citations",
+          "format": "XML / JSONL",
+          "kg_node_type": "Abstract",
+          "description": "Biomedical literature database since 1966 — full metadata"
+        },
+        {
+          "name": "NHANES",
+          "source": "Government",
+          "identifier": "cdc.gov/nchs/nhanes",
+          "scale": "20yr continuous",
+          "format": "SAS / CSV",
+          "kg_node_type": "HealthSurvey",
+          "description": "US national health and nutrition examination survey"
+        },
+        {
+          "name": "Global Burden of Disease",
+          "source": "Academic",
+          "identifier": "ihme.healthdata.org/gbd",
+          "scale": "370 diseases",
+          "format": "CSV / REST",
+          "kg_node_type": "DiseaseMetric",
+          "description": "Cause of death, disability and risk factors, 204 countries"
+        },
+        {
+          "name": "DrugBank",
+          "source": "Academic",
+          "identifier": "go.drugbank.com",
+          "scale": "14K+ drugs",
+          "format": "XML / CSV",
+          "kg_node_type": "Drug",
+          "description": "Comprehensive drug structure, mechanism, and target database"
+        },
+        {
+          "name": "ClinicalTrials.gov",
+          "source": "Government",
+          "identifier": "clinicaltrials.gov",
+          "scale": "450K+ trials",
+          "format": "JSON / XML",
+          "kg_node_type": "ClinicalTrial",
+          "description": "Registered interventional and observational studies worldwide"
+        },
+        {
+          "name": "UK Biobank",
+          "source": "Government",
+          "identifier": "ukbiobank.ac.uk",
+          "scale": "500K subjects",
+          "format": "BGEN / CSV",
+          "kg_node_type": "BankSubject",
+          "description": "Genotype, phenotype, imaging and lifestyle for 500K adults"
+        },
+        {
+          "name": "PubMedQA",
+          "source": "HuggingFace",
+          "identifier": "bigbio/pubmed_qa",
+          "scale": "1M+ QA pairs",
+          "format": "Parquet",
+          "kg_node_type": "MedQA",
+          "description": "Biomedical question answering from PubMed abstracts"
+        }
+      ]
+    },
+    {
+      "id": "econ",
+      "name": "Economics & Finance",
+      "categories": [
+        "Macroeconomics",
+        "Microeconomics",
+        "Finance & capital markets",
+        "Labor economics",
+        "Development economics",
+        "Trade & trade policy",
+        "Behavioral economics",
+        "Econometrics"
+      ],
+      "datasets": [
+        {
+          "name": "World Bank WDI (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.world_bank_wdi",
+          "scale": "1,600 indicators",
+          "format": "SQL",
+          "kg_node_type": "Indicator",
+          "description": "World Development Indicators for 217 countries, 1960–present"
+        },
+        {
+          "name": "IRS 990 Filings (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.irs_990",
+          "scale": "10M+ filings",
+          "format": "SQL",
+          "kg_node_type": "TaxFiling",
+          "description": "US nonprofit organization financial filings since 2011"
+        },
+        {
+          "name": "FRED Economic Data",
+          "source": "Government",
+          "identifier": "fred.stlouisfed.org",
+          "scale": "800K+ series",
+          "format": "JSON / CSV",
+          "kg_node_type": "EconSeries",
+          "description": "Federal Reserve time series: GDP, CPI, rates, employment"
+        },
+        {
+          "name": "BLS Price & Labor",
+          "source": "Government",
+          "identifier": "bls.gov/data",
+          "scale": "40+ surveys",
+          "format": "JSON / CSV",
+          "kg_node_type": "LaborStat",
+          "description": "CPI, PPI, unemployment, wages, productivity statistics"
+        },
+        {
+          "name": "IMF World Economic Outlook",
+          "source": "Government",
+          "identifier": "imf.org/en/Publications/WEO",
+          "scale": "194 countries",
+          "format": "CSV / SDMX",
+          "kg_node_type": "EconForecast",
+          "description": "Annual IMF economic projections and historical series"
+        },
+        {
+          "name": "Bitcoin Blockchain (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.bitcoin_blockchain",
+          "scale": "800M+ txns",
+          "format": "SQL",
+          "kg_node_type": "Transaction",
+          "description": "Full Bitcoin blockchain ledger in BigQuery, updated daily"
+        },
+        {
+          "name": "SEC EDGAR Filings",
+          "source": "Government",
+          "identifier": "sec.gov/cgi-bin/browse-edgar",
+          "scale": "21M filings",
+          "format": "XBRL / HTML",
+          "kg_node_type": "SecFiling",
+          "description": "All US public company 10-K, 10-Q and 8-K disclosures"
+        },
+        {
+          "name": "Financial PhraseBank",
+          "source": "HuggingFace",
+          "identifier": "takala/financial_phrasebank",
+          "scale": "5K sentences",
+          "format": "Parquet",
+          "kg_node_type": "SentimentLabel",
+          "description": "Financial news sentences labeled positive/negative/neutral"
+        },
+        {
+          "name": "World Happiness Report",
+          "source": "Kaggle",
+          "identifier": "unsdsn/world-happiness",
+          "scale": "156 countries",
+          "format": "CSV",
+          "kg_node_type": "HappinessIndex",
+          "description": "Annual national wellbeing scores across 6 Cantril ladder factors"
+        },
+        {
+          "name": "US Census Economic (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.census_bureau_usa",
+          "scale": "3.3M households",
+          "format": "SQL",
+          "kg_node_type": "CensusRecord",
+          "description": "ACS income, employment, occupation and housing statistics"
+        },
+        {
+          "name": "CRSP / WRDS Market Data",
+          "source": "Academic",
+          "identifier": "wrds.wharton.upenn.edu",
+          "scale": "1926–present",
+          "format": "SAS / CSV",
+          "kg_node_type": "EquityReturn",
+          "description": "CRSP equity return data, the gold standard for finance research"
+        }
+      ]
+    },
+    {
+      "id": "psych",
+      "name": "Psychology",
+      "categories": [
+        "Cognitive psychology",
+        "Social psychology",
+        "Developmental psychology",
+        "Clinical & abnormal",
+        "Neuropsychology",
+        "Personality",
+        "Psychometrics",
+        "Behavioral economics overlap"
+      ],
+      "datasets": [
+        {
+          "name": "Implicit Association Tests",
+          "source": "Academic",
+          "identifier": "implicit.harvard.edu/implicit",
+          "scale": "4M+ participants",
+          "format": "CSV",
+          "kg_node_type": "IATRecord",
+          "description": "Project Implicit: implicit bias across race, gender, age"
+        },
+        {
+          "name": "YouGov Psychographics",
+          "source": "YouGov",
+          "identifier": "yougov.com/topics/consumer",
+          "scale": "350K+ respondents",
+          "format": "API / CSV",
+          "kg_node_type": "Survey",
+          "description": "Brand affinity, personality type and lifestyle segmentation"
+        },
+        {
+          "name": "Big Five Personality (Kaggle)",
+          "source": "Kaggle",
+          "identifier": "kaggle/big-five-personality-test",
+          "scale": "1M+ responses",
+          "format": "CSV",
+          "kg_node_type": "PersonalityScore",
+          "description": "IPIP Big Five OCEAN assessments at scale"
+        },
+        {
+          "name": "MIDUS Longitudinal Study",
+          "source": "Academic",
+          "identifier": "midus.wisc.edu",
+          "scale": "7K participants",
+          "format": "SAS / Stata",
+          "kg_node_type": "LongitudinalRecord",
+          "description": "Midlife in the US: wellbeing, cognition, biomarkers over 25yr"
+        },
+        {
+          "name": "UK Biobank Mental Health",
+          "source": "Government",
+          "identifier": "ukbiobank.ac.uk",
+          "scale": "157K subjects",
+          "format": "BGEN / CSV",
+          "kg_node_type": "MHRecord",
+          "description": "Mental health online follow-up with imaging linkage"
+        },
+        {
+          "name": "ABIDE Autism fMRI",
+          "source": "Academic",
+          "identifier": "fcon_1000.projects.nitrc.org/indi/abide",
+          "scale": "1K+ subjects",
+          "format": "NIfTI",
+          "kg_node_type": "fMRIScan",
+          "description": "Resting-state fMRI in autism spectrum disorder across 17 sites"
+        },
+        {
+          "name": "EEG Brainwave Dataset",
+          "source": "Kaggle",
+          "identifier": "kaggle/eeg-brainwave-dataset-mental-state",
+          "scale": "400+ trials",
+          "format": "EDF / CSV",
+          "kg_node_type": "EEGSignal",
+          "description": "EEG recordings across relaxed, neutral and concentrating states"
+        },
+        {
+          "name": "Emotion Dataset (HF)",
+          "source": "HuggingFace",
+          "identifier": "dair-ai/emotion",
+          "scale": "20K utterances",
+          "format": "Parquet",
+          "kg_node_type": "EmotionLabel",
+          "description": "Twitter text labeled with 6 emotions (joy, sadness, anger…)"
+        },
+        {
+          "name": "APA PsycINFO",
+          "source": "Academic",
+          "identifier": "apa.org/pubs/databases/psycinfo",
+          "scale": "5M+ records",
+          "format": "RIS / BIB",
+          "kg_node_type": "PsychPaper",
+          "description": "Comprehensive psychology literature index since 1887"
+        },
+        {
+          "name": "Mental Health Corpus",
+          "source": "Kaggle",
+          "identifier": "kaggle/mental-health-corpus",
+          "scale": "30K posts",
+          "format": "CSV",
+          "kg_node_type": "SocialPost",
+          "description": "Reddit mental health community posts with diagnostic labels"
+        }
+      ]
+    },
+    {
+      "id": "soc",
+      "name": "Sociology",
+      "categories": [
+        "Social stratification",
+        "Demography",
+        "Race & ethnicity",
+        "Gender & family",
+        "Urban sociology",
+        "Social networks",
+        "Migration",
+        "Culture & religion"
+      ],
+      "datasets": [
+        {
+          "name": "US Census ACS (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.census_bureau_usa",
+          "scale": "3.3M households/yr",
+          "format": "SQL",
+          "kg_node_type": "HouseholdRecord",
+          "description": "American Community Survey social, economic, housing variables"
+        },
+        {
+          "name": "General Social Survey",
+          "source": "Academic",
+          "identifier": "gss.norc.org",
+          "scale": "1972–present",
+          "format": "Stata / SPSS",
+          "kg_node_type": "SurveyWave",
+          "description": "Flagship US sociological longitudinal survey, 50+ years"
+        },
+        {
+          "name": "World Values Survey",
+          "source": "Academic",
+          "identifier": "worldvaluessurvey.org",
+          "scale": "100+ countries",
+          "format": "SPSS / CSV",
+          "kg_node_type": "ValuesRecord",
+          "description": "Cross-national survey of beliefs, values and life satisfaction"
+        },
+        {
+          "name": "YouGov Social Surveys",
+          "source": "YouGov",
+          "identifier": "yougov.com/topics/society",
+          "scale": "Ongoing",
+          "format": "API / CSV",
+          "kg_node_type": "Survey",
+          "description": "UK and US social attitudes, demographics, life events"
+        },
+        {
+          "name": "Pew Research Center Data",
+          "source": "Academic",
+          "identifier": "pewresearch.org/datasets",
+          "scale": "500+ datasets",
+          "format": "SPSS / CSV",
+          "kg_node_type": "PublicOpinion",
+          "description": "Social trends, religion, news consumption, international"
+        },
+        {
+          "name": "European Social Survey",
+          "source": "Government",
+          "identifier": "europeansocialsurvey.org",
+          "scale": "40K resp/wave",
+          "format": "Stata / CSV",
+          "kg_node_type": "ESSSurvey",
+          "description": "Cross-national biennial survey, 38 countries, 10 rounds"
+        },
+        {
+          "name": "IPUMS International Census",
+          "source": "Academic",
+          "identifier": "ipums.org/international",
+          "scale": "1.4B+ persons",
+          "format": "Fixed / CSV",
+          "kg_node_type": "CensusRecord",
+          "description": "Harmonized census microdata for 100+ countries since 1960"
+        },
+        {
+          "name": "OECD Better Life Index",
+          "source": "Government",
+          "identifier": "stats.oecd.org/BLI",
+          "scale": "40 countries",
+          "format": "CSV / JSON",
+          "kg_node_type": "WellbeingIndex",
+          "description": "11 dimensions of wellbeing: housing, income, jobs, community"
+        },
+        {
+          "name": "Migration Data Portal",
+          "source": "Government",
+          "identifier": "migrationdataportal.org",
+          "scale": "200+ indicators",
+          "format": "CSV / API",
+          "kg_node_type": "MigrationStat",
+          "description": "International migration stocks, flows and forced displacement"
+        },
+        {
+          "name": "Reddit Pushshift Corpus",
+          "source": "HuggingFace",
+          "identifier": "reddit",
+          "scale": "800M+ posts",
+          "format": "JSONL / Parquet",
+          "kg_node_type": "SocialPost",
+          "description": "Reddit submissions and comments — social discussion at scale"
+        }
+      ]
+    },
+    {
+      "id": "crime",
+      "name": "Criminology & Justice",
+      "categories": [
+        "Crime statistics",
+        "Criminal justice system",
+        "Terrorism & extremism",
+        "Cybercrime",
+        "Policing & use of force",
+        "Incarceration & recidivism",
+        "Forensic science",
+        "Victimology"
+      ],
+      "datasets": [
+        {
+          "name": "Chicago Crime (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.chicago_crime",
+          "scale": "8M+ incidents",
+          "format": "SQL",
+          "kg_node_type": "CrimeIncident",
+          "description": "Chicago Police incident reports with location, 2001–present"
+        },
+        {
+          "name": "FBI NIBRS Crime Data",
+          "source": "Government",
+          "identifier": "ucr.fbi.gov/nibrs",
+          "scale": "12M incidents/yr",
+          "format": "CSV / API",
+          "kg_node_type": "CrimeRecord",
+          "description": "National Incident-Based Reporting System — offense, victim, offender"
+        },
+        {
+          "name": "BJS Justice Statistics",
+          "source": "Government",
+          "identifier": "bjs.ojp.gov",
+          "scale": "50+ surveys",
+          "format": "CSV / SAS",
+          "kg_node_type": "JusticeStat",
+          "description": "Incarceration counts, court filings, victimization surveys"
+        },
+        {
+          "name": "UK Police Street Data",
+          "source": "Government",
+          "identifier": "data.police.uk",
+          "scale": "10M+ records",
+          "format": "CSV / API",
+          "kg_node_type": "PoliceRecord",
+          "description": "UK street-level crime, outcomes, and stop-and-search data"
+        },
+        {
+          "name": "Global Terrorism Database",
+          "source": "Kaggle",
+          "identifier": "start.umd.edu/gtd",
+          "scale": "200K+ attacks",
+          "format": "CSV",
+          "kg_node_type": "TerrorEvent",
+          "description": "GTD: terrorist incidents 1970–2020, 100+ attributes each"
+        },
+        {
+          "name": "ICPSR Criminal Justice",
+          "source": "Academic",
+          "identifier": "icpsr.umich.edu",
+          "scale": "1K+ datasets",
+          "format": "Stata / SAS",
+          "kg_node_type": "StudyRecord",
+          "description": "Archived CJ research studies, codebooks, replications"
+        },
+        {
+          "name": "HateSpeech18",
+          "source": "HuggingFace",
+          "identifier": "hate_speech18",
+          "scale": "10K posts",
+          "format": "Parquet",
+          "kg_node_type": "TextLabel",
+          "description": "Stormfront forum posts labeled for hate speech detection"
+        },
+        {
+          "name": "Jigsaw Toxicity (Kaggle)",
+          "source": "Kaggle",
+          "identifier": "jigsaw-toxic-comment-classification-challenge",
+          "scale": "160K comments",
+          "format": "CSV",
+          "kg_node_type": "ToxicityLabel",
+          "description": "Wikipedia comments labeled for multiple toxicity types"
+        },
+        {
+          "name": "ProPublica COMPAS Data",
+          "source": "Academic",
+          "identifier": "propublica.org/datastore/dataset/compas-recidivism-risk-score-data-and-analysis",
+          "scale": "7K defendants",
+          "format": "CSV",
+          "kg_node_type": "RecidivismRecord",
+          "description": "Broward County criminal records with COMPAS risk scores"
+        },
+        {
+          "name": "UNODC Crime Statistics",
+          "source": "Government",
+          "identifier": "unodc.org/unodc/en/data-and-analysis",
+          "scale": "190+ countries",
+          "format": "CSV / Excel",
+          "kg_node_type": "CrimeStat",
+          "description": "International homicide, drug, trafficking and corruption data"
+        }
+      ]
+    },
+    {
+      "id": "pol",
+      "name": "Political Science",
+      "categories": [
+        "Electoral systems",
+        "Political economy",
+        "International relations",
+        "Comparative politics",
+        "Public opinion",
+        "Legislative behavior",
+        "Political parties",
+        "Foreign policy & conflict"
+      ],
+      "datasets": [
+        {
+          "name": "YouGov Political Polls",
+          "source": "YouGov",
+          "identifier": "yougov.com/topics/politics",
+          "scale": "Ongoing",
+          "format": "API / CSV",
+          "kg_node_type": "PollWave",
+          "description": "US, UK, and international political polling and voting intention"
+        },
+        {
+          "name": "FEC Campaign Finance",
+          "source": "Government",
+          "identifier": "fec.gov/data",
+          "scale": "200M+ records",
+          "format": "CSV / JSON",
+          "kg_node_type": "Contribution",
+          "description": "All US federal campaign contributions and expenditures"
+        },
+        {
+          "name": "Congressional Record",
+          "source": "Government",
+          "identifier": "congress.gov/congressional-record",
+          "scale": "1873–present",
+          "format": "XML / TXT",
+          "kg_node_type": "LegislativeText",
+          "description": "Full text of US Congressional proceedings and debates"
+        },
+        {
+          "name": "V-Dem Dataset",
+          "source": "Academic",
+          "identifier": "v-dem.net",
+          "scale": "202 countries",
+          "format": "CSV / RData",
+          "kg_node_type": "DemocracyScore",
+          "description": "500+ democracy indicators from 1789 to present — gold standard"
+        },
+        {
+          "name": "Polity5",
+          "source": "Academic",
+          "identifier": "systemicpeace.org/polity",
+          "scale": "167 countries",
+          "format": "Excel / CSV",
+          "kg_node_type": "PolityScore",
+          "description": "Regime authority characteristics 1800–2018, autocracy-democracy axis"
+        },
+        {
+          "name": "Comparative Manifesto Project",
+          "source": "Academic",
+          "identifier": "manifesto-project.wzb.eu",
+          "scale": "50+ countries",
+          "format": "CSV / R",
+          "kg_node_type": "PartyManifesto",
+          "description": "Coded political party manifestos, 1945–present, 56 categories"
+        },
+        {
+          "name": "UNGA Voting Records",
+          "source": "Government",
+          "identifier": "unbisnet.un.org",
+          "scale": "90K+ resolutions",
+          "format": "CSV / API",
+          "kg_node_type": "VoteRecord",
+          "description": "UN General Assembly voting history for all member states"
+        },
+        {
+          "name": "ACLED Conflict Data",
+          "source": "Academic",
+          "identifier": "acleddata.com",
+          "scale": "2M+ events",
+          "format": "CSV / API",
+          "kg_node_type": "ConflictEvent",
+          "description": "Armed conflict and protest events worldwide, 1997–present"
+        },
+        {
+          "name": "MIT Election Lab",
+          "source": "Academic",
+          "identifier": "electionlab.mit.edu/data",
+          "scale": "120+ datasets",
+          "format": "CSV",
+          "kg_node_type": "ElectionResult",
+          "description": "US election returns at precinct level, validated and harmonized"
+        },
+        {
+          "name": "Manifesto Political Speech",
+          "source": "HuggingFace",
+          "identifier": "joelito/political_speeches_and_books",
+          "scale": "150K+ texts",
+          "format": "Parquet",
+          "kg_node_type": "PoliticalText",
+          "description": "Speeches, manifestos, and political books in multiple languages"
+        }
+      ]
+    },
+    {
+      "id": "earth",
+      "name": "Earth & Environmental",
+      "categories": [
+        "Climatology",
+        "Geophysics",
+        "Oceanography",
+        "Ecology",
+        "Atmospheric science",
+        "Hydrology",
+        "Geology & mineralogy",
+        "Biodiversity & conservation"
+      ],
+      "datasets": [
+        {
+          "name": "NOAA ISD Weather (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.noaa_isd_history",
+          "scale": "2B+ observations",
+          "format": "SQL",
+          "kg_node_type": "WeatherStation",
+          "description": "Global hourly surface observations from 35K+ stations"
+        },
+        {
+          "name": "EPA Air Quality (BigQuery)",
+          "source": "BigQuery",
+          "identifier": "bigquery-public-data.epa_historical_air_quality",
+          "scale": "100M+ rows",
+          "format": "SQL",
+          "kg_node_type": "AQMeasure",
+          "description": "US PM2.5, ozone, NO2 and CO measurements since 1980"
+        },
+        {
+          "name": "NASA EarthData",
+          "source": "Government",
+          "identifier": "earthdata.nasa.gov",
+          "scale": "PB-scale",
+          "format": "HDF5 / NetCDF",
+          "kg_node_type": "SatelliteObs",
+          "description": "MODIS, Landsat, ASTER, OCO-2 satellite Earth observations"
+        },
+        {
+          "name": "USGS Earthquake Catalog",
+          "source": "Government",
+          "identifier": "earthquake.usgs.gov/earthquakes",
+          "scale": "3M+ events",
+          "format": "JSON / CSV",
+          "kg_node_type": "SeismicEvent",
+          "description": "Global seismic event catalog — magnitude, depth, location"
+        },
+        {
+          "name": "Copernicus Climate Store",
+          "source": "Government",
+          "identifier": "cds.climate.copernicus.eu",
+          "scale": "PB-scale",
+          "format": "NetCDF / GRIB",
+          "kg_node_type": "ClimateModel",
+          "description": "ERA5 reanalysis hourly data since 1940 — the standard for climate"
+        },
+        {
+          "name": "OBIS Ocean Biodiversity",
+          "source": "Academic",
+          "identifier": "obis.org",
+          "scale": "120M+ records",
+          "format": "DwC-A / CSV",
+          "kg_node_type": "MarineObs",
+          "description": "Ocean biodiversity species occurrence data, 120K datasets"
+        },
+        {
+          "name": "Global Forest Watch",
+          "source": "Academic",
+          "identifier": "globalforestwatch.org",
+          "scale": "2000–present",
+          "format": "GeoTIFF / API",
+          "kg_node_type": "ForestLoss",
+          "description": "Annual tree cover loss and gain globally at 30m resolution"
+        },
+        {
+          "name": "IPCC AR6 Climate Data",
+          "source": "Government",
+          "identifier": "ipcc-data.org",
+          "scale": "200+ scenarios",
+          "format": "NetCDF / CSV",
+          "kg_node_type": "ClimateScenario",
+          "description": "AR6 SSP emissions pathways and climate model projections"
+        },
+        {
+          "name": "Berkeley Earth Temperatures",
+          "source": "Kaggle",
+          "identifier": "berkeleyearth/climate-change",
+          "scale": "260+ years",
+          "format": "CSV",
+          "kg_node_type": "TempRecord",
+          "description": "Global land and ocean temperature anomaly reconstructions"
+        },
+        {
+          "name": "USGS National Water Data",
+          "source": "Government",
+          "identifier": "waterdata.usgs.gov/nwis",
+          "scale": "150K+ gauges",
+          "format": "REST / CSV",
+          "kg_node_type": "StreamflowObs",
+          "description": "Streamflow, groundwater level and water quality observations"
+        },
+        {
+          "name": "ESA Biodiversity Data",
+          "source": "Government",
+          "identifier": "biodiversity.europa.eu",
+          "scale": "8M+ records",
+          "format": "GeoJSON / CSV",
+          "kg_node_type": "HabitatRecord",
+          "description": "EU habitat types, species distributions, and protected areas"
+        }
+      ]
+    },
+    {
+      "id": "ling",
+      "name": "Linguistics & NLP",
+      "categories": [
+        "Computational linguistics",
+        "Morphology & syntax",
+        "Semantics & pragmatics",
+        "Phonetics & phonology",
+        "Historical linguistics",
+        "Sociolinguistics",
+        "Language acquisition",
+        "Translation & multilingual"
+      ],
+      "datasets": [
+        {
+          "name": "Wikipedia (330 languages)",
+          "source": "HuggingFace",
+          "identifier": "wikimedia/wikipedia",
+          "scale": "330 languages",
+          "format": "Parquet",
+          "kg_node_type": "Article",
+          "description": "Wikipedia articles with wikitext, sections and categories"
+        },
+        {
+          "name": "OPUS Parallel Corpora",
+          "source": "Academic",
+          "identifier": "opus.nlpl.eu",
+          "scale": "90 languages",
+          "format": "TMX / XML",
+          "kg_node_type": "SentencePair",
+          "description": "Parallel sentence pairs for MT: legal, medical, subtitle domains"
+        },
+        {
+          "name": "Universal Dependencies",
+          "source": "Academic",
+          "identifier": "universaldependencies.org",
+          "scale": "100+ languages",
+          "format": "CoNLL-U",
+          "kg_node_type": "ParseTree",
+          "description": "Manually annotated treebanks — the standard for syntax parsing"
+        },
+        {
+          "name": "FLORES-200",
+          "source": "HuggingFace",
+          "identifier": "facebook/flores",
+          "scale": "200 languages",
+          "format": "Parquet",
+          "kg_node_type": "Translation",
+          "description": "Evaluation benchmark across 200 languages including low-resource"
+        },
+        {
+          "name": "Multilingual C4",
+          "source": "HuggingFace",
+          "identifier": "allenai/c4",
+          "scale": "101 languages",
+          "format": "JSONL",
+          "kg_node_type": "WebDocument",
+          "description": "mC4 — cleaned web text in 101 languages with language ID"
+        },
+        {
+          "name": "WordNet (Princeton)",
+          "source": "Academic",
+          "identifier": "wordnet.princeton.edu",
+          "scale": "155K synsets",
+          "format": "XML / LMF",
+          "kg_node_type": "Synset",
+          "description": "English lexical database with synonym sets and semantic relations"
+        },
+        {
+          "name": "Linguistic Data Consortium",
+          "source": "Academic",
+          "identifier": "ldc.upenn.edu",
+          "scale": "700+ corpora",
+          "format": "Various",
+          "kg_node_type": "Corpus",
+          "description": "Penn Treebank, OntoNotes, AMR, MUC, TimeBank and 700+ corpora"
+        },
+        {
+          "name": "Wikidata",
+          "source": "HuggingFace",
+          "identifier": "wikimedia/wikidata",
+          "scale": "100M+ entities",
+          "format": "JSON",
+          "kg_node_type": "KGEntity",
+          "description": "Structured knowledge base with 9,000+ property types, 300 languages"
+        },
+        {
+          "name": "CCNet Deduplicated",
+          "source": "HuggingFace",
+          "identifier": "facebook/cc_net",
+          "scale": "100+ languages",
+          "format": "JSONL / GZ",
+          "kg_node_type": "WebDocument",
+          "description": "Perplexity-filtered Common Crawl — quality-stratified web text"
+        },
+        {
+          "name": "BooksCorpus",
+          "source": "HuggingFace",
+          "identifier": "bookcorpus/bookcorpus",
+          "scale": "11K books",
+          "format": "TXT",
+          "kg_node_type": "Book",
+          "description": "Unpublished novels from Smashwords — used for BERT pre-training"
+        },
+        {
+          "name": "FLORES+ / NLLB",
+          "source": "HuggingFace",
+          "identifier": "facebook/flores",
+          "scale": "200 languages",
+          "format": "Parquet",
+          "kg_node_type": "LowResourceText",
+          "description": "No Language Left Behind: 200-language translation benchmark"
+        }
+      ]
+    }
+  ]
+}

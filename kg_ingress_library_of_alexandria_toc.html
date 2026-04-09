@@ -1,0 +1,314 @@
+
+<div style="padding:1.25rem 0">
+<p style="font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:0.07em;margin-bottom:5px">KNOWLEDGE GRAPH · INGRESS LAYER · v1.0</p>
+<h1 style="font-size:22px;font-weight:500;margin-bottom:6px">Library of Alexandria</h1>
+<p style="font-size:14px;color:var(--color-text-secondary);max-width:640px;margin-bottom:1.25rem">Master dataset index for KG ingestion — BigQuery, HuggingFace, Kaggle, Government, Academic, and YouGov sources spanning every domain of human knowledge.</p>
+<div id="stats-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+<input type="search" id="q" placeholder="Search datasets, identifiers, node types..." oninput="applyFilters()" style="flex:1;min-width:180px;max-width:320px;font-size:13px">
+<div id="src-filters" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+<button onclick="toggleAll()" id="expand-btn" style="font-size:12px;margin-left:auto">Expand all</button>
+<button onclick="exportAll()" style="font-size:12px">Export JSON ↗</button>
+</div>
+<div id="domain-list"></div>
+</div>
+<script>
+const SOURCES={BQ:{label:'BigQuery',bg:'var(--color-background-info)',fg:'var(--color-text-info)'},HF:{label:'HuggingFace',bg:'var(--color-background-warning)',fg:'var(--color-text-warning)'},KG:{label:'Kaggle',bg:'var(--color-background-success)',fg:'var(--color-text-success)'},GOV:{label:'Government',bg:'var(--color-background-danger)',fg:'var(--color-text-danger)'},ACD:{label:'Academic',bg:'var(--color-background-secondary)',fg:'var(--color-text-primary)',brd:'0.5px solid #7F77DD'},YOUGOV:{label:'YouGov',bg:'var(--color-background-secondary)',fg:'var(--color-text-primary)',brd:'0.5px solid #D4537E'}};
+const DOMAINS=[
+{id:'math',name:'Mathematics',icon:'∑',color:'#7F77DD',cats:['Pure mathematics','Applied mathematics','Statistics & probability','Logic & proof theory','Number theory','Graph theory','Combinatorics','Topology & geometry'],ds:[
+{n:'MATH Benchmark',src:'HF',id:'hendrycks/MATH',sz:'12.5K problems',fmt:'Parquet',node:'Problem',desc:'Competition math with step-by-step solutions across 5 difficulty levels'},
+{n:'OpenWebMath',src:'HF',id:'open-web-math/open-web-math',sz:'6.3M docs',fmt:'Parquet',node:'Document',desc:'High-quality mathematical web text for pre-training'},
+{n:'Proof-Pile 2',src:'HF',id:'EleutherAI/proof-pile-2',sz:'55B tokens',fmt:'Parquet',node:'ProofCorpus',desc:'Formal proofs, arXiv papers, textbooks and code'},
+{n:'NuminaMath-CoT',src:'HF',id:'AI-MO/NuminaMath-CoT',sz:'860K problems',fmt:'JSON',node:'Problem',desc:'Competition problems with chain-of-thought solutions'},
+{n:'DeepMind Mathematics',src:'HF',id:'deepmind/math_dataset',sz:'2M problems',fmt:'TFRecord',node:'Problem',desc:'Synthetic problems across 56 mathematical modules'},
+{n:'MetaMathQA',src:'HF',id:'meta-math/MetaMathQA',sz:'395K pairs',fmt:'JSON',node:'QAPair',desc:'GSM8K + MATH augmented via question rewriting'},
+{n:'MathOverflow (BigQuery)',src:'BQ',id:'bigquery-public-data.stackoverflow',sz:'18M rows',fmt:'SQL',node:'Thread',desc:'Q&A threads from math.stackexchange.com, SQL-queryable'},
+{n:'Lean 4 Mathlib',src:'ACD',id:'leanprover-community/mathlib4',sz:'1M+ theorems',fmt:'Lean4',node:'Theorem',desc:'Formally verified mathematics in Lean 4'},
+{n:'OEIS Integer Sequences',src:'ACD',id:'oeis.org',sz:'370K+ sequences',fmt:'JSON/TXT',node:'Sequence',desc:'On-Line Encyclopedia of Integer Sequences'},
+{n:'arXiv Mathematics',src:'ACD',id:'arxiv.org/list/math',sz:'450K+ papers',fmt:'LaTeX/PDF',node:'Paper',desc:'Preprints across all mathematical subfields'},
+{n:'IMO / USAMO Problems',src:'KG',id:'kaggle/math-olympiad-problems',sz:'1.5K+ problems',fmt:'CSV',node:'OlympiadProblem',desc:'International Mathematical Olympiad historical problems'},
+]},
+{id:'physics',name:'Physics & Cosmology',icon:'φ',color:'#378ADD',cats:['Classical mechanics','Quantum physics','Astrophysics & cosmology','Thermodynamics','Particle physics','Electromagnetism','Condensed matter','Materials science'],ds:[
+{n:'CERN Open Data',src:'GOV',id:'opendata.cern.ch',sz:'2+ PB',fmt:'ROOT / CSV',node:'Collision',desc:'LHC particle collision events from CMS, ATLAS and more'},
+{n:'NASA Exoplanet Archive',src:'GOV',id:'exoplanetarchive.ipac.caltech.edu',sz:'5.5K planets',fmt:'VOTable / CSV',node:'Exoplanet',desc:'Confirmed exoplanets with orbital and stellar parameters'},
+{n:'SDSS DR17',src:'ACD',id:'skyserver.sdss.org',sz:'930M objects',fmt:'SQL / FITS',node:'AstroObject',desc:'Sloan Digital Sky Survey photometry and spectra'},
+{n:'NOAA GSOD Weather',src:'BQ',id:'bigquery-public-data.noaa_gsod',sz:'1B rows',fmt:'SQL',node:'WeatherObs',desc:'Global surface daily observations since 1929'},
+{n:'Materials Project',src:'ACD',id:'materialsproject.org',sz:'150K+ materials',fmt:'JSON / REST',node:'Material',desc:'DFT-computed electronic and structural properties'},
+{n:'LIGO Open Science',src:'ACD',id:'gw-openscience.org',sz:'TB-scale',fmt:'HDF5',node:'GravWave',desc:'Gravitational wave strain time series from O1–O3'},
+{n:'NIST Physical Constants',src:'GOV',id:'physics.nist.gov/constants',sz:'400+ constants',fmt:'JSON / CSV',node:'PhysicsConstant',desc:'CODATA 2022 fundamental physical constants'},
+{n:'arXiv Physics',src:'ACD',id:'arxiv.org/list/physics',sz:'800K+ papers',fmt:'LaTeX / PDF',node:'Paper',desc:'Preprints: hep, cond-mat, astro, gr-qc, quant-ph'},
+{n:'CDS Strasbourg',src:'ACD',id:'cds.u-strasbg.fr',sz:'30K+ catalogs',fmt:'VOTable',node:'AstroCatalog',desc:'Centre de Données astronomiques — master astronomical catalog'},
+{n:'PhysicsQA (GQA)',src:'HF',id:'Vikhrmodels/GQA-Physics',sz:'5K problems',fmt:'Parquet',node:'Problem',desc:'Physics problems with detailed reasoning chains'},
+{n:'IRIS Seismology',src:'GOV',id:'iris.edu/hq/ds/nodes/dmc',sz:'50PB waveforms',fmt:'SEED / miniSEED',node:'SeismicWaveform',desc:'Global seismic waveform archive since 1963'},
+]},
+{id:'cs',name:'Computer Science & AI',icon:'{}',color:'#1D9E75',cats:['Algorithms & data structures','Machine learning & AI','Distributed systems','Programming languages','Computer vision','NLP & speech','Security & cryptography','Theory of computation'],ds:[
+{n:'The Stack (BigCode)',src:'HF',id:'bigcode/the-stack',sz:'6.4 TB',fmt:'Parquet',node:'CodeFile',desc:'358 programming languages, near-deduplicated source code'},
+{n:'GitHub Repos (BigQuery)',src:'BQ',id:'bigquery-public-data.github_repos',sz:'3 TB source',fmt:'SQL',node:'Repository',desc:'SQL-queryable open-source code: files, commits, languages'},
+{n:'Stack Overflow (BigQuery)',src:'BQ',id:'bigquery-public-data.stackoverflow',sz:'20M+ Q&A',fmt:'SQL',node:'Thread',desc:'All posts, answers, comments, and tags since 2008'},
+{n:'The Pile',src:'HF',id:'EleutherAI/pile',sz:'825 GB',fmt:'JSONL',node:'Document',desc:'22 diverse high-quality text sources for LLM training'},
+{n:'Papers With Code',src:'ACD',id:'paperswithcode.com',sz:'100K+ papers',fmt:'JSON / REST',node:'MLResult',desc:'ML papers linked to benchmarks, results and code repos'},
+{n:'CodeSearchNet',src:'HF',id:'code_search_net',sz:'2M pairs',fmt:'JSON',node:'CodeDocPair',desc:'Code + docstring pairs in Python, Java, JS, Ruby, PHP, Go'},
+{n:'BIG-Bench',src:'HF',id:'google/BIG-bench',sz:'214 tasks',fmt:'JSON',node:'Benchmark',desc:'Beyond the Imitation Game — diverse LLM evaluation tasks'},
+{n:'arXiv CS',src:'ACD',id:'arxiv.org/list/cs',sz:'500K+ papers',fmt:'LaTeX / PDF',node:'Paper',desc:'CS preprints: ML, AI, systems, theory, security, vision'},
+{n:'RedPajama v2',src:'HF',id:'togethercomputer/RedPajama-Data-V2',sz:'30T tokens',fmt:'Parquet',node:'WebDocument',desc:'Massive pre-training corpus with quality annotations'},
+{n:'GLUE / SuperGLUE',src:'HF',id:'nyu-mll/glue',sz:'9 / 8 tasks',fmt:'Parquet',node:'Benchmark',desc:'General language understanding evaluation benchmarks'},
+{n:'Common Crawl',src:'ACD',id:'commoncrawl.org',sz:'PB-scale',fmt:'WARC',node:'WebPage',desc:'Monthly crawls of 5B+ pages since 2008 — the ur-corpus'},
+]},
+{id:'eng',name:'Engineering',icon:'///',color:'#D85A30',cats:['Civil & structural','Mechanical & aerospace','Chemical & process','Electrical & power','Environmental engineering','Materials & manufacturing','Robotics & control','Systems engineering'],ds:[
+{n:'OpenStreetMap',src:'ACD',id:'openstreetmap.org',sz:'8B+ features',fmt:'PBF / XML',node:'GeoFeature',desc:'Global roads, infrastructure, buildings and land use'},
+{n:'NBI Bridge Inventory',src:'GOV',id:'fhwa.dot.gov/bridge/nbi',sz:'620K bridges',fmt:'CSV',node:'Bridge',desc:'US National Bridge Inventory condition and geometry data'},
+{n:'USGS 3DEP Elevation',src:'GOV',id:'nationalmap.gov/3dep',sz:'TB-scale',fmt:'LAS / GeoTIFF',node:'ElevationPoint',desc:'3D elevation program — 1m lidar coverage for entire US'},
+{n:'PubChem Compounds',src:'GOV',id:'pubchem.ncbi.nlm.nih.gov',sz:'115M+ compounds',fmt:'SDF / JSON',node:'Compound',desc:'Chemical structures, properties, safety and bioassay data'},
+{n:'ChEMBL Database',src:'ACD',id:'ebi.ac.uk/chembl',sz:'2.4M molecules',fmt:'SQL / SDF',node:'Molecule',desc:'Bioactive drug-like small molecules with target activity'},
+{n:'NASA Technical Reports',src:'GOV',id:'ntrs.nasa.gov',sz:'900K+ docs',fmt:'PDF / XML',node:'TechReport',desc:'Aerospace engineering reports from NACA 1915 to present'},
+{n:'NREL Energy Atlas',src:'GOV',id:'data.nrel.gov',sz:'Varied',fmt:'CSV / GeoJSON',node:'EnergyResource',desc:'Solar, wind, and geothermal resource data for the US'},
+{n:'EPA Air Quality (BigQuery)',src:'BQ',id:'bigquery-public-data.epa_historical_air_quality',sz:'100M+ rows',fmt:'SQL',node:'AirMeasure',desc:'US historical air quality monitoring stations since 1980'},
+{n:'Cambridge Structural DB',src:'ACD',id:'ccdc.cam.ac.uk/structures',sz:'1.2M crystals',fmt:'CIF',node:'CrystalStructure',desc:'Organic and metal-organic crystal structure determinations'},
+{n:'OpenEI Utility Rate DB',src:'GOV',id:'openei.org/wiki/Utility_Rate_Database',sz:'30K+ rates',fmt:'JSON / CSV',node:'UtilityRate',desc:'US electricity tariff structures and rate schedules'},
+{n:'ASTM / ISO Standards (via NIST)',src:'GOV',id:'mds.nist.gov',sz:'Varied',fmt:'XML / PDF',node:'Standard',desc:'Materials Data Series — standardized engineering properties'},
+]},
+{id:'bio',name:'Biology & Life Sciences',icon:'β',color:'#639922',cats:['Genomics & genetics','Proteomics','Ecology & biodiversity','Cell biology','Evolutionary biology','Neuroscience','Systems biology','Microbiology'],ds:[
+{n:'Human Genome Variants (BQ)',src:'BQ',id:'bigquery-public-data.human_genome_variants',sz:'10B+ variants',fmt:'SQL',node:'GenomicVariant',desc:'gnomAD variant data — population allele frequencies in BigQuery'},
+{n:'Open Targets Genetics (BQ)',src:'BQ',id:'bigquery-public-data.open_targets_genetics',sz:'50M+ associations',fmt:'SQL',node:'GeneticAssoc',desc:'Gene-disease associations from GWAS and functional genomics'},
+{n:'UniProt Swiss-Prot',src:'ACD',id:'uniprot.org',sz:'250M sequences',fmt:'FASTA / XML',node:'Protein',desc:'Curated protein sequence, function, and domain annotations'},
+{n:'RCSB Protein Data Bank',src:'GOV',id:'rcsb.org',sz:'210K+ structures',fmt:'PDB / mmCIF',node:'ProteinStructure',desc:'3D macromolecular structures: proteins, RNA, complexes'},
+{n:'GBIF Biodiversity',src:'GOV',id:'gbif.org',sz:'2.4B occurrences',fmt:'DwC-A / CSV',node:'SpeciesOccurrence',desc:'Global biodiversity species occurrence records, 1700s–present'},
+{n:'NCBI Gene Database',src:'GOV',id:'ncbi.nlm.nih.gov/gene',sz:'56M+ genes',fmt:'XML / TXT',node:'Gene',desc:'Curated gene information across thousands of species'},
+{n:'Allen Brain Atlas',src:'GOV',id:'brain-map.org',sz:'50 TB imagery',fmt:'OME-TIFF / JSON',node:'GeneExpression',desc:'Spatial gene expression maps in mouse and human brain'},
+{n:'BioGRID Interactions',src:'ACD',id:'thebiogrid.org',sz:'2.3M+ interactions',fmt:'TSV',node:'Interaction',desc:'Curated protein–protein and genetic interaction network'},
+{n:'iNaturalist Observations',src:'ACD',id:'inaturalist.org',sz:'170M+ observations',fmt:'CSV / JSON',node:'NaturalistObs',desc:'Citizen science species identification with geolocations'},
+{n:'ClinVar Variants',src:'GOV',id:'ncbi.nlm.nih.gov/clinvar',sz:'3M+ variants',fmt:'VCF / XML',node:'ClinicalVariant',desc:'Clinical significance and evidence for genomic variants'},
+{n:'TreeOfLife / OpenTree',src:'HF',id:'OpenTreeOfLife/synthetic-tree',sz:'2.3M taxa',fmt:'Newick / JSON',node:'TaxonNode',desc:'Comprehensive synthetic phylogenetic tree of life'},
+]},
+{id:'med',name:'Medicine & Health',icon:'+',color:'#E24B4A',cats:['Clinical medicine','Epidemiology','Pharmacology','Medical imaging','Public health','Oncology','Mental health','Global burden of disease'],ds:[
+{n:'MIMIC-IV Clinical',src:'ACD',id:'physionet.org/content/mimiciv',sz:'70K patients',fmt:'CSV / Parquet',node:'ClinicalRecord',desc:'De-identified ICU electronic health records, Beth Israel'},
+{n:'CDC WONDER',src:'GOV',id:'wonder.cdc.gov',sz:'40+ datasets',fmt:'REST / CSV',node:'EpiRecord',desc:'US mortality, natality, cancer, and chronic disease data'},
+{n:'FDA Drug Dataset (BigQuery)',src:'BQ',id:'bigquery-public-data.fda_drug',sz:'100K+ drugs',fmt:'SQL',node:'DrugApproval',desc:'FDA drug approval history, labels and adverse events'},
+{n:'PubMed Abstracts',src:'GOV',id:'pubmed.ncbi.nlm.nih.gov',sz:'35M citations',fmt:'XML / JSONL',node:'Abstract',desc:'Biomedical literature database since 1966 — full metadata'},
+{n:'NHANES',src:'GOV',id:'cdc.gov/nchs/nhanes',sz:'20yr continuous',fmt:'SAS / CSV',node:'HealthSurvey',desc:'US national health and nutrition examination survey'},
+{n:'Global Burden of Disease',src:'ACD',id:'ihme.healthdata.org/gbd',sz:'370 diseases',fmt:'CSV / REST',node:'DiseaseMetric',desc:'Cause of death, disability and risk factors, 204 countries'},
+{n:'DrugBank',src:'ACD',id:'go.drugbank.com',sz:'14K+ drugs',fmt:'XML / CSV',node:'Drug',desc:'Comprehensive drug structure, mechanism, and target database'},
+{n:'ClinicalTrials.gov',src:'GOV',id:'clinicaltrials.gov',sz:'450K+ trials',fmt:'JSON / XML',node:'ClinicalTrial',desc:'Registered interventional and observational studies worldwide'},
+{n:'UK Biobank',src:'GOV',id:'ukbiobank.ac.uk',sz:'500K subjects',fmt:'BGEN / CSV',node:'BankSubject',desc:'Genotype, phenotype, imaging and lifestyle for 500K adults'},
+{n:'PubMedQA',src:'HF',id:'bigbio/pubmed_qa',sz:'1M+ QA pairs',fmt:'Parquet',node:'MedQA',desc:'Biomedical question answering from PubMed abstracts'},
+]},
+{id:'econ',name:'Economics & Finance',icon:'$',color:'#BA7517',cats:['Macroeconomics','Microeconomics','Finance & capital markets','Labor economics','Development economics','Trade & trade policy','Behavioral economics','Econometrics'],ds:[
+{n:'World Bank WDI (BigQuery)',src:'BQ',id:'bigquery-public-data.world_bank_wdi',sz:'1,600 indicators',fmt:'SQL',node:'Indicator',desc:'World Development Indicators for 217 countries, 1960–present'},
+{n:'IRS 990 Filings (BigQuery)',src:'BQ',id:'bigquery-public-data.irs_990',sz:'10M+ filings',fmt:'SQL',node:'TaxFiling',desc:'US nonprofit organization financial filings since 2011'},
+{n:'FRED Economic Data',src:'GOV',id:'fred.stlouisfed.org',sz:'800K+ series',fmt:'JSON / CSV',node:'EconSeries',desc:'Federal Reserve time series: GDP, CPI, rates, employment'},
+{n:'BLS Price & Labor',src:'GOV',id:'bls.gov/data',sz:'40+ surveys',fmt:'JSON / CSV',node:'LaborStat',desc:'CPI, PPI, unemployment, wages, productivity statistics'},
+{n:'IMF World Economic Outlook',src:'GOV',id:'imf.org/en/Publications/WEO',sz:'194 countries',fmt:'CSV / SDMX',node:'EconForecast',desc:'Annual IMF economic projections and historical series'},
+{n:'Bitcoin Blockchain (BigQuery)',src:'BQ',id:'bigquery-public-data.bitcoin_blockchain',sz:'800M+ txns',fmt:'SQL',node:'Transaction',desc:'Full Bitcoin blockchain ledger in BigQuery, updated daily'},
+{n:'SEC EDGAR Filings',src:'GOV',id:'sec.gov/cgi-bin/browse-edgar',sz:'21M filings',fmt:'XBRL / HTML',node:'SecFiling',desc:'All US public company 10-K, 10-Q and 8-K disclosures'},
+{n:'Financial PhraseBank',src:'HF',id:'takala/financial_phrasebank',sz:'5K sentences',fmt:'Parquet',node:'SentimentLabel',desc:'Financial news sentences labeled positive/negative/neutral'},
+{n:'World Happiness Report',src:'KG',id:'unsdsn/world-happiness',sz:'156 countries',fmt:'CSV',node:'HappinessIndex',desc:'Annual national wellbeing scores across 6 Cantril ladder factors'},
+{n:'US Census Economic (BigQuery)',src:'BQ',id:'bigquery-public-data.census_bureau_usa',sz:'3.3M households',fmt:'SQL',node:'CensusRecord',desc:'ACS income, employment, occupation and housing statistics'},
+{n:'CRSP / WRDS Market Data',src:'ACD',id:'wrds.wharton.upenn.edu',sz:'1926–present',fmt:'SAS / CSV',node:'EquityReturn',desc:'CRSP equity return data, the gold standard for finance research'},
+]},
+{id:'psych',name:'Psychology',icon:'ψ',color:'#D4537E',cats:['Cognitive psychology','Social psychology','Developmental psychology','Clinical & abnormal','Neuropsychology','Personality','Psychometrics','Behavioral economics overlap'],ds:[
+{n:'Implicit Association Tests',src:'ACD',id:'implicit.harvard.edu/implicit',sz:'4M+ participants',fmt:'CSV',node:'IATRecord',desc:'Project Implicit: implicit bias across race, gender, age'},
+{n:'YouGov Psychographics',src:'YOUGOV',id:'yougov.com/topics/consumer',sz:'350K+ respondents',fmt:'API / CSV',node:'Survey',desc:'Brand affinity, personality type and lifestyle segmentation'},
+{n:'Big Five Personality (Kaggle)',src:'KG',id:'kaggle/big-five-personality-test',sz:'1M+ responses',fmt:'CSV',node:'PersonalityScore',desc:'IPIP Big Five OCEAN assessments at scale'},
+{n:'MIDUS Longitudinal Study',src:'ACD',id:'midus.wisc.edu',sz:'7K participants',fmt:'SAS / Stata',node:'LongitudinalRecord',desc:'Midlife in the US: wellbeing, cognition, biomarkers over 25yr'},
+{n:'UK Biobank Mental Health',src:'GOV',id:'ukbiobank.ac.uk',sz:'157K subjects',fmt:'BGEN / CSV',node:'MHRecord',desc:'Mental health online follow-up with imaging linkage'},
+{n:'ABIDE Autism fMRI',src:'ACD',id:'fcon_1000.projects.nitrc.org/indi/abide',sz:'1K+ subjects',fmt:'NIfTI',node:'fMRIScan',desc:'Resting-state fMRI in autism spectrum disorder across 17 sites'},
+{n:'EEG Brainwave Dataset',src:'KG',id:'kaggle/eeg-brainwave-dataset-mental-state',sz:'400+ trials',fmt:'EDF / CSV',node:'EEGSignal',desc:'EEG recordings across relaxed, neutral and concentrating states'},
+{n:'Emotion Dataset (HF)',src:'HF',id:'dair-ai/emotion',sz:'20K utterances',fmt:'Parquet',node:'EmotionLabel',desc:'Twitter text labeled with 6 emotions (joy, sadness, anger…)'},
+{n:'APA PsycINFO',src:'ACD',id:'apa.org/pubs/databases/psycinfo',sz:'5M+ records',fmt:'RIS / BIB',node:'PsychPaper',desc:'Comprehensive psychology literature index since 1887'},
+{n:'Mental Health Corpus',src:'KG',id:'kaggle/mental-health-corpus',sz:'30K posts',fmt:'CSV',node:'SocialPost',desc:'Reddit mental health community posts with diagnostic labels'},
+]},
+{id:'soc',name:'Sociology',icon:'◎',color:'#5F5E5A',cats:['Social stratification','Demography','Race & ethnicity','Gender & family','Urban sociology','Social networks','Migration','Culture & religion'],ds:[
+{n:'US Census ACS (BigQuery)',src:'BQ',id:'bigquery-public-data.census_bureau_usa',sz:'3.3M households/yr',fmt:'SQL',node:'HouseholdRecord',desc:'American Community Survey social, economic, housing variables'},
+{n:'General Social Survey',src:'ACD',id:'gss.norc.org',sz:'1972–present',fmt:'Stata / SPSS',node:'SurveyWave',desc:'Flagship US sociological longitudinal survey, 50+ years'},
+{n:'World Values Survey',src:'ACD',id:'worldvaluessurvey.org',sz:'100+ countries',fmt:'SPSS / CSV',node:'ValuesRecord',desc:'Cross-national survey of beliefs, values and life satisfaction'},
+{n:'YouGov Social Surveys',src:'YOUGOV',id:'yougov.com/topics/society',sz:'Ongoing',fmt:'API / CSV',node:'Survey',desc:'UK and US social attitudes, demographics, life events'},
+{n:'Pew Research Center Data',src:'ACD',id:'pewresearch.org/datasets',sz:'500+ datasets',fmt:'SPSS / CSV',node:'PublicOpinion',desc:'Social trends, religion, news consumption, international'},
+{n:'European Social Survey',src:'GOV',id:'europeansocialsurvey.org',sz:'40K resp/wave',fmt:'Stata / CSV',node:'ESSSurvey',desc:'Cross-national biennial survey, 38 countries, 10 rounds'},
+{n:'IPUMS International Census',src:'ACD',id:'ipums.org/international',sz:'1.4B+ persons',fmt:'Fixed / CSV',node:'CensusRecord',desc:'Harmonized census microdata for 100+ countries since 1960'},
+{n:'OECD Better Life Index',src:'GOV',id:'stats.oecd.org/BLI',sz:'40 countries',fmt:'CSV / JSON',node:'WellbeingIndex',desc:'11 dimensions of wellbeing: housing, income, jobs, community'},
+{n:'Migration Data Portal',src:'GOV',id:'migrationdataportal.org',sz:'200+ indicators',fmt:'CSV / API',node:'MigrationStat',desc:'International migration stocks, flows and forced displacement'},
+{n:'Reddit Pushshift Corpus',src:'HF',id:'reddit',sz:'800M+ posts',fmt:'JSONL / Parquet',node:'SocialPost',desc:'Reddit submissions and comments — social discussion at scale'},
+]},
+{id:'crime',name:'Criminology & Justice',icon:'§',color:'#A32D2D',cats:['Crime statistics','Criminal justice system','Terrorism & extremism','Cybercrime','Policing & use of force','Incarceration & recidivism','Forensic science','Victimology'],ds:[
+{n:'Chicago Crime (BigQuery)',src:'BQ',id:'bigquery-public-data.chicago_crime',sz:'8M+ incidents',fmt:'SQL',node:'CrimeIncident',desc:'Chicago Police incident reports with location, 2001–present'},
+{n:'FBI NIBRS Crime Data',src:'GOV',id:'ucr.fbi.gov/nibrs',sz:'12M incidents/yr',fmt:'CSV / API',node:'CrimeRecord',desc:'National Incident-Based Reporting System — offense, victim, offender'},
+{n:'BJS Justice Statistics',src:'GOV',id:'bjs.ojp.gov',sz:'50+ surveys',fmt:'CSV / SAS',node:'JusticeStat',desc:'Incarceration counts, court filings, victimization surveys'},
+{n:'UK Police Street Data',src:'GOV',id:'data.police.uk',sz:'10M+ records',fmt:'CSV / API',node:'PoliceRecord',desc:'UK street-level crime, outcomes, and stop-and-search data'},
+{n:'Global Terrorism Database',src:'KG',id:'start.umd.edu/gtd',sz:'200K+ attacks',fmt:'CSV',node:'TerrorEvent',desc:'GTD: terrorist incidents 1970–2020, 100+ attributes each'},
+{n:'ICPSR Criminal Justice',src:'ACD',id:'icpsr.umich.edu',sz:'1K+ datasets',fmt:'Stata / SAS',node:'StudyRecord',desc:'Archived CJ research studies, codebooks, replications'},
+{n:'HateSpeech18',src:'HF',id:'hate_speech18',sz:'10K posts',fmt:'Parquet',node:'TextLabel',desc:'Stormfront forum posts labeled for hate speech detection'},
+{n:'Jigsaw Toxicity (Kaggle)',src:'KG',id:'jigsaw-toxic-comment-classification-challenge',sz:'160K comments',fmt:'CSV',node:'ToxicityLabel',desc:'Wikipedia comments labeled for multiple toxicity types'},
+{n:'ProPublica COMPAS Data',src:'ACD',id:'propublica.org/datastore/dataset/compas-recidivism-risk-score-data-and-analysis',sz:'7K defendants',fmt:'CSV',node:'RecidivismRecord',desc:'Broward County criminal records with COMPAS risk scores'},
+{n:'UNODC Crime Statistics',src:'GOV',id:'unodc.org/unodc/en/data-and-analysis',sz:'190+ countries',fmt:'CSV / Excel',node:'CrimeStat',desc:'International homicide, drug, trafficking and corruption data'},
+]},
+{id:'pol',name:'Political Science',icon:'◈',color:'#185FA5',cats:['Electoral systems','Political economy','International relations','Comparative politics','Public opinion','Legislative behavior','Political parties','Foreign policy & conflict'],ds:[
+{n:'YouGov Political Polls',src:'YOUGOV',id:'yougov.com/topics/politics',sz:'Ongoing',fmt:'API / CSV',node:'PollWave',desc:'US, UK, and international political polling and voting intention'},
+{n:'FEC Campaign Finance',src:'GOV',id:'fec.gov/data',sz:'200M+ records',fmt:'CSV / JSON',node:'Contribution',desc:'All US federal campaign contributions and expenditures'},
+{n:'Congressional Record',src:'GOV',id:'congress.gov/congressional-record',sz:'1873–present',fmt:'XML / TXT',node:'LegislativeText',desc:'Full text of US Congressional proceedings and debates'},
+{n:'V-Dem Dataset',src:'ACD',id:'v-dem.net',sz:'202 countries',fmt:'CSV / RData',node:'DemocracyScore',desc:'500+ democracy indicators from 1789 to present — gold standard'},
+{n:'Polity5',src:'ACD',id:'systemicpeace.org/polity',sz:'167 countries',fmt:'Excel / CSV',node:'PolityScore',desc:'Regime authority characteristics 1800–2018, autocracy-democracy axis'},
+{n:'Comparative Manifesto Project',src:'ACD',id:'manifesto-project.wzb.eu',sz:'50+ countries',fmt:'CSV / R',node:'PartyManifesto',desc:'Coded political party manifestos, 1945–present, 56 categories'},
+{n:'UNGA Voting Records',src:'GOV',id:'unbisnet.un.org',sz:'90K+ resolutions',fmt:'CSV / API',node:'VoteRecord',desc:'UN General Assembly voting history for all member states'},
+{n:'ACLED Conflict Data',src:'ACD',id:'acleddata.com',sz:'2M+ events',fmt:'CSV / API',node:'ConflictEvent',desc:'Armed conflict and protest events worldwide, 1997–present'},
+{n:'MIT Election Lab',src:'ACD',id:'electionlab.mit.edu/data',sz:'120+ datasets',fmt:'CSV',node:'ElectionResult',desc:'US election returns at precinct level, validated and harmonized'},
+{n:'Manifesto Political Speech',src:'HF',id:'joelito/political_speeches_and_books',sz:'150K+ texts',fmt:'Parquet',node:'PoliticalText',desc:'Speeches, manifestos, and political books in multiple languages'},
+]},
+{id:'earth',name:'Earth & Environmental',icon:'●',color:'#0F6E56',cats:['Climatology','Geophysics','Oceanography','Ecology','Atmospheric science','Hydrology','Geology & mineralogy','Biodiversity & conservation'],ds:[
+{n:'NOAA ISD Weather (BigQuery)',src:'BQ',id:'bigquery-public-data.noaa_isd_history',sz:'2B+ observations',fmt:'SQL',node:'WeatherStation',desc:'Global hourly surface observations from 35K+ stations'},
+{n:'EPA Air Quality (BigQuery)',src:'BQ',id:'bigquery-public-data.epa_historical_air_quality',sz:'100M+ rows',fmt:'SQL',node:'AQMeasure',desc:'US PM2.5, ozone, NO2 and CO measurements since 1980'},
+{n:'NASA EarthData',src:'GOV',id:'earthdata.nasa.gov',sz:'PB-scale',fmt:'HDF5 / NetCDF',node:'SatelliteObs',desc:'MODIS, Landsat, ASTER, OCO-2 satellite Earth observations'},
+{n:'USGS Earthquake Catalog',src:'GOV',id:'earthquake.usgs.gov/earthquakes',sz:'3M+ events',fmt:'JSON / CSV',node:'SeismicEvent',desc:'Global seismic event catalog — magnitude, depth, location'},
+{n:'Copernicus Climate Store',src:'GOV',id:'cds.climate.copernicus.eu',sz:'PB-scale',fmt:'NetCDF / GRIB',node:'ClimateModel',desc:'ERA5 reanalysis hourly data since 1940 — the standard for climate'},
+{n:'OBIS Ocean Biodiversity',src:'ACD',id:'obis.org',sz:'120M+ records',fmt:'DwC-A / CSV',node:'MarineObs',desc:'Ocean biodiversity species occurrence data, 120K datasets'},
+{n:'Global Forest Watch',src:'ACD',id:'globalforestwatch.org',sz:'2000–present',fmt:'GeoTIFF / API',node:'ForestLoss',desc:'Annual tree cover loss and gain globally at 30m resolution'},
+{n:'IPCC AR6 Climate Data',src:'GOV',id:'ipcc-data.org',sz:'200+ scenarios',fmt:'NetCDF / CSV',node:'ClimateScenario',desc:'AR6 SSP emissions pathways and climate model projections'},
+{n:'Berkeley Earth Temperatures',src:'KG',id:'berkeleyearth/climate-change',sz:'260+ years',fmt:'CSV',node:'TempRecord',desc:'Global land and ocean temperature anomaly reconstructions'},
+{n:'USGS National Water Data',src:'GOV',id:'waterdata.usgs.gov/nwis',sz:'150K+ gauges',fmt:'REST / CSV',node:'StreamflowObs',desc:'Streamflow, groundwater level and water quality observations'},
+{n:'ESA Biodiversity Data',src:'GOV',id:'biodiversity.europa.eu',sz:'8M+ records',fmt:'GeoJSON / CSV',node:'HabitatRecord',desc:'EU habitat types, species distributions, and protected areas'},
+]},
+{id:'ling',name:'Linguistics & NLP',icon:'Λ',color:'#534AB7',cats:['Computational linguistics','Morphology & syntax','Semantics & pragmatics','Phonetics & phonology','Historical linguistics','Sociolinguistics','Language acquisition','Translation & multilingual'],ds:[
+{n:'Wikipedia (330 languages)',src:'HF',id:'wikimedia/wikipedia',sz:'330 languages',fmt:'Parquet',node:'Article',desc:'Wikipedia articles with wikitext, sections and categories'},
+{n:'OPUS Parallel Corpora',src:'ACD',id:'opus.nlpl.eu',sz:'90 languages',fmt:'TMX / XML',node:'SentencePair',desc:'Parallel sentence pairs for MT: legal, medical, subtitle domains'},
+{n:'Universal Dependencies',src:'ACD',id:'universaldependencies.org',sz:'100+ languages',fmt:'CoNLL-U',node:'ParseTree',desc:'Manually annotated treebanks — the standard for syntax parsing'},
+{n:'FLORES-200',src:'HF',id:'facebook/flores',sz:'200 languages',fmt:'Parquet',node:'Translation',desc:'Evaluation benchmark across 200 languages including low-resource'},
+{n:'Multilingual C4',src:'HF',id:'allenai/c4',sz:'101 languages',fmt:'JSONL',node:'WebDocument',desc:'mC4 — cleaned web text in 101 languages with language ID'},
+{n:'WordNet (Princeton)',src:'ACD',id:'wordnet.princeton.edu',sz:'155K synsets',fmt:'XML / LMF',node:'Synset',desc:'English lexical database with synonym sets and semantic relations'},
+{n:'Linguistic Data Consortium',src:'ACD',id:'ldc.upenn.edu',sz:'700+ corpora',fmt:'Various',node:'Corpus',desc:'Penn Treebank, OntoNotes, AMR, MUC, TimeBank and 700+ corpora'},
+{n:'Wikidata',src:'HF',id:'wikimedia/wikidata',sz:'100M+ entities',fmt:'JSON',node:'KGEntity',desc:'Structured knowledge base with 9,000+ property types, 300 languages'},
+{n:'CCNet Deduplicated',src:'HF',id:'facebook/cc_net',sz:'100+ languages',fmt:'JSONL / GZ',node:'WebDocument',desc:'Perplexity-filtered Common Crawl — quality-stratified web text'},
+{n:'BooksCorpus',src:'HF',id:'bookcorpus/bookcorpus',sz:'11K books',fmt:'TXT',node:'Book',desc:'Unpublished novels from Smashwords — used for BERT pre-training'},
+{n:'FLORES+ / NLLB',src:'HF',id:'facebook/flores',sz:'200 languages',fmt:'Parquet',node:'LowResourceText',desc:'No Language Left Behind: 200-language translation benchmark'},
+]}
+];
+
+let activeFilters=new Set(), searchQ='', allExpanded=false;
+
+function bHtml(src){const s=SOURCES[src];return `<span style="font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;white-space:nowrap;background:${s.bg};color:${s.fg};border:${s.brd||'none'}">${s.label}</span>`;}
+
+function applyFilters(){
+  searchQ=document.getElementById('q').value.toLowerCase();
+  DOMAINS.forEach(dom=>{
+    let vis=0;
+    dom.ds.forEach((ds,i)=>{
+      const row=document.getElementById(`ds-${dom.id}-${i}`);
+      const mSrc=activeFilters.size===0||activeFilters.has(ds.src);
+      const mQ=!searchQ||[ds.n,ds.id,ds.desc,ds.node,dom.name].some(s=>s.toLowerCase().includes(searchQ));
+      const show=mSrc&&mQ;
+      if(row)row.style.display=show?'':'none';
+      if(show)vis++;
+    });
+    const card=document.getElementById(`dom-${dom.id}`);
+    if(card)card.style.display=(vis===0&&(activeFilters.size>0||searchQ))?'none':'';
+    const badge=document.getElementById(`cnt-${dom.id}`);
+    if(badge)badge.textContent=(vis<dom.ds.length?vis+'/':'')+dom.ds.length+' datasets';
+    if(searchQ&&vis>0){const body=document.getElementById(`body-${dom.id}`);if(body)body.style.display='block';document.getElementById(`arr-${dom.id}`).textContent='▼';}
+  });
+}
+
+function toggleExpand(id){
+  const body=document.getElementById(`body-${id}`);
+  const arr=document.getElementById(`arr-${id}`);
+  const open=body.style.display!=='none'&&body.style.display!=='';
+  body.style.display=open?'none':'block';
+  arr.textContent=open?'▶':'▼';
+}
+
+function toggleAll(){
+  allExpanded=!allExpanded;
+  DOMAINS.forEach(d=>{
+    const body=document.getElementById(`body-${d.id}`);
+    const arr=document.getElementById(`arr-${d.id}`);
+    if(body){body.style.display=allExpanded?'block':'none';}
+    if(arr)arr.textContent=allExpanded?'▼':'▶';
+  });
+  document.getElementById('expand-btn').textContent=allExpanded?'Collapse all':'Expand all';
+}
+
+function toggleFilter(src){
+  if(activeFilters.has(src))activeFilters.delete(src);else activeFilters.add(src);
+  Object.keys(SOURCES).forEach(s=>{
+    const btn=document.getElementById(`flt-${s}`);
+    if(btn)btn.style.opacity=(activeFilters.size===0||activeFilters.has(s))?'1':'0.35';
+  });
+  applyFilters();
+}
+
+function exportDomain(id){
+  const dom=DOMAINS.find(d=>d.id===id);
+  const out=JSON.stringify({domain:dom.name,id:dom.id,categories:dom.cats,datasets:dom.ds.map(ds=>({name:ds.n,source:SOURCES[ds.src].label,identifier:ds.id,scale:ds.sz,format:ds.fmt,kg_node_type:ds.node,description:ds.desc}))},null,2);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'application/json'}));a.download=`kg-ingress-${id}.json`;a.click();
+}
+
+function exportAll(){
+  const out=JSON.stringify({title:'Library of Alexandria — KG Ingress ToC',generated:new Date().toISOString(),total_datasets:DOMAINS.reduce((a,d)=>a+d.ds.length,0),total_domains:DOMAINS.length,domains:DOMAINS.map(dom=>({id:dom.id,name:dom.name,categories:dom.cats,datasets:dom.ds.map(ds=>({name:ds.n,source:SOURCES[ds.src].label,identifier:ds.id,scale:ds.sz,format:ds.fmt,kg_node_type:ds.node,description:ds.desc}))}))},null,2);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'application/json'}));a.download='kg-ingress-library-of-alexandria.json';a.click();
+}
+
+function renderDomain(dom){
+  const catPreview=dom.cats.slice(0,4).join(' · ');
+  const dsRows=dom.ds.map((ds,i)=>`
+<tr id="ds-${dom.id}-${i}" onmouseenter="this.style.background='var(--color-background-secondary)'" onmouseleave="this.style.background=''">
+<td style="padding:8px 1rem;border-bottom:0.5px solid var(--color-border-tertiary)">
+<div style="font-size:13px;font-weight:500;margin-bottom:2px">${ds.n}</div>
+<div style="font-size:11px;color:var(--color-text-secondary)">${ds.desc}</div>
+</td>
+<td style="padding:8px;vertical-align:top;border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap">${bHtml(ds.src)}</td>
+<td style="padding:8px;vertical-align:top;border-bottom:0.5px solid var(--color-border-tertiary)"><code style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:2px 5px;border-radius:3px">${ds.id}</code></td>
+<td style="padding:8px;vertical-align:top;border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap;font-size:11px;color:var(--color-text-secondary)">${ds.sz}</td>
+<td style="padding:8px;vertical-align:top;border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap;font-size:11px;color:var(--color-text-secondary)">${ds.fmt}</td>
+<td style="padding:8px 1rem 8px 8px;vertical-align:top;border-bottom:0.5px solid var(--color-border-tertiary)"><code style="font-family:var(--font-mono);font-size:10px;color:${dom.color};background:var(--color-background-secondary);padding:2px 5px;border-radius:3px;border:0.5px solid ${dom.color}55">${ds.node}</code></td>
+</tr>`).join('');
+
+return `<div id="dom-${dom.id}" style="border:0.5px solid var(--color-border-tertiary);border-left:3px solid ${dom.color};border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary);margin-bottom:8px">
+<div onclick="toggleExpand('${dom.id}')" style="display:flex;align-items:center;gap:12px;padding:0.875rem 1rem;cursor:pointer;user-select:none">
+<div style="width:34px;height:34px;border-radius:8px;background:${dom.color}20;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:${dom.color};flex-shrink:0">${dom.icon}</div>
+<div style="flex:1;min-width:0">
+<div style="font-size:14px;font-weight:500;margin-bottom:2px">${dom.name}</div>
+<div style="font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${catPreview} …</div>
+</div>
+<span id="cnt-${dom.id}" style="font-size:11px;color:var(--color-text-secondary);white-space:nowrap;flex-shrink:0;margin-right:8px">${dom.ds.length} datasets</span>
+<span id="arr-${dom.id}" style="color:var(--color-text-tertiary);font-size:11px;flex-shrink:0">▶</span>
+</div>
+<div id="body-${dom.id}" style="display:none;border-top:0.5px solid var(--color-border-tertiary)">
+<div style="padding:0.75rem 1rem 0.5rem">
+<p style="font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:0.05em;margin-bottom:6px">SUBJECT AREAS</p>
+<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem">${dom.cats.map(c=>`<span style="font-size:11px;padding:3px 9px;border-radius:12px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary)">${c}</span>`).join('')}</div>
+<p style="font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:0.05em;margin-bottom:6px">INDEXED DATASETS</p>
+</div>
+<div style="overflow-x:auto">
+<table style="width:100%;border-collapse:collapse;font-size:12px">
+<thead><tr style="border-bottom:0.5px solid var(--color-border-secondary)">
+<th style="text-align:left;padding:5px 1rem;font-weight:500;font-size:10px;color:var(--color-text-tertiary);letter-spacing:0.04em">DATASET</th>
+<th style="text-align:left;padding:5px 8px;font-weight:500;font-size:10px;color:var(--color-text-tertiary);letter-spacing:0.04em">SOURCE</th>
+<th style="text-align:left;padding:5px 8px;font-weight:500;font-size:10px;color:var(--color-text-tertiary);letter-spacing:0.04em">IDENTIFIER / PATH</th>
+<th style="text-align:left;padding:5px 8px;font-weight:500;font-size:10px;color:var(--color-text-tertiary);letter-spacing:0.04em">SCALE</th>
+<th style="text-align:left;padding:5px 8px;font-weight:500;font-size:10px;color:var(--color-text-tertiary);letter-spacing:0.04em">FORMAT</th>
+<th style="text-align:left;padding:5px 1rem 5px 8px;font-weight:500;font-size:10px;color:var(--color-text-tertiary);letter-spacing:0.04em">KG NODE TYPE</th>
+</tr></thead>
+<tbody>${dsRows}</tbody>
+</table>
+</div>
+<div style="padding:0.75rem 1rem;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:0.5px solid var(--color-border-tertiary)">
+<button onclick="sendPrompt('Design a full KG schema for the ${dom.name} domain: node types, edge types, properties, and ingestion strategy for the datasets in the ingress ToC')" style="font-size:12px">Generate KG schema ↗</button>
+<button onclick="exportDomain('${dom.id}')" style="font-size:12px">Export domain JSON ↗</button>
+<span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">${dom.ds.length} datasets · ${dom.cats.length} subject areas</span>
+</div>
+</div>
+</div>`;
+}
+
+// Init
+const totalDS=DOMAINS.reduce((a,d)=>a+d.ds.length,0);
+const totalCats=DOMAINS.reduce((a,d)=>a+d.cats.length,0);
+document.getElementById('stats-row').innerHTML=[
+{n:DOMAINS.length,l:'knowledge domains'},
+{n:totalDS,l:'indexed datasets'},
+{n:Object.keys(SOURCES).length,l:'source types'},
+{n:totalCats,l:'subject categories'},
+{n:'PB+',l:'estimated data scale'},
+].map(s=>`<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:0.5rem 0.875rem;min-width:90px"><div style="font-size:20px;font-weight:500">${s.n}</div><div style="font-size:11px;color:var(--color-text-secondary)">${s.l}</div></div>`).join('');
+
+document.getElementById('src-filters').innerHTML=Object.entries(SOURCES).map(([k,s])=>`<button id="flt-${k}" onclick="toggleFilter('${k}')" style="font-size:11px;padding:4px 10px;background:${s.bg};color:${s.fg};border:${s.brd||'0.5px solid transparent'};border-radius:var(--border-radius-md)">${s.label}</button>`).join('');
+
+document.getElementById('domain-list').innerHTML=DOMAINS.map(renderDomain).join('');
+</script>

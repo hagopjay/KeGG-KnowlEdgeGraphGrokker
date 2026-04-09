@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apache Flink Masterclass — Stateful Stream Processing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Share+Tech+Mono&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --magma:    #0f0906;
+  --magma2:   #160d09;
+  --magma3:   #1e1208;
+  --magma4:   #28170a;
+  --magma5:   #341e0d;
+  --crim:     #e8360a;
+  --crim2:    #c42d08;
+  --crim3:    #ff4d22;
+  --crim-dim: #3d0e03;
+  --amber:    #f5a623;
+  --amber2:   #ffc147;
+  --amb-dim:  #3a2200;
+  --teal:     #00c9a7;
+  --teal2:    #00f0c8;
+  --teal-dim: #002a22;
+  --gold:     #ffd166;
+  --gold-dim: #332800;
+  --slate:    #4a90b8;
+  --slate-dim:#0a1e2a;
+  --border:   rgba(232,54,10,0.18);
+  --border2:  rgba(232,54,10,0.08);
+  --text:     #e8ddd5;
+  --text2:    #9a8878;
+  --text3:    #4a3828;
+  --mono:     'Share Tech Mono', monospace;
+  --sans:     'Nunito', sans-serif;
+  --display:  'Syncopate', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--magma);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── LAVA FLOW BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(232,54,10,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(245,166,35,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(232,54,10,0.08) 0%, transparent 40%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(232,54,10,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232,54,10,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(15,9,6,0.96);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 1500px; margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex; align-items: center; gap: 0; height: 54px;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  padding-right: 2rem; border-right: 1px solid var(--border);
+  flex-shrink: 0; margin-right: 1.5rem;
+}
+.logo-mark {
+  width: 34px; height: 34px;
+  background: var(--crim-dim);
+  border: 1.5px solid var(--crim2);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.logo-mark::before {
+  content: '⚡';
+  font-size: 1rem;
+  position: relative; z-index: 1;
+  animation: zap 2.4s ease-in-out infinite;
+}
+@keyframes zap { 0%,90%,100%{opacity:1;transform:scale(1)} 92%{opacity:0.4;transform:scale(0.9)} 94%{opacity:1;transform:scale(1.1)} 96%{opacity:0.6;transform:scale(0.95)} }
+.logo-text {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--crim3);
+  letter-spacing: 0.18em;
+  line-height: 1;
+}
+.logo-sub {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  color: var(--text3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+nav {
+  display: flex; align-items: stretch;
+  overflow-x: auto; scrollbar-width: none; flex: 1; gap: 0;
+}
+nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  background: none; border: none;
+  border-right: 1px solid var(--border2);
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 0 1.1rem;
+  cursor: pointer; white-space: nowrap;
+  height: 54px; transition: all 0.12s;
+  text-transform: uppercase; position: relative;
+}
+.nav-btn::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: var(--crim); transform: scaleX(0); transition: transform 0.15s;
+}
+.nav-btn:hover { color: var(--amber); background: rgba(232,54,10,0.04); }
+.nav-btn:hover::after { transform: scaleX(1); background: var(--amber); }
+.nav-btn.active { color: var(--crim3); background: var(--crim-dim); }
+.nav-btn.active::after { transform: scaleX(1); }
+.hdr-badge {
+  flex-shrink: 0; margin-left: auto; padding-left: 1.5rem;
+  border-left: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.ver-tag {
+  font-family: var(--mono); font-size: 0.62rem;
+  background: var(--crim-dim); border: 1px solid var(--crim2);
+  color: var(--crim3); padding: 3px 9px; letter-spacing: 0.06em;
+}
+
+/* ── LAYOUT ── */
+.wrapper { max-width: 1500px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+section { display: none; animation: fadeIn 0.22s ease; }
+section.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── SECTION HEADER ── */
+.section-header { margin-bottom: 2rem; }
+.section-eyebrow {
+  font-family: var(--mono); font-size: 0.62rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--crim); margin-bottom: 0.4rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.section-eyebrow::before { content: '//'; color: var(--crim2); }
+.section-title {
+  font-family: var(--display); font-size: 2.6rem; font-weight: 700;
+  letter-spacing: 0.08em; line-height: 1; color: var(--text); margin-bottom: 0.6rem;
+}
+.section-title em { color: var(--crim3); font-style: normal; }
+.section-sub { color: var(--text2); font-size: 0.88rem; max-width: 780px; line-height: 1.75; font-weight: 300; }
+.section-rule { height: 1px; background: linear-gradient(90deg, var(--crim), rgba(232,54,10,0.15), transparent); margin: 1.25rem 0 2rem; }
+
+/* ── GRIDS ── */
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+.g12 { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+@media(max-width:960px){.g2,.g3,.g12,.g21{grid-template-columns:1fr}}
+
+/* ── CARDS ── */
+.card {
+  background: var(--magma2); border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem; position: relative;
+  transition: border-color 0.15s;
+}
+.card:hover { border-color: rgba(232,54,10,0.35); }
+.card-label {
+  font-family: var(--mono); font-size: 0.6rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--crim); margin-bottom: 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.card-label::before { content: '▸'; }
+
+/* ── CODE ── */
+.code-wrap { background: #07040200; border: 1px solid var(--border); margin: 1rem 0; overflow: hidden; background: rgba(0,0,0,0.5); }
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--magma3); border-bottom: 1px solid var(--border);
+  padding: 0.4rem 1rem;
+}
+.code-fname { font-family: var(--mono); font-size: 0.67rem; color: var(--text2); }
+.code-lang {
+  font-family: var(--mono); font-size: 0.6rem; color: var(--crim3);
+  background: var(--crim-dim); border: 1px solid rgba(232,54,10,0.25);
+  padding: 1px 7px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+pre {
+  padding: 1.1rem 1.25rem; overflow-x: auto;
+  font-family: var(--mono); font-size: 0.79rem; line-height: 1.8;
+  color: #c8bdb5; tab-size: 2;
+  scrollbar-width: thin; scrollbar-color: var(--magma4) transparent;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--magma4); }
+
+/* Syntax */
+.kw  { color: #ff7055; }
+.fn  { color: #60cce0; }
+.st  { color: #b8e060; }
+.cm  { color: #4a3828; font-style: italic; }
+.jj  { color: var(--amber); }
+.nm  { color: #d080e8; }
+.op  { color: var(--teal); }
+.nu  { color: #f0a860; }
+.dc  { color: var(--teal); }
+.py  { color: var(--amber); font-weight: 700; }
+.ty  { color: #70e8a0; }
+.an  { color: var(--crim3); font-style: italic; } /* annotations */
+.ch  { color: #60b8e8; }
+
+/* ── CALLOUTS ── */
+.callout {
+  border-left: 2px solid; padding: 0.85rem 1rem; margin: 1rem 0;
+  font-size: 0.87rem; line-height: 1.65;
+}
+.callout strong {
+  display: block; font-family: var(--mono); font-size: 0.63rem;
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.3rem;
+}
+.c-crim   { border-color: var(--crim2);  background: rgba(232,54,10,0.06);  color: var(--crim3);  }
+.c-amber  { border-color: var(--amber);  background: rgba(245,166,35,0.06); color: var(--amber);  }
+.c-teal   { border-color: var(--teal);   background: rgba(0,201,167,0.06);  color: var(--teal);   }
+.c-gold   { border-color: var(--gold);   background: rgba(255,209,102,0.06);color: var(--gold);   }
+.c-slate  { border-color: var(--slate);  background: rgba(74,144,184,0.06); color: var(--slate);  }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 0.6rem;
+  padding: 2px 7px; letter-spacing: 0.06em; border: 1px solid;
+}
+.b-crim  { background: var(--crim-dim);  color: var(--crim3); border-color: rgba(232,54,10,0.3); }
+.b-amber { background: var(--amb-dim);   color: var(--amber); border-color: rgba(245,166,35,0.3);}
+.b-teal  { background: var(--teal-dim);  color: var(--teal);  border-color: rgba(0,201,167,0.3); }
+.b-gold  { background: var(--gold-dim);  color: var(--gold);  border-color: rgba(255,209,102,0.3);}
+.b-slate { background: var(--slate-dim); color: var(--slate); border-color: rgba(74,144,184,0.3);}
+
+/* ── TABLES ── */
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+th {
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--crim3);
+  border-bottom: 1px solid var(--border); padding: 0.5rem 0.85rem;
+  text-align: left; background: var(--magma3);
+}
+td { padding: 0.55rem 0.85rem; border-bottom: 1px solid var(--border2); vertical-align: top; color: var(--text2); }
+tr:last-child td { border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(232,54,10,0.04); }
+td:first-child { color: var(--text); font-family: var(--mono); font-size: 0.78rem; }
+td code, p code, li code, span code {
+  font-family: var(--mono); font-size: 0.8em;
+  background: var(--magma3); border: 1px solid var(--border);
+  padding: 0 4px; color: var(--teal);
+}
+
+/* ── PILLS / TABS ── */
+.pills { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.pill {
+  font-family: var(--mono); font-size: 0.67rem; padding: 0.35rem 0.9rem;
+  cursor: pointer; border: 1px solid var(--border);
+  background: none; color: var(--text3);
+  transition: all 0.12s; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.pill:hover { border-color: var(--crim); color: var(--crim3); }
+.pill.active { background: var(--crim-dim); border-color: var(--crim); color: var(--crim3); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── STAT STRIP ── */
+.stat-strip {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr));
+  border: 1px solid var(--border); margin-bottom: 2rem; background: var(--magma2);
+}
+.stat {
+  padding: 1.1rem 1rem; text-align: center;
+  border-right: 1px solid var(--border); transition: background 0.15s;
+}
+.stat:last-child { border-right: none; }
+.stat:hover { background: var(--magma3); }
+.stat-num { font-family: var(--display); font-size: 1.9rem; font-weight: 700; line-height: 1; margin-bottom: 0.2rem; letter-spacing: 0.04em; }
+.stat-label { font-family: var(--mono); font-size: 0.58rem; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── OPERATOR NODE ── */
+.op-row { display: flex; align-items: center; gap: 6px; margin: 4px 0; flex-wrap: wrap; }
+.op-box {
+  padding: 6px 14px; border: 1px solid; font-family: var(--mono);
+  font-size: 0.72rem; display: inline-flex; align-items: center; gap: 6px;
+  transition: all 0.15s; white-space: nowrap;
+}
+.op-box:hover { transform: translateY(-1px); }
+.ob-source { background: var(--teal-dim);  border-color: var(--teal);   color: var(--teal);  }
+.ob-map    { background: var(--amb-dim);   border-color: var(--amber);  color: var(--amber); }
+.ob-filter { background: var(--crim-dim);  border-color: var(--crim2);  color: var(--crim3); }
+.ob-key    { background: var(--gold-dim);  border-color: var(--gold);   color: var(--gold);  }
+.ob-window { background: var(--slate-dim); border-color: var(--slate);  color: var(--slate); }
+.ob-agg    { background: rgba(208,80,232,0.12); border-color: #d050e8; color: #d050e8; }
+.ob-sink   { background: var(--magma4);    border-color: var(--text3);  color: var(--text2); }
+.ob-state  { background: rgba(255,209,102,0.12); border-color: var(--gold); color: var(--gold); }
+.op-arr { color: var(--text3); font-family: var(--mono); font-size: 0.85rem; flex-shrink: 0; }
+.op-note { font-family: var(--mono); font-size: 0.62rem; color: var(--text3); }
+
+/* ── WATERMARK TIMELINE ── */
+.wm-track {
+  background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+  padding: 1rem; margin: 1rem 0; overflow-x: auto;
+}
+.wm-row { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 0.5rem; min-width: 600px; }
+.wm-event {
+  width: 36px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.wm-bubble {
+  width: 32px; height: 32px; border: 1px solid; border-radius: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 700;
+  transition: all 0.15s; cursor: default; flex-shrink: 0;
+}
+.wm-bubble:hover { transform: scale(1.1); }
+.wm-ts { font-family: var(--mono); font-size: 0.52rem; color: var(--text3); text-align: center; }
+.wmb-in-order   { background: var(--teal-dim);   border-color: var(--teal);  color: var(--teal);  }
+.wmb-late       { background: var(--crim-dim);    border-color: var(--crim2); color: var(--crim3); }
+.wmb-watermark  { background: var(--amb-dim);     border-color: var(--amber); color: var(--amber); width: 48px; height: 28px; }
+.wmb-allowed    { background: rgba(245,166,35,0.1); border-color: rgba(245,166,35,0.3); color: var(--text3); }
+.wm-label { font-family: var(--mono); font-size: 0.62rem; color: var(--text2); margin-bottom: 4px; }
+
+/* ── CHECKPOINT DIAGRAM ── */
+.ckpt-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.ckpt-op {
+  padding: 5px 12px; border: 1px solid var(--border);
+  font-family: var(--mono); font-size: 0.68rem; color: var(--text2);
+  background: var(--magma3); min-width: 80px; text-align: center;
+}
+.ckpt-barrier {
+  padding: 5px 8px; border: 1px dashed var(--amber);
+  font-family: var(--mono); font-size: 0.6rem; color: var(--amber);
+  background: var(--amb-dim); letter-spacing: 0.06em;
+}
+.ckpt-state {
+  padding: 5px 10px; border: 1px solid var(--gold);
+  font-family: var(--mono); font-size: 0.6rem; color: var(--gold);
+  background: var(--gold-dim);
+}
+.ckpt-arr { color: var(--text3); font-size: 0.8rem; }
+
+/* ── COMPARISON GRID ── */
+.vs-grid {
+  display: grid; font-size: 0.8rem;
+  grid-template-columns: 180px repeat(2,1fr);
+  gap: 1px; background: var(--border); border: 1px solid var(--border);
+  margin: 1rem 0;
+}
+.vs-cell {
+  background: var(--magma2); padding: 0.65rem 0.9rem;
+  font-family: var(--mono); font-size: 0.71rem;
+}
+.vs-head { background: var(--magma4); font-weight: 700; letter-spacing: 0.06em; }
+.vs-label { color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.63rem; }
+.vs-flink { background: var(--crim-dim) !important; border-left: 2px solid var(--crim); }
+.vs-kafka { background: rgba(0,201,167,0.04) !important; }
+.vs-win  { color: var(--teal); }
+.vs-lose { color: var(--crim3); }
+.vs-tie  { color: var(--amber); }
+
+/* ── PERF ROW ── */
+.perf-row { display: grid; grid-template-columns: 200px 1fr 100px; gap: 1rem; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid var(--border2); }
+.perf-label { font-family: var(--mono); font-size: 0.73rem; color: var(--text2); }
+.perf-track { height: 7px; background: var(--magma4); border: 1px solid var(--border); overflow: hidden; }
+.perf-fill { height: 100%; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+.perf-val { font-family: var(--mono); font-size: 0.7rem; color: var(--text3); text-align: right; }
+
+/* ── SEP ── */
+.sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+.sep-fire { border-top: 1px solid; border-image: linear-gradient(90deg,var(--crim),rgba(232,54,10,0.15),transparent) 1; }
+
+/* ── TEXT ── */
+p { margin-bottom: 0.9rem; color: var(--text2); font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+h3 { font-family: var(--display); font-size: 1.4rem; font-weight: 700; letter-spacing: 0.06em; color: var(--text); margin: 1.75rem 0 0.6rem; }
+h3:first-child { margin-top: 0; }
+h4 { font-family: var(--mono); font-size: 0.72rem; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin: 1.2rem 0 0.5rem; }
+ul,ol { padding-left: 1.5rem; color: var(--text2); font-weight: 300; }
+li { margin-bottom: 0.35rem; }
+strong { color: var(--text); font-weight: 600; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--magma2); }
+::-webkit-scrollbar-thumb { background: var(--magma4); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark"></div>
+      <div>
+        <div class="logo-text">FLINK</div>
+        <div class="logo-sub">Stateful Stream Processing</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="show('arch',this)">ARCH</button>
+      <button class="nav-btn" onclick="show('datastream',this)">DATASTREAM</button>
+      <button class="nav-btn" onclick="show('watermarks',this)">WATERMARKS</button>
+      <button class="nav-btn" onclick="show('state',this)">STATE</button>
+      <button class="nav-btn" onclick="show('sql',this)">FLINK SQL</button>
+      <button class="nav-btn" onclick="show('windows',this)">WINDOWS</button>
+      <button class="nav-btn" onclick="show('eos',this)">EOS</button>
+      <button class="nav-btn" onclick="show('vs',this)">FLINK vs KAFKA</button>
+    </nav>
+    <div class="hdr-badge">
+      <div class="ver-tag">v1.19 / v2.0</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<!-- ══════════════════════════════════════════
+     SECTION 1 — ARCHITECTURE
+══════════════════════════════════════════ -->
+<section id="arch" class="active">
+  <div class="section-header">
+    <div class="section-eyebrow">Runtime Architecture</div>
+    <div class="section-title">THE STREAMING <em>ENGINE</em></div>
+    <div class="section-sub">Flink is a distributed stateful computation engine. Where Kafka moves data between systems, Flink computes on that data in motion — with stateful operators, event-time semantics, and fault-tolerant exactly-once processing baked all the way down to the execution model.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="stat-strip">
+    <div class="stat"><div class="stat-num" style="color:var(--crim3)">JM+TM</div><div class="stat-label">Job + Task Mgr</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--amber)">Slots</div><div class="stat-label">Unit of parallelism</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--teal)">Async</div><div class="stat-label">Checkpointing</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--gold)">RocksDB</div><div class="stat-label">State Backend</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--crim3)">ms</div><div class="stat-label">End-to-end Latency</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--teal)">Unified</div><div class="stat-label">Batch + Stream API</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>Cluster Topology</h3>
+      <div class="card" style="padding:1.25rem">
+        <div class="card-label">Runtime components</div>
+        <!-- Client layer -->
+        <div class="op-row">
+          <div class="op-box ob-map" style="width:100%;justify-content:center">CLIENT — submits JobGraph via REST / CLI / SDK</div>
+        </div>
+        <div class="op-row" style="justify-content:center"><div class="op-arr">↓ JobGraph</div></div>
+        <!-- JM -->
+        <div class="op-box ob-source" style="width:100%;justify-content:center">
+          JOB MANAGER — Dispatcher + ResourceManager + JobMaster
+        </div>
+        <div style="display:flex;gap:4px;margin:2px 0;font-family:var(--mono);font-size:0.62rem;color:var(--text3)">
+          <span style="flex:1;text-align:center">▸ Schedules tasks</span>
+          <span style="flex:1;text-align:center">▸ Coordinates checkpoints</span>
+          <span style="flex:1;text-align:center">▸ Recovery on failure</span>
+        </div>
+        <div class="op-row" style="justify-content:center"><div class="op-arr">↓ Deploy subtasks</div></div>
+        <!-- TMs -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <div class="op-box ob-sink" style="flex-direction:column;align-items:flex-start;gap:2px">
+            <span style="color:var(--text)">TASKMANAGER 1</span>
+            <span style="font-size:0.6rem;color:var(--text3)">Slot 1 | Slot 2 | Slot 3</span>
+            <span style="font-size:0.58rem;color:var(--teal-dim)">JVM process → threads</span>
+          </div>
+          <div class="op-box ob-sink" style="flex-direction:column;align-items:flex-start;gap:2px">
+            <span style="color:var(--text)">TASKMANAGER 2</span>
+            <span style="font-size:0.6rem;color:var(--text3)">Slot 1 | Slot 2 | Slot 3</span>
+            <span style="font-size:0.58rem;color:var(--teal-dim)">Shares JVM heap + off-heap</span>
+          </div>
+          <div class="op-box ob-sink" style="flex-direction:column;align-items:flex-start;gap:2px">
+            <span style="color:var(--text)">TASKMANAGER N</span>
+            <span style="font-size:0.6rem;color:var(--text3)">Slot 1 | Slot 2 | Slot 3</span>
+            <span style="font-size:0.58rem;color:var(--teal-dim)">RocksDB for keyed state</span>
+          </div>
+        </div>
+        <div class="op-arr" style="text-align:center;margin:4px 0">↓ Persist snapshots</div>
+        <div class="op-box ob-state" style="width:100%;justify-content:center">
+          STATE BACKEND — HDFS / S3 / GCS (checkpoint storage)
+        </div>
+      </div>
+
+      <div class="callout c-crim">
+        <strong>Slot — The Unit of Parallelism</strong>
+        Each TaskManager is a JVM process with <em>N</em> slots. A slot = a fixed slice of CPU and memory. An operator with parallelism 4 occupies 4 slots across TaskManagers. <strong>Slot sharing</strong> (default) lets different operators in the same job share a slot — enabling a full pipeline to run in one slot per TaskManager without extra scheduling overhead.
+      </div>
+    </div>
+
+    <div>
+      <h3>Execution Model: Dataflow Graph</h3>
+      <p>A Flink program compiles to a <strong>Logical Dataflow Graph</strong> (operators + streams), then to a <strong>Physical Execution Graph</strong> (parallel subtasks). Network buffers connect subtasks — data flows through them in a push model, not a pull-loop like Kafka consumers.</p>
+
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Logical → Physical execution</span><span class="code-lang">concept</span></div>
+        <pre><span class="cm">/* LOGICAL GRAPH (your code):
+   Source ──→ Map ──→ KeyBy ──→ Window ──→ Sink
+
+   PHYSICAL GRAPH (parallelism=3, what actually runs):
+   Source[0] ──→ Map[0] ──→\
+   Source[1] ──→ Map[1] ──→ KeyBy/shuffle ──→ Window[0] ──→ Sink[0]
+   Source[2] ──→ Map[2] ──→/               ──→ Window[1] ──→ Sink[1]
+                                            ──→ Window[2] ──→ Sink[2]
+
+   NETWORK SHUFFLE: KeyBy routes each record to exactly one
+   downstream subtask based on hash(key) % parallelism.
+   This is the only place data crosses thread/network boundaries.
+
+   FORWARD CHANNELS: Source→Map (same parallelism) use direct
+   buffer handoff — zero serialization, zero network copy.
+*/</span>
+
+<span class="cm">// Configure execution mode:</span>
+<span class="ty">StreamExecutionEnvironment</span> env <span class="op">=</span>
+    <span class="ty">StreamExecutionEnvironment</span>.getExecutionEnvironment();
+
+env.setParallelism(<span class="nu">4</span>);          <span class="cm">// global default</span>
+env.disableOperatorChaining();   <span class="cm">// force separate tasks (debugging)</span>
+env.setBufferTimeout(<span class="nu">100</span>);      <span class="cm">// flush network buffers every 100ms</span>
+                                 <span class="cm">// lower = latency, higher = throughput</span>
+
+<span class="cm">// Per-operator parallelism override:</span>
+stream
+  .map(fn).setParallelism(<span class="nu">8</span>)   <span class="cm">// this operator uses 8 subtasks</span>
+  .keyBy(key)                   <span class="cm">// shuffle happens here</span>
+  .window(...)
+  .sum(<span class="st">"amount"</span>).setParallelism(<span class="nu">4</span>);</pre>
+      </div>
+
+      <h3>Deployment Modes</h3>
+      <table>
+        <thead><tr><th>Mode</th><th>JobManager</th><th>Use Case</th></tr></thead>
+        <tbody>
+          <tr><td>Application</td><td>Runs inside cluster, 1 JM per job</td><td>Production — strong isolation</td></tr>
+          <tr><td>Per-Job</td><td>Created on submit, destroyed on exit</td><td>YARN/K8s short-lived jobs</td></tr>
+          <tr><td>Session</td><td>Long-lived, shared by many jobs</td><td>Dev, low-latency deploys</td></tr>
+          <tr><td>Local</td><td>Embedded in main() process</td><td>Testing, IDE debugging</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 2 — DATASTREAM API
+══════════════════════════════════════════ -->
+<section id="datastream">
+  <div class="section-header">
+    <div class="section-eyebrow">Core Processing API</div>
+    <div class="section-title">DATASTREAM <em>API</em></div>
+    <div class="section-sub">The DataStream API is Flink's low-level streaming primitive. It gives you full control over state, timers, watermarks, and side outputs. Every higher-level API (Table, SQL, PyFlink) compiles down to DataStream operators.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="pills" id="ds-pills">
+    <button class="pill active" onclick="showTab('ds','java',this)">Java / Scala</button>
+    <button class="pill" onclick="showTab('ds','python',this)">PyFlink</button>
+    <button class="pill" onclick="showTab('ds','process',this)">ProcessFunction</button>
+    <button class="pill" onclick="showTab('ds','sideout',this)">Side Outputs</button>
+  </div>
+
+  <!-- JAVA -->
+  <div id="ds-java" class="tab-pane active">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Full streaming job — Java DSL</span><span class="code-lang">java</span></div>
+        <pre><span class="ty">StreamExecutionEnvironment</span> env <span class="op">=</span>
+    <span class="ty">StreamExecutionEnvironment</span>.getExecutionEnvironment();
+
+<span class="cm">// ── SOURCE ──────────────────────────────────────</span>
+<span class="ty">KafkaSource</span>&lt;<span class="ty">Order</span>&gt; source <span class="op">=</span> <span class="ty">KafkaSource</span>.&lt;<span class="ty">Order</span>&gt;builder()
+    .setBootstrapServers(<span class="st">"broker:9092"</span>)
+    .setTopics(<span class="st">"orders"</span>)
+    .setGroupId(<span class="st">"flink-order-processor"</span>)
+    .setStartingOffsets(<span class="ty">OffsetsInitializer</span>.earliest())
+    .setValueOnlyDeserializer(<span class="kw">new</span> <span class="ty">OrderDeserializer</span>())
+    .build();
+
+<span class="ty">DataStream</span>&lt;<span class="ty">Order</span>&gt; orders <span class="op">=</span> env.fromSource(
+    source,
+    <span class="ty">WatermarkStrategy</span>
+        .&lt;<span class="ty">Order</span>&gt;forBoundedOutOfOrderness(<span class="ty">Duration</span>.ofSeconds(<span class="nu">5</span>))
+        .withTimestampAssigner((e, ts) <span class="op">-></span> e.getEventTs()),
+    <span class="st">"Kafka Orders Source"</span>
+);
+
+<span class="cm">// ── TRANSFORMATIONS ─────────────────────────────</span>
+<span class="ty">DataStream</span>&lt;<span class="ty">RevenueMetric</span>&gt; revenue <span class="op">=</span> orders
+    .filter(o <span class="op">-></span> o.getStatus() <span class="op">==</span> <span class="ty">Status</span>.COMPLETED)   <span class="cm">// parallel filter</span>
+    .map(o <span class="op">-></span> <span class="kw">new</span> <span class="ty">EnrichedOrder</span>(o, enrich(o)))            <span class="cm">// stateless map</span>
+    .keyBy(<span class="ty">EnrichedOrder</span>::getCustomerId)                   <span class="cm">// hash shuffle</span>
+    .window(<span class="ty">TumblingEventTimeWindows</span>.of(<span class="ty">Time</span>.hours(<span class="nu">1</span>)))      <span class="cm">// 1-hour window</span>
+    .aggregate(
+        <span class="kw">new</span> <span class="ty">RevenueAggregator</span>(),   <span class="cm">// incremental: O(1) state per window</span>
+        <span class="kw">new</span> <span class="ty">WindowResultMapper</span>()    <span class="cm">// called once when window fires</span>
+    );
+
+<span class="cm">// ── SINK ─────────────────────────────────────────</span>
+<span class="ty">KafkaSink</span>&lt;<span class="ty">RevenueMetric</span>&gt; sink <span class="op">=</span> <span class="ty">KafkaSink</span>.&lt;<span class="ty">RevenueMetric</span>&gt;builder()
+    .setBootstrapServers(<span class="st">"broker:9092"</span>)
+    .setRecordSerializer(<span class="ty">KafkaRecordSerializationSchema</span>.builder()
+        .setTopic(<span class="st">"hourly-revenue"</span>)
+        .setValueSerializationSchema(<span class="kw">new</span> <span class="ty">RevenueSerializer</span>())
+        .build())
+    .setDeliveryGuarantee(<span class="ty">DeliveryGuarantee</span>.EXACTLY_ONCE) <span class="cm">// 2PC</span>
+    .setTransactionalIdPrefix(<span class="st">"revenue-sink"</span>)
+    .build();
+
+revenue.sinkTo(sink);
+env.execute(<span class="st">"Hourly Revenue Aggregator"</span>);</pre>
+      </div>
+      <div>
+        <div class="op-row"><div class="op-box ob-source">KafkaSource</div><div class="op-arr">→</div><div class="op-note">assigns event timestamps + watermarks</div></div>
+        <div class="op-row" style="padding-left:1rem"><div class="op-arr">↓</div></div>
+        <div class="op-row"><div class="op-box ob-filter">filter</div><div class="op-arr">→</div><div class="op-note">stateless, executes in same task chain</div></div>
+        <div class="op-row" style="padding-left:1rem"><div class="op-arr">↓</div></div>
+        <div class="op-row"><div class="op-box ob-map">map (enrich)</div><div class="op-arr">→</div><div class="op-note">operator chaining — zero serialization</div></div>
+        <div class="op-row" style="padding-left:1rem"><div class="op-arr">↓ hash shuffle (network)</div></div>
+        <div class="op-row"><div class="op-box ob-key">keyBy(customerId)</div><div class="op-arr">→</div><div class="op-note">same key always reaches same subtask</div></div>
+        <div class="op-row" style="padding-left:1rem"><div class="op-arr">↓</div></div>
+        <div class="op-row"><div class="op-box ob-window">TumblingEventTime(1h)</div><div class="op-arr">→</div><div class="op-note">window buffers until watermark passes window end</div></div>
+        <div class="op-row" style="padding-left:1rem"><div class="op-arr">↓ fires on watermark</div></div>
+        <div class="op-row"><div class="op-box ob-agg">aggregate (incremental)</div><div class="op-arr">→</div><div class="op-note">AggregateFunction accumulates state per-window</div></div>
+        <div class="op-row" style="padding-left:1rem"><div class="op-arr">↓</div></div>
+        <div class="op-row"><div class="op-box ob-sink">KafkaSink (EOS)</div><div class="op-arr">→</div><div class="op-note">2-phase commit with checkpoint barrier</div></div>
+        <div class="callout c-teal" style="margin-top:1rem">
+          <strong>Operator Chaining — The Performance Secret</strong>
+          Flink fuses consecutive stateless operators (filter→map→flatMap) into a single task thread. No serialization, no network, no buffer — just method calls in a tight loop. This is often the single largest source of latency reduction vs naive Kafka Streams topologies.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PYFLINK -->
+  <div id="ds-python" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">PyFlink DataStream API</span><span class="code-lang">python</span></div>
+        <pre><span class="py">from</span> pyflink.datastream <span class="py">import</span> StreamExecutionEnvironment, RuntimeExecutionMode
+<span class="py">from</span> pyflink.datastream.connectors.kafka <span class="py">import</span> (
+    KafkaSource, KafkaOffsetsInitializer, KafkaRecordSerializationSchema, KafkaSink
+)
+<span class="py">from</span> pyflink.common <span class="py">import</span> WatermarkStrategy, Duration, Types
+<span class="py">from</span> pyflink.common.serialization <span class="py">import</span> SimpleStringSchema
+
+env <span class="op">=</span> StreamExecutionEnvironment.get_execution_environment()
+env.set_parallelism(<span class="nu">4</span>)
+env.enable_checkpointing(<span class="nu">60_000</span>)  <span class="cm"># checkpoint every 60s</span>
+
+<span class="cm"># Add Kafka connector JARs (needed for PyFlink)</span>
+env.add_jars(<span class="st">"file:///opt/flink/lib/flink-connector-kafka.jar"</span>)
+
+<span class="cm"># ── SOURCE ──────────────────────────────────────</span>
+source <span class="op">=</span> (
+    KafkaSource.builder()
+    .set_bootstrap_servers(<span class="st">"broker:9092"</span>)
+    .set_topics(<span class="st">"orders"</span>)
+    .set_group_id(<span class="st">"flink-py-processor"</span>)
+    .set_starting_offsets(KafkaOffsetsInitializer.earliest())
+    .set_value_only_deserializer(SimpleStringSchema())
+    .build()
+)
+
+orders <span class="op">=</span> env.from_source(
+    source,
+    WatermarkStrategy
+        .for_bounded_out_of_orderness(Duration.of_seconds(<span class="nu">5</span>))
+        .with_idleness(Duration.of_minutes(<span class="nu">1</span>)),
+    <span class="st">"Kafka Source"</span>
+)
+
+<span class="cm"># ── TRANSFORMATIONS ─────────────────────────────</span>
+<span class="py">import</span> json
+
+<span class="py">def</span> <span class="fn">parse_order</span>(raw_json: str) -> dict:
+    d <span class="op">=</span> json.loads(raw_json)
+    <span class="py">return</span> (d[<span class="st">'customer_id'</span>], d[<span class="st">'amount'</span>])
+
+<span class="py">def</span> <span class="fn">is_valid</span>(record) -> bool:
+    <span class="py">return</span> record[<span class="nu">1</span>] <span class="op">></span> <span class="nu">0</span>
+
+parsed <span class="op">=</span> (
+    orders
+    .map(parse_order, output_type<span class="op">=</span>Types.TUPLE([Types.STRING(), Types.FLOAT()]))
+    .filter(is_valid)
+    .key_by(<span class="py">lambda</span> x: x[<span class="nu">0</span>])  <span class="cm"># key by customer_id</span>
+)
+
+<span class="cm"># ── STATEFUL REDUCE (sum per customer, unbounded) ──</span>
+result <span class="op">=</span> parsed.reduce(<span class="py">lambda</span> a, b: (a[<span class="nu">0</span>], a[<span class="nu">1</span>] <span class="op">+</span> b[<span class="nu">1</span>]))
+
+result.print()
+env.execute(<span class="st">"PyFlink Order Processor"</span>)</pre>
+      </div>
+      <div>
+        <div class="callout c-amber">
+          <strong>PyFlink Architecture — JVM Bridge</strong>
+          PyFlink is not pure Python. It's a Python wrapper around the Java/Scala Flink runtime. Python operators use Apache Beam's Python worker model — your Python functions run in a separate process connected to the JVM via gRPC. This means: Python UDFs add ~2-5ms per-record overhead vs Java. For heavy Python workloads, prefer Table API / Flink SQL which push computation to the JVM.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">PyFlink — Table API (recommended for Python)</span><span class="code-lang">python</span></div>
+          <pre><span class="py">from</span> pyflink.table <span class="py">import</span> EnvironmentSettings, TableEnvironment
+<span class="py">from</span> pyflink.table.expressions <span class="py">import</span> col, lit
+
+settings <span class="op">=</span> EnvironmentSettings.in_streaming_mode()
+t_env <span class="op">=</span> TableEnvironment.create(settings)
+
+<span class="cm"># Define source with DDL (connector resolved at runtime)</span>
+t_env.execute_sql(<span class="st">"""
+  CREATE TABLE orders (
+    order_id     STRING,
+    customer_id  STRING,
+    amount       DOUBLE,
+    event_ts     TIMESTAMP(3),
+    WATERMARK FOR event_ts AS event_ts - INTERVAL '5' SECOND
+  ) WITH (
+    'connector' = 'kafka',
+    'topic'     = 'orders',
+    'properties.bootstrap.servers' = 'broker:9092',
+    'format'    = 'json'
+  )
+"""</span>)
+
+<span class="cm"># Table API: compiled to Java operators, zero Python overhead</span>
+orders_table <span class="op">=</span> t_env.from_path(<span class="st">"orders"</span>)
+result <span class="op">=</span> (
+    orders_table
+    .filter(col(<span class="st">"amount"</span>) <span class="op">></span> <span class="nu">0</span>)
+    .group_by(col(<span class="st">"customer_id"</span>))
+    .select(
+        col(<span class="st">"customer_id"</span>),
+        col(<span class="st">"amount"</span>).sum.alias(<span class="st">"total_spend"</span>)
+    )
+)
+result.execute().print()</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROCESS FUNCTION -->
+  <div id="ds-process" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">ProcessFunction — full low-level control</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">/**
+ * ProcessFunction: the most powerful Flink primitive.
+ * Gives you:
+ *   - Access to keyed state (per-key values, lists, maps)
+ *   - Event-time and processing-time timers
+ *   - Side outputs (route to different streams)
+ *   - Full context: timestamp, key, current watermark
+ */</span>
+<span class="kw">public class</span> <span class="ty">SessionDetector</span>
+        <span class="kw">extends</span> <span class="ty">KeyedProcessFunction</span>&lt;<span class="ty">String</span>, <span class="ty">Event</span>, <span class="ty">Session</span>&gt; {
+
+    <span class="cm">// Declared state — Flink manages lifecycle across checkpoints</span>
+    <span class="kw">private</span> <span class="ty">ValueState</span>&lt;<span class="ty">Long</span>&gt;       sessionStart;
+    <span class="kw">private</span> <span class="ty">ValueState</span>&lt;<span class="ty">Long</span>&gt;       lastEventTs;
+    <span class="kw">private</span> <span class="ty">ValueState</span>&lt;<span class="ty">Integer</span>&gt;    eventCount;
+    <span class="kw">private</span> <span class="ty">ValueState</span>&lt;<span class="ty">Long</span>&gt;       timerTs;     <span class="cm">// pending timer</span>
+
+    <span class="kw">private static final long</span> GAP <span class="op">=</span> <span class="nu">30</span> <span class="op">*</span> <span class="nu">60_000</span>; <span class="cm">// 30min inactivity</span>
+
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">open</span>(<span class="ty">OpenContext</span> ctx) {
+        sessionStart <span class="op">=</span> getRuntimeContext().getState(
+            <span class="kw">new</span> <span class="ty">ValueStateDescriptor</span>&lt;&gt;(<span class="st">"session-start"</span>, <span class="ty">Long</span>.<span class="kw">class</span>));
+        lastEventTs  <span class="op">=</span> getRuntimeContext().getState(
+            <span class="kw">new</span> <span class="ty">ValueStateDescriptor</span>&lt;&gt;(<span class="st">"last-event"</span>,   <span class="ty">Long</span>.<span class="kw">class</span>));
+        eventCount   <span class="op">=</span> getRuntimeContext().getState(
+            <span class="kw">new</span> <span class="ty">ValueStateDescriptor</span>&lt;&gt;(<span class="st">"event-count"</span>,  <span class="ty">Integer</span>.<span class="kw">class</span>));
+        timerTs      <span class="op">=</span> getRuntimeContext().getState(
+            <span class="kw">new</span> <span class="ty">ValueStateDescriptor</span>&lt;&gt;(<span class="st">"timer-ts"</span>,     <span class="ty">Long</span>.<span class="kw">class</span>));
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">processElement</span>(<span class="ty">Event</span> e, <span class="ty">Context</span> ctx, <span class="ty">Collector</span>&lt;<span class="ty">Session</span>&gt; out) {
+        <span class="ty">Long</span> start <span class="op">=</span> sessionStart.value();
+
+        <span class="kw">if</span> (start <span class="op">==</span> <span class="kw">null</span>) {
+            sessionStart.update(e.ts);   <span class="cm">// start of new session</span>
+            eventCount.update(<span class="nu">0</span>);
+        }
+        eventCount.update(eventCount.value() <span class="op">+</span> <span class="nu">1</span>);
+        lastEventTs.update(e.ts);
+
+        <span class="cm">// Cancel old timer, register new one (30min from NOW)</span>
+        <span class="ty">Long</span> oldTimer <span class="op">=</span> timerTs.value();
+        <span class="kw">if</span> (oldTimer <span class="op">!=</span> <span class="kw">null</span>)
+            ctx.timerService().deleteEventTimeTimer(oldTimer);
+
+        <span class="kw">long</span> newTimer <span class="op">=</span> e.ts <span class="op">+</span> GAP;
+        ctx.timerService().registerEventTimeTimer(newTimer);
+        timerTs.update(newTimer);
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">onTimer</span>(<span class="kw">long</span> ts, <span class="ty">OnTimerContext</span> ctx, <span class="ty">Collector</span>&lt;<span class="ty">Session</span>&gt; out) {
+        <span class="cm">// Timer fires → 30min inactivity → emit session</span>
+        out.collect(<span class="kw">new</span> <span class="ty">Session</span>(
+            ctx.getCurrentKey(),
+            sessionStart.value(), lastEventTs.value(),
+            eventCount.value()
+        ));
+        <span class="cm">// Clear state — this key starts fresh</span>
+        sessionStart.clear(); lastEventTs.clear();
+        eventCount.clear();   timerTs.clear();
+    }
+}</pre>
+      </div>
+      <div>
+        <div class="callout c-gold">
+          <strong>Event-Time Timers — The Superpower</strong>
+          Timers fire based on the <em>watermark</em>, not the system clock. This means: if you replay 6 months of historical data, timers fire at the correct business times — not 6 months later. Your session detection logic works identically on live data and historical replay. Kafka Streams does not have this capability.
+        </div>
+        <h3>RichFunction — Async External Lookups</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">AsyncFunction — non-blocking enrichment</span><span class="code-lang">java</span></div>
+          <pre><span class="cm">// Never use blocking DB calls in processElement()!
+// They block the entire slot thread.
+// Use AsyncFunction for external enrichment.</span>
+<span class="kw">public class</span> <span class="ty">CustomerEnricher</span>
+        <span class="kw">extends</span> <span class="ty">RichAsyncFunction</span>&lt;<span class="ty">Order</span>, <span class="ty">EnrichedOrder</span>&gt; {
+
+    <span class="kw">private transient</span> <span class="ty">AsyncHttpClient</span> client;
+
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">open</span>(<span class="ty">Configuration</span> params) {
+        client <span class="op">=</span> <span class="ty">Dsl</span>.asyncHttpClient();   <span class="cm">// non-blocking HTTP</span>
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">asyncInvoke</span>(<span class="ty">Order</span> order, <span class="ty">ResultFuture</span>&lt;<span class="ty">EnrichedOrder</span>&gt; rf) {
+        client.prepareGet(<span class="st">"/customers/"</span> <span class="op">+</span> order.customerId)
+            .execute(<span class="kw">new</span> <span class="ty">AsyncCompletionHandler</span>&lt;&gt;() {
+                <span class="kw">public</span> <span class="ty">Response</span> <span class="fn">onCompleted</span>(<span class="ty">Response</span> resp) {
+                    rf.complete(Collections.singletonList(
+                        <span class="kw">new</span> <span class="ty">EnrichedOrder</span>(order, parseCustomer(resp))
+                    ));
+                    <span class="kw">return</span> resp;
+                }
+            });
+    }
+}
+
+<span class="cm">// Wire it into the pipeline:</span>
+<span class="ty">DataStream</span>&lt;<span class="ty">EnrichedOrder</span>&gt; enriched <span class="op">=</span>
+    <span class="ty">AsyncDataStream</span>.unorderedWait(
+        orders,
+        <span class="kw">new</span> <span class="ty">CustomerEnricher</span>(),
+        <span class="nu">1000</span>, <span class="ty">TimeUnit</span>.MILLISECONDS, <span class="cm">// timeout</span>
+        <span class="nu">100</span>                            <span class="cm">// max concurrent requests</span>
+    );</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDE OUTPUTS -->
+  <div id="ds-sideout" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Side outputs — multi-stream routing</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">/**
+ * Side outputs split a stream into multiple tagged sub-streams
+ * based on record content — without forking or filtering.
+ * Zero overhead: routing decision made inline, no copy.
+ */</span>
+<span class="ty">OutputTag</span>&lt;<span class="ty">Order</span>&gt; largeOrders   <span class="op">=</span> <span class="kw">new</span> <span class="ty">OutputTag</span>&lt;&gt;(<span class="st">"large-orders"</span>){};
+<span class="ty">OutputTag</span>&lt;<span class="ty">Order</span>&gt; lateEvents     <span class="op">=</span> <span class="kw">new</span> <span class="ty">OutputTag</span>&lt;&gt;(<span class="st">"late-events"</span>){};
+<span class="ty">OutputTag</span>&lt;<span class="ty">String</span>&gt; parseErrors   <span class="op">=</span> <span class="kw">new</span> <span class="ty">OutputTag</span>&lt;&gt;(<span class="st">"parse-errors"</span>){};
+
+<span class="ty">SingleOutputStreamOperator</span>&lt;<span class="ty">Order</span>&gt; mainStream <span class="op">=</span> rawInput
+    .process(<span class="kw">new</span> <span class="ty">ProcessFunction</span>&lt;<span class="ty">String</span>, <span class="ty">Order</span>&gt;() {
+        <span class="kw">public void</span> <span class="fn">processElement</span>(<span class="ty">String</span> raw, <span class="ty">Context</span> ctx,
+                <span class="ty">Collector</span>&lt;<span class="ty">Order</span>&gt; out) {
+            <span class="kw">try</span> {
+                <span class="ty">Order</span> o <span class="op">=</span> parse(raw);
+
+                <span class="kw">if</span> (o.getAmount() <span class="op">></span> <span class="nu">10_000</span>)
+                    ctx.output(largeOrders, o);   <span class="cm">// → fraud review</span>
+
+                <span class="kw">if</span> (ctx.timestamp() <span class="op">&lt;</span> ctx.timerService().currentWatermark())
+                    ctx.output(lateEvents, o);    <span class="cm">// → late data audit</span>
+
+                out.collect(o);  <span class="cm">// always goes to main stream too</span>
+            } <span class="kw">catch</span> (<span class="ty">ParseException</span> e) {
+                ctx.output(parseErrors, raw);     <span class="cm">// → DLQ topic</span>
+            }
+        }
+    });
+
+<span class="cm">// Each is a fully independent DataStream:</span>
+<span class="ty">DataStream</span>&lt;<span class="ty">Order</span>&gt;  fraudReview  <span class="op">=</span> mainStream.getSideOutput(largeOrders);
+<span class="ty">DataStream</span>&lt;<span class="ty">Order</span>&gt;  lateAudit    <span class="op">=</span> mainStream.getSideOutput(lateEvents);
+<span class="ty">DataStream</span>&lt;<span class="ty">String</span>&gt; deadLetters  <span class="op">=</span> mainStream.getSideOutput(parseErrors);
+
+<span class="cm">// Route to different Kafka topics:</span>
+fraudReview.sinkTo(fraudTopic);
+lateAudit.sinkTo(auditTopic);
+deadLetters.sinkTo(dlqTopic);</pre>
+      </div>
+      <div>
+        <div class="callout c-amber">
+          <strong>Side Outputs Replace Dead-Letter Queues</strong>
+          Instead of try/catch-then-produce-to-DLQ in your consumer (which breaks EOS), use Flink side outputs. Parse errors, late records, fraud candidates, and audit events all route to separate physical streams while maintaining exactly-once guarantees end-to-end. The DLQ is no longer an afterthought.
+        </div>
+        <h3>Connected Streams — Joining Two Types</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">connect() — heterogeneous stream merge</span><span class="code-lang">java</span></div>
+          <pre><span class="cm">// connect() joins TWO DIFFERENT TYPES in one operator.
+// Unlike union() (same type) or join() (keyed window),
+// connect() lets each stream handle its own logic with shared state.</span>
+
+<span class="ty">DataStream</span>&lt;<span class="ty">Order</span>&gt;  orders  <span class="op">=</span> ...;
+<span class="ty">DataStream</span>&lt;<span class="ty">Config</span>&gt; configs <span class="op">=</span> ...;  <span class="cm">// dynamic config changes</span>
+
+<span class="ty">BroadcastStream</span>&lt;<span class="ty">Config</span>&gt; bcConfig <span class="op">=</span>
+    configs.broadcast(configStateDescriptor);
+
+orders.connect(bcConfig)
+    .process(<span class="kw">new</span> <span class="ty">BroadcastProcessFunction</span>&lt;<span class="ty">Order</span>, <span class="ty">Config</span>, <span class="ty">Result</span>&gt;() {
+
+        <span class="kw">public void</span> <span class="fn">processElement</span>(<span class="ty">Order</span> order, <span class="ty">ReadOnlyContext</span> ctx, ...) {
+            <span class="ty">Config</span> cfg <span class="op">=</span> ctx.getBroadcastState(configStateDescriptor)
+                            .get(<span class="st">"current"</span>);
+            <span class="cm">// Apply latest config to every order — no restart needed</span>
+            out.collect(applyConfig(order, cfg));
+        }
+
+        <span class="kw">public void</span> <span class="fn">processBroadcastElement</span>(<span class="ty">Config</span> cfg, ...) {
+            ctx.getBroadcastState(configStateDescriptor).put(<span class="st">"current"</span>, cfg);
+        }
+    });</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 3 — WATERMARKS
+══════════════════════════════════════════ -->
+<section id="watermarks">
+  <div class="section-header">
+    <div class="section-eyebrow">Time & Ordering</div>
+    <div class="section-title">WATERMARKS — <em>EVENT TIME</em></div>
+    <div class="section-sub">Watermarks are Flink's most powerful and most misunderstood concept. They are the mechanism by which a distributed streaming engine reasons about time when data can arrive late, out-of-order, and from multiple parallel partitions simultaneously.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <h3>The Three Time Domains</h3>
+      <table>
+        <thead><tr><th>Domain</th><th>Clock Source</th><th>Replays Correctly?</th><th>Use For</th></tr></thead>
+        <tbody>
+          <tr><td>Event Time</td><td>Timestamp in the record itself</td><td><span style="color:var(--teal)">Yes ✓</span></td><td>All business-critical windows</td></tr>
+          <tr><td>Processing Time</td><td>System wall clock on TaskManager</td><td><span style="color:var(--crim3)">No ✗</span></td><td>Approximate monitoring only</td></tr>
+          <tr><td>Ingestion Time</td><td>Timestamp assigned at source</td><td><span style="color:var(--amber)">Partial</span></td><td>Backpressure detection</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout c-crim">
+        <strong>The Core Problem Watermarks Solve</strong>
+        In a distributed system, event E with timestamp T=10:00 might arrive AFTER event E2 with timestamp T=10:05 due to network delays, retries, or partition leadership changes. If Flink fires a 10:00–10:01 window the moment it sees T=10:00, it will miss E arriving late. Watermarks say: "I guarantee no event with timestamp &lt; W will ever arrive again." Windows fire when their watermark passes — not when the clock passes.
+      </div>
+
+      <h3>Watermark Strategies</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">WatermarkStrategy — all patterns</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">// 1. Bounded out-of-orderness (most common production choice)</span>
+<span class="ty">WatermarkStrategy</span>
+    .&lt;<span class="ty">Event</span>&gt;forBoundedOutOfOrderness(<span class="ty">Duration</span>.ofSeconds(<span class="nu">5</span>))
+    .withTimestampAssigner((e, ts) <span class="op">-></span> e.getEventTs())
+<span class="cm">// Watermark = max(seen_event_ts) - 5s
+// "I'll wait 5 seconds for stragglers, then fire windows"</span>
+
+<span class="cm">// 2. Monotonically increasing (data is perfectly ordered)</span>
+<span class="ty">WatermarkStrategy</span>
+    .&lt;<span class="ty">Event</span>&gt;forMonotonousTimestamps()
+    .withTimestampAssigner((e, ts) <span class="op">-></span> e.getEventTs())
+<span class="cm">// Watermark = max(seen_ts) - 1ms. Zero delay. Use only if certain.</span>
+
+<span class="cm">// 3. Custom — per-partition watermarks (Kafka-native)</span>
+<span class="ty">WatermarkStrategy</span>
+    .&lt;<span class="ty">Event</span>&gt;forBoundedOutOfOrderness(<span class="ty">Duration</span>.ofSeconds(<span class="nu">30</span>))
+    .withTimestampAssigner(...)
+    .withIdleness(<span class="ty">Duration</span>.ofMinutes(<span class="nu">5</span>))
+<span class="cm">// withIdleness: if a Kafka partition has no events for 5min,
+// don't let it block the global watermark from advancing.
+// Critical for low-volume topics with sparse partitions.</span>
+
+<span class="cm">// 4. Custom WatermarkGenerator (full control)</span>
+<span class="kw">public class</span> <span class="ty">OrderedEventTimeGenerator</span>
+        <span class="kw">implements</span> <span class="ty">WatermarkGenerator</span>&lt;<span class="ty">Event</span>&gt; {
+    <span class="kw">private long</span> maxTs <span class="op">=</span> <span class="ty">Long</span>.MIN_VALUE;
+
+    <span class="kw">public void</span> <span class="fn">onEvent</span>(<span class="ty">Event</span> e, <span class="kw">long</span> ts, <span class="ty">WatermarkOutput</span> out) {
+        maxTs <span class="op">=</span> <span class="ty">Math</span>.max(maxTs, e.getTs());
+    }
+    <span class="kw">public void</span> <span class="fn">onPeriodicEmit</span>(<span class="ty">WatermarkOutput</span> out) {
+        out.emitWatermark(<span class="kw">new</span> <span class="ty">Watermark</span>(maxTs <span class="op">-</span> <span class="nu">5000</span>));
+    }
+}</pre>
+      </div>
+    </div>
+    <div>
+      <h3>Watermark Propagation in Parallel</h3>
+      <div class="wm-track">
+        <div class="wm-label">Partition 0 events:</div>
+        <div class="wm-row">
+          <div class="wm-event"><div class="wmb-in-order wm-bubble">t=1</div><div class="wm-ts">08:00:01</div></div>
+          <div class="wm-event"><div class="wmb-in-order wm-bubble">t=3</div><div class="wm-ts">08:00:03</div></div>
+          <div class="wm-event"><div class="wmb-in-order wm-bubble">t=7</div><div class="wm-ts">08:00:07</div></div>
+          <div class="wm-event"><div class="wmb-in-order wm-bubble">t=9</div><div class="wm-ts">08:00:09</div></div>
+          <div class="wm-event"><div class="wmb-watermark wm-bubble">WM=4</div><div class="wm-ts">→ emitted</div></div>
+        </div>
+        <div class="wm-label" style="margin-top:0.5rem">Partition 1 events:</div>
+        <div class="wm-row">
+          <div class="wm-event"><div class="wmb-in-order wm-bubble">t=2</div><div class="wm-ts">08:00:02</div></div>
+          <div class="wm-event"><div class="wmb-late wm-bubble">t=1</div><div class="wm-ts">late!</div></div>
+          <div class="wm-event"><div class="wmb-in-order wm-bubble">t=5</div><div class="wm-ts">08:00:05</div></div>
+          <div class="wm-event"><div class="wmb-watermark wm-bubble">WM=0</div><div class="wm-ts">→ emitted</div></div>
+        </div>
+        <div class="wm-label" style="margin-top:0.5rem">Global watermark (min of all partitions):</div>
+        <div class="wm-row">
+          <div class="wm-event"><div class="wmb-allowed wm-bubble">min</div><div class="wm-ts">min(4,0)=0</div></div>
+          <div class="wm-event"><div class="wmb-allowed wm-bubble" style="font-size:0.5rem">blocked</div><div class="wm-ts">by P1</div></div>
+          <div style="font-family:var(--mono);font-size:0.65rem;color:var(--crim3);padding:0 8px;display:flex;align-items:center">← Partition 1's stragglers hold back the window!</div>
+        </div>
+        <div style="margin-top:0.75rem;font-family:var(--mono);font-size:0.62rem;color:var(--text3)">
+          Solution: <span style="color:var(--amber)">.withIdleness(Duration.ofMinutes(1))</span> — marks idle partition, removes from global min calculation
+        </div>
+      </div>
+
+      <h3>Allowed Lateness + Late Data</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Late events — three disposal strategies</span><span class="code-lang">java</span></div>
+        <pre><span class="ty">OutputTag</span>&lt;<span class="ty">Order</span>&gt; lateTag <span class="op">=</span> <span class="kw">new</span> <span class="ty">OutputTag</span>&lt;&gt;(<span class="st">"late-orders"</span>){};
+
+<span class="ty">SingleOutputStreamOperator</span>&lt;<span class="ty">Revenue</span>&gt; result <span class="op">=</span> orders
+    .keyBy(o <span class="op">-></span> o.customerId)
+    .window(<span class="ty">TumblingEventTimeWindows</span>.of(<span class="ty">Time</span>.hours(<span class="nu">1</span>)))
+
+    <span class="cm">// Strategy 1: Allow late events to re-fire the window</span>
+    <span class="cm">// Window fires at watermark, then AGAIN for each late event</span>
+    <span class="cm">// for up to 'allowedLateness' past the window close</span>
+    .allowedLateness(<span class="ty">Time</span>.minutes(<span class="nu">5</span>))
+
+    <span class="cm">// Strategy 2: Route very-late events to a side output</span>
+    <span class="cm">// (events arriving after allowedLateness period)</span>
+    .sideOutputLateData(lateTag)
+
+    .aggregate(<span class="kw">new</span> <span class="ty">RevenueAgg</span>());
+
+<span class="cm">// Strategy 3: Process side output separately (correction stream)</span>
+<span class="ty">DataStream</span>&lt;<span class="ty">Order</span>&gt; lateOrders <span class="op">=</span> result.getSideOutput(lateTag);
+lateOrders.sinkTo(lateOrdersAuditTopic);
+
+<span class="cm">/*
+ TIMELINE:
+  t=10:00:00  window [09:00, 10:00) opens
+  t=10:00:05  watermark passes 10:00 → window FIRES (main output)
+  t=10:02:00  late event arrives (ts=09:58) → allowedLateness=5min
+              still within window → fires AGAIN with updated result
+  t=10:05:01  another late event (ts=09:45) → past allowedLateness
+              routed to lateTag side output
+*/</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 4 — STATE & CHECKPOINTS
+══════════════════════════════════════════ -->
+<section id="state">
+  <div class="section-header">
+    <div class="section-eyebrow">Fault Tolerance</div>
+    <div class="section-title">STATE <em>&</em> CHECKPOINTS</div>
+    <div class="section-sub">Flink's state is first-class — it is not a cache, not a side-car, not a database call. It lives co-located with the operator, checkpointed asynchronously via Chandy-Lamport distributed snapshots, and restored automatically on failure. This is what makes Flink fault-tolerant without a coordinator like Zookeeper.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <h3>State Types</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Keyed State primitives</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">// ALL keyed state is scoped to: (operator, key, namespace)
+// Flink manages serialization, checkpointing, and TTL.</span>
+
+<span class="cm">// 1. ValueState — single value per key</span>
+<span class="ty">ValueState</span>&lt;<span class="ty">Long</span>&gt; count <span class="op">=</span> ctx.getState(
+    <span class="kw">new</span> <span class="ty">ValueStateDescriptor</span>&lt;&gt;(<span class="st">"event-count"</span>, <span class="ty">Long</span>.<span class="kw">class</span>));
+count.update(count.value() <span class="op">+</span> <span class="nu">1</span>);
+<span class="ty">Long</span> v <span class="op">=</span> count.value();
+count.clear();
+
+<span class="cm">// 2. ListState — append-only list per key</span>
+<span class="ty">ListState</span>&lt;<span class="ty">Event</span>&gt; buffer <span class="op">=</span> ctx.getListState(
+    <span class="kw">new</span> <span class="ty">ListStateDescriptor</span>&lt;&gt;(<span class="st">"event-buffer"</span>, <span class="ty">Event</span>.<span class="kw">class</span>));
+buffer.add(event);
+<span class="ty">Iterable</span>&lt;<span class="ty">Event</span>&gt; all <span class="op">=</span> buffer.get();
+buffer.update(newList);   <span class="cm">// replace all</span>
+
+<span class="cm">// 3. MapState — key-value map per Flink-key</span>
+<span class="ty">MapState</span>&lt;<span class="ty">String</span>, <span class="ty">Double</span>&gt; totals <span class="op">=</span> ctx.getMapState(
+    <span class="kw">new</span> <span class="ty">MapStateDescriptor</span>&lt;&gt;(<span class="st">"category-totals"</span>,
+        <span class="ty">String</span>.<span class="kw">class</span>, <span class="ty">Double</span>.<span class="kw">class</span>));
+totals.put(<span class="st">"electronics"</span>, totals.get(<span class="st">"electronics"</span>) <span class="op">+</span> amount);
+
+<span class="cm">// 4. ReducingState — auto-reduces on add()</span>
+<span class="ty">ReducingState</span>&lt;<span class="ty">Long</span>&gt; sum <span class="op">=</span> ctx.getReducingState(
+    <span class="kw">new</span> <span class="ty">ReducingStateDescriptor</span>&lt;&gt;(<span class="st">"sum"</span>, Long<span class="op">::</span>sum, <span class="ty">Long</span>.<span class="kw">class</span>));
+sum.add(<span class="nu">42L</span>);   <span class="cm">// calls (current, 42L) → Long::sum</span>
+sum.get();       <span class="cm">// current aggregate</span>
+
+<span class="cm">// 5. AggregatingState — complex incremental aggregation</span>
+<span class="ty">AggregatingState</span>&lt;<span class="ty">Order</span>, <span class="ty">Stats</span>&gt; statsState <span class="op">=</span> ctx.getAggregatingState(
+    <span class="kw">new</span> <span class="ty">AggregatingStateDescriptor</span>&lt;&gt;(<span class="st">"stats"</span>,
+        <span class="kw">new</span> <span class="ty">StatsAggregator</span>(), <span class="ty">Stats</span>.<span class="kw">class</span>));
+
+<span class="cm">// 6. State TTL — automatic expiry (prevents unbounded growth)</span>
+<span class="ty">StateTtlConfig</span> ttl <span class="op">=</span> <span class="ty">StateTtlConfig</span>
+    .newBuilder(<span class="ty">Time</span>.days(<span class="nu">7</span>))
+    .setUpdateType(<span class="ty">StateTtlConfig</span>.UpdateType.OnCreateAndWrite)
+    .setStateVisibility(<span class="ty">StateTtlConfig</span>.StateVisibility.NeverReturnExpired)
+    .cleanupInRocksdbCompactFilter(<span class="nu">1000</span>)  <span class="cm">// compact during RocksDB flush</span>
+    .build();
+valueStateDescriptor.enableTimeToLive(ttl);</pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>State Backends</h3>
+      <table>
+        <thead><tr><th>Backend</th><th>State Location</th><th>Checkpoint</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td>HashMapStateBackend</td><td>JVM Heap (objects)</td><td>Async snapshot to FS</td><td>Small state, fast access</td></tr>
+          <tr><td>EmbeddedRocksDB</td><td>Off-heap (SSD/NVMe)</td><td>Incremental to S3/HDFS</td><td>Large state, TB-scale</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout c-gold">
+        <strong>RocksDB — The Production State Backend</strong>
+        RocksDB stores state outside the JVM heap on local disk. This eliminates GC pressure (no Java GC pauses on 100GB of state), enables incremental checkpoints (only changed SSTable files are uploaded — not the whole state), and allows state larger than available RAM. The tradeoff: state access is ~10× slower than heap (disk read vs memory). Use for any job with &gt;1GB state per key group.
+      </div>
+
+      <h3>Chandy-Lamport Checkpointing</h3>
+      <p>Flink's checkpoint algorithm injects <strong>checkpoint barriers</strong> — special markers — into the data stream alongside regular events. When an operator receives barriers from all upstream partitions, it snapshots its state and propagates the barrier downstream. No data flow is paused.</p>
+
+      <div style="border:1px solid var(--border);background:rgba(0,0,0,0.3);padding:1rem;margin:1rem 0">
+        <div style="font-family:var(--mono);font-size:0.62rem;color:var(--crim3);margin-bottom:0.75rem;letter-spacing:0.1em">CHECKPOINT SEQUENCE — operator chain</div>
+        <div class="ckpt-row">
+          <div class="ckpt-op">Source</div>
+          <div class="ckpt-arr">→</div>
+          <div class="ckpt-barrier">BARRIER #42</div>
+          <div class="ckpt-arr">injected into stream</div>
+        </div>
+        <div class="ckpt-row" style="margin-left:20px">
+          <div class="ckpt-arr">↓ barrier reaches Map operator</div>
+        </div>
+        <div class="ckpt-row">
+          <div class="ckpt-op">Map</div>
+          <div class="ckpt-arr">→</div>
+          <div class="ckpt-state">snapshot Map state async</div>
+          <div class="ckpt-arr">→</div>
+          <div class="ckpt-barrier">BARRIER #42</div>
+          <div class="ckpt-arr">forwarded</div>
+        </div>
+        <div class="ckpt-row" style="margin-left:20px">
+          <div class="ckpt-arr">↓ all upstream barriers aligned at Window</div>
+        </div>
+        <div class="ckpt-row">
+          <div class="ckpt-op">Window</div>
+          <div class="ckpt-arr">→</div>
+          <div class="ckpt-state">snapshot window buffers async</div>
+          <div class="ckpt-arr">→ S3/HDFS</div>
+        </div>
+        <div style="margin-top:0.75rem;font-family:var(--mono);font-size:0.62rem;color:var(--text3)">
+          <span style="color:var(--teal)">KEY INSIGHT:</span> Data keeps flowing while state is being snapshotted. The copy-on-write snapshot is taken asynchronously. Checkpoint completion = all operators have confirmed their snapshot upload.
+        </div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Checkpoint + savepoint config</span><span class="code-lang">java</span></div>
+        <pre><span class="ty">CheckpointConfig</span> cfg <span class="op">=</span> env.getCheckpointConfig();
+cfg.setCheckpointInterval(<span class="nu">60_000</span>);       <span class="cm">// every 60s</span>
+cfg.setCheckpointTimeout(<span class="nu">120_000</span>);       <span class="cm">// fail if > 2min</span>
+cfg.setMinPauseBetweenCheckpoints(<span class="nu">30_000</span>); <span class="cm">// cooldown</span>
+cfg.setMaxConcurrentCheckpoints(<span class="nu">1</span>);       <span class="cm">// 1 in-flight at a time</span>
+cfg.setExternalizedCheckpointCleanup(      <span class="cm">// keep on cancel</span>
+    <span class="ty">CheckpointConfig</span>.<span class="ty">ExternalizedCheckpointCleanup</span>.RETAIN_ON_CANCELLATION);
+
+<span class="cm">// Incremental checkpoints (RocksDB only — huge for large state):</span>
+env.setStateBackend(<span class="kw">new</span> <span class="ty">EmbeddedRocksDBStateBackend</span>(<span class="kw">true</span>));
+<span class="cm">// true = incremental. Only changed SSTable files uploaded.
+// Full checkpoint: 100GB → 30min. Incremental: 100GB → 90s.</span>
+
+<span class="cm">// Savepoint: operator-initiated, used for upgrades</span>
+<span class="cm">// $ flink savepoint &lt;jobId&gt; s3://bucket/savepoints/
+// $ flink run -s s3://bucket/savepoints/sp-123 job.jar
+// Savepoints survive code changes (with compatible state schema)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 5 — FLINK SQL
+══════════════════════════════════════════ -->
+<section id="sql">
+  <div class="section-header">
+    <div class="section-eyebrow">Declarative Streaming</div>
+    <div class="section-title">FLINK <em>SQL</em> — STREAMING ANSI SQL</div>
+    <div class="section-sub">Flink SQL is a fully featured streaming SQL engine. It handles windowed aggregations, temporal table joins, changelog streams (CDC), and upsert semantics — all in standard SQL syntax. Internally it compiles to the same DataStream operators you'd write by hand.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="pills" id="sq-pills">
+    <button class="pill active" onclick="showTab('sq','ddl',this)">DDL + Connectors</button>
+    <button class="pill" onclick="showTab('sq','windows',this)">Streaming Windows</button>
+    <button class="pill" onclick="showTab('sq','temporal',this)">Temporal Joins</button>
+    <button class="pill" onclick="showTab('sq','cdc',this)">CDC + Upsert</button>
+  </div>
+
+  <!-- DDL -->
+  <div id="sq-ddl" class="tab-pane active">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">CREATE TABLE — source and sink DDL</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- Kafka source with Avro schema registry</span>
+<span class="kw">CREATE TABLE</span> orders (
+  order_id      <span class="ty">STRING</span>,
+  customer_id   <span class="ty">STRING</span>,
+  amount        <span class="ty">DECIMAL(18, 4)</span>,
+  status        <span class="ty">STRING</span>,
+  event_ts      <span class="ty">TIMESTAMP(3)</span>,
+  <span class="cm">-- Watermark: allow 5s of out-of-order delivery</span>
+  <span class="kw">WATERMARK FOR</span> event_ts <span class="kw">AS</span> event_ts <span class="op">-</span> <span class="ty">INTERVAL</span> <span class="st">'5'</span> <span class="ty">SECOND</span>
+) <span class="kw">WITH</span> (
+  <span class="st">'connector'</span>                     <span class="op">=</span> <span class="st">'kafka'</span>,
+  <span class="st">'topic'</span>                         <span class="op">=</span> <span class="st">'orders'</span>,
+  <span class="st">'properties.bootstrap.servers'</span>  <span class="op">=</span> <span class="st">'broker:9092'</span>,
+  <span class="st">'properties.group.id'</span>           <span class="op">=</span> <span class="st">'flink-sql-group'</span>,
+  <span class="st">'scan.startup.mode'</span>             <span class="op">=</span> <span class="st">'earliest-offset'</span>,
+  <span class="st">'format'</span>                        <span class="op">=</span> <span class="st">'avro-confluent'</span>,
+  <span class="st">'avro-confluent.url'</span>            <span class="op">=</span> <span class="st">'http://schema-registry:8081'</span>
+);
+
+<span class="cm">-- Parquet source (S3 data lake)</span>
+<span class="kw">CREATE TABLE</span> customer_profiles (
+  customer_id   <span class="ty">STRING</span>,
+  tier          <span class="ty">STRING</span>,
+  country       <span class="ty">STRING</span>,
+  updated_at    <span class="ty">TIMESTAMP(3)</span>
+) <span class="kw">WITH</span> (
+  <span class="st">'connector'</span>   <span class="op">=</span> <span class="st">'filesystem'</span>,
+  <span class="st">'path'</span>        <span class="op">=</span> <span class="st">'s3://lake/customer-profiles/'</span>,
+  <span class="st">'format'</span>      <span class="op">=</span> <span class="st">'parquet'</span>,
+  <span class="st">'source.monitor-interval'</span> <span class="op">=</span> <span class="st">'60s'</span>  <span class="cm">-- poll for new files</span>
+);
+
+<span class="cm">-- JDBC lookup (for enrichment with temporal join)</span>
+<span class="kw">CREATE TABLE</span> exchange_rates (
+  currency      <span class="ty">STRING</span>,
+  rate          <span class="ty">DOUBLE</span>,
+  valid_from    <span class="ty">TIMESTAMP(3)</span>,
+  <span class="kw">PRIMARY KEY</span>   (currency) <span class="kw">NOT ENFORCED</span>
+) <span class="kw">WITH</span> (
+  <span class="st">'connector'</span>           <span class="op">=</span> <span class="st">'jdbc'</span>,
+  <span class="st">'url'</span>                 <span class="op">=</span> <span class="st">'jdbc:postgresql://db:5432/rates'</span>,
+  <span class="st">'table-name'</span>          <span class="op">=</span> <span class="st">'exchange_rates'</span>,
+  <span class="st">'lookup.cache.max-rows'</span> <span class="op">=</span> <span class="st">'10000'</span>,   <span class="cm">-- in-memory cache</span>
+  <span class="st">'lookup.cache.ttl'</span>    <span class="op">=</span> <span class="st">'60s'</span>
+);
+
+<span class="cm">-- Iceberg sink (write to data lake with ACID)</span>
+<span class="kw">CREATE TABLE</span> hourly_revenue_iceberg (
+  window_start  <span class="ty">TIMESTAMP(3)</span>,
+  customer_id   <span class="ty">STRING</span>,
+  total_revenue <span class="ty">DECIMAL(18,4)</span>,
+  <span class="kw">PRIMARY KEY</span>   (window_start, customer_id) <span class="kw">NOT ENFORCED</span>
+) <span class="kw">WITH</span> (
+  <span class="st">'connector'</span>   <span class="op">=</span> <span class="st">'iceberg'</span>,
+  <span class="st">'catalog-name'</span><span class="op">=</span> <span class="st">'glue'</span>,
+  <span class="st">'warehouse'</span>   <span class="op">=</span> <span class="st">'s3://lake/iceberg/'</span>,
+  <span class="st">'write.format.default'</span> <span class="op">=</span> <span class="st">'parquet'</span>
+);</pre>
+      </div>
+      <div>
+        <div class="callout c-teal">
+          <strong>Dynamic Table — The Core Abstraction</strong>
+          Flink SQL treats every streaming source as a <em>Dynamic Table</em> that grows continuously. A SELECT on a streaming source is a continuous query — it keeps running, updating its result as new rows arrive. An INSERT INTO a Kafka sink continuously appends results. An UPSERT INTO an Iceberg table continuously merges changes. The SQL is standard; the execution is infinite.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Continuous query patterns</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- Simple continuous filter — runs forever</span>
+<span class="kw">INSERT INTO</span> high_value_orders
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> orders
+<span class="kw">WHERE</span>  amount <span class="op">></span> <span class="nu">1000</span>
+  <span class="kw">AND</span>  status <span class="op">=</span> <span class="st">'COMPLETED'</span>;
+
+<span class="cm">-- Lookup join with JDBC (adds async I/O under the hood)</span>
+<span class="kw">SELECT</span>
+  o.order_id,
+  o.amount,
+  c.tier,
+  c.country
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> customer_profiles <span class="kw">FOR SYSTEM_TIME AS OF</span> o.event_ts c
+  <span class="kw">ON</span>  o.customer_id <span class="op">=</span> c.customer_id;
+<span class="cm">-- FOR SYSTEM_TIME AS OF: temporal join.
+-- Looks up the customer profile valid AT the event's timestamp.
+-- This is "as-of" join semantics — identical to DuckDB's ASOF JOIN.</span>
+
+<span class="cm">-- Group by with deduplication</span>
+<span class="kw">SELECT</span> customer_id, <span class="fn">count</span>(<span class="kw">DISTINCT</span> session_id) <span class="kw">AS</span> sessions
+<span class="kw">FROM</span>   orders
+<span class="kw">GROUP BY</span> customer_id;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINDOWS -->
+  <div id="sq-windows" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Windowed aggregations in SQL</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">-- TUMBLE: fixed non-overlapping windows</span>
+<span class="kw">SELECT</span>
+  window_start, window_end,
+  customer_id,
+  <span class="fn">SUM</span>(amount)           <span class="kw">AS</span> hourly_revenue,
+  <span class="fn">COUNT</span>(<span class="op">*</span>)              <span class="kw">AS</span> order_count,
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> session_id) <span class="kw">AS</span> sessions
+<span class="kw">FROM</span> <span class="ty">TABLE</span>(
+  <span class="fn">TUMBLE</span>(<span class="ty">TABLE</span> orders, <span class="ty">DESCRIPTOR</span>(event_ts), <span class="ty">INTERVAL</span> <span class="st">'1'</span> <span class="ty">HOUR</span>)
+)
+<span class="kw">GROUP BY</span> window_start, window_end, customer_id;
+
+<span class="cm">-- HOP (sliding): 10-minute windows advancing every 5 minutes</span>
+<span class="kw">SELECT</span>
+  window_start, window_end, customer_id, <span class="fn">SUM</span>(amount)
+<span class="kw">FROM</span> <span class="ty">TABLE</span>(
+  <span class="fn">HOP</span>(<span class="ty">TABLE</span> orders, <span class="ty">DESCRIPTOR</span>(event_ts),
+      <span class="ty">INTERVAL</span> <span class="st">'5'</span> <span class="ty">MINUTE</span>,   <span class="cm">-- hop (slide) interval</span>
+      <span class="ty">INTERVAL</span> <span class="st">'10'</span> <span class="ty">MINUTE</span>)  <span class="cm">-- window size</span>
+)
+<span class="kw">GROUP BY</span> window_start, window_end, customer_id;
+
+<span class="cm">-- SESSION: close window after 30min inactivity per key</span>
+<span class="kw">SELECT</span>
+  window_start, window_end,
+  customer_id,
+  <span class="fn">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> events_in_session
+<span class="kw">FROM</span> <span class="ty">TABLE</span>(
+  <span class="fn">SESSION</span>(<span class="ty">TABLE</span> orders <span class="kw">PARTITION BY</span> customer_id,
+          <span class="ty">DESCRIPTOR</span>(event_ts),
+          <span class="ty">INTERVAL</span> <span class="st">'30'</span> <span class="ty">MINUTE</span>)
+)
+<span class="kw">GROUP BY</span> window_start, window_end, customer_id;
+
+<span class="cm">-- CUMULATE: growing windows that reset at fixed boundaries
+-- Perfect for: real-time "revenue so far today" metrics</span>
+<span class="kw">SELECT</span>
+  window_start,  <span class="cm">-- start of day (reset boundary)</span>
+  window_end,    <span class="cm">-- current accumulation point</span>
+  customer_id,
+  <span class="fn">SUM</span>(amount) <span class="kw">AS</span> revenue_so_far_today
+<span class="kw">FROM</span> <span class="ty">TABLE</span>(
+  <span class="fn">CUMULATE</span>(<span class="ty">TABLE</span> orders, <span class="ty">DESCRIPTOR</span>(event_ts),
+            <span class="ty">INTERVAL</span> <span class="st">'1'</span> <span class="ty">HOUR</span>,   <span class="cm">-- step: emit every hour</span>
+            <span class="ty">INTERVAL</span> <span class="st">'1'</span> <span class="ty">DAY</span>)    <span class="cm">-- max size: reset daily</span>
+)
+<span class="kw">GROUP BY</span> window_start, window_end, customer_id;</pre>
+      </div>
+      <div>
+        <div class="callout c-crim">
+          <strong>CUMULATE Window — Flink's Secret SQL Feature</strong>
+          CUMULATE is unique to Flink SQL. It emits cumulative results at regular step intervals, resetting at a larger boundary. A common pattern: emit hourly revenue totals that accumulate through the day (00:00–01:00, 00:00–02:00, ... 00:00–24:00), then reset at midnight. Impossible to express cleanly in Kafka ksqlDB or standard SQL without application logic.
+        </div>
+        <h3>Window TVF — The New Model vs Deprecated GroupWindow</h3>
+        <table>
+          <thead><tr><th>API</th><th>Status</th><th>Syntax</th></tr></thead>
+          <tbody>
+            <tr><td>Window TVF</td><td><span style="color:var(--teal)">Current (1.13+)</span></td><td><code>TABLE(TUMBLE(TABLE t, ...))</code></td></tr>
+            <tr><td>GroupWindow</td><td><span style="color:var(--crim3)">Deprecated</span></td><td><code>GROUP BY TUMBLE(ts, INTERVAL...)</code></td></tr>
+          </tbody>
+        </table>
+        <p>Window TVF enables Window TopN, Window Deduplication, and Window Join — capabilities impossible with the old GroupWindow API.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEMPORAL JOINS -->
+  <div id="sq-temporal" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Temporal joins — the most powerful SQL feature</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">/*
+ TEMPORAL TABLE JOIN (versioned): for each order, find the
+ exchange rate that was valid AT the order's event time.
+ This requires the rate table to be versioned (append-only CDC).
+*/</span>
+<span class="kw">CREATE TABLE</span> exchange_rates_versioned (
+  currency    <span class="ty">STRING</span>,
+  rate        <span class="ty">DOUBLE</span>,
+  valid_from  <span class="ty">TIMESTAMP(3)</span>,
+  <span class="kw">PRIMARY KEY</span> (currency) <span class="kw">NOT ENFORCED</span>,
+  <span class="kw">WATERMARK FOR</span> valid_from <span class="kw">AS</span> valid_from <span class="op">-</span> <span class="ty">INTERVAL</span> <span class="st">'1'</span> <span class="ty">SECOND</span>
+) <span class="kw">WITH</span> (...);  <span class="cm">-- backed by Kafka topic (append-only)</span>
+
+<span class="cm">-- Temporal join: look up rate valid AT order time
+-- Flink maintains a versioned state of the rate table.</span>
+<span class="kw">SELECT</span>
+  o.order_id,
+  o.currency,
+  o.amount,
+  o.amount <span class="op">*</span> r.rate <span class="kw">AS</span> amount_usd,
+  r.valid_from      <span class="kw">AS</span> rate_valid_from
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> exchange_rates_versioned <span class="kw">FOR SYSTEM_TIME AS OF</span> o.event_ts r
+  <span class="kw">ON</span> o.currency <span class="op">=</span> r.currency;
+
+<span class="cm">/*
+ INTERVAL JOIN: join two streams where the timestamps
+ must be within a time distance of each other.
+ Use for: matching orders with their payments, correlating
+ click events with subsequent purchases.
+*/</span>
+<span class="kw">SELECT</span>
+  o.order_id,
+  p.payment_id,
+  p.amount    <span class="kw">AS</span> paid_amount,
+  o.amount    <span class="kw">AS</span> order_amount,
+  p.event_ts <span class="op">-</span> o.event_ts <span class="kw">AS</span> payment_delay
+<span class="kw">FROM</span>  orders o, payments p
+<span class="kw">WHERE</span> o.order_id <span class="op">=</span> p.order_id
+  <span class="kw">AND</span>  p.event_ts <span class="kw">BETWEEN</span>
+         o.event_ts <span class="kw">AND</span> o.event_ts <span class="op">+</span> <span class="ty">INTERVAL</span> <span class="st">'24'</span> <span class="ty">HOUR</span>;
+<span class="cm">-- Flink buffers orders for 24h, waiting for matching payments.
+-- Records older than 24h are cleared from state automatically.</span></pre>
+      </div>
+      <div>
+        <div class="callout c-amber">
+          <strong>Interval Join vs Stream-Table Join</strong>
+          <strong>Interval join</strong>: both sides are unbounded streams, matched within a time interval. Flink buffers both streams and clears old state when the interval expires. <strong>Temporal table join</strong>: one side is a versioned changelog, accessed as "what was its value at this timestamp?" — no buffering on the changelog side, just versioned state. Use interval join for correlating two event streams. Use temporal join for enrichment with a slowly-changing reference dataset.
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Deduplication + Top-N in SQL</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- DEDUPLICATION: keep only the first event per key
+-- (solves at-least-once source duplicates)</span>
+<span class="kw">SELECT</span> order_id, customer_id, amount, event_ts
+<span class="kw">FROM</span> (
+  <span class="kw">SELECT</span> <span class="op">*</span>,
+    <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (
+      <span class="kw">PARTITION BY</span> order_id
+      <span class="kw">ORDER BY</span>     event_ts <span class="kw">ASC</span>
+    ) <span class="kw">AS</span> rn
+  <span class="kw">FROM</span> orders
+)
+<span class="kw">WHERE</span> rn <span class="op">=</span> <span class="nu">1</span>;
+
+<span class="cm">-- WINDOW TOP-N: top 3 products by revenue per hour</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> (
+  <span class="kw">SELECT</span> <span class="op">*</span>,
+    <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (
+      <span class="kw">PARTITION BY</span> window_start, window_end
+      <span class="kw">ORDER BY</span>     total_revenue <span class="kw">DESC</span>
+    ) <span class="kw">AS</span> rank
+  <span class="kw">FROM</span> hourly_product_revenue   <span class="cm">-- windowed result from TUMBLE</span>
+)
+<span class="kw">WHERE</span> rank <span class="op">&lt;=</span> <span class="nu">3</span>;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CDC + UPSERT -->
+  <div id="sq-cdc" class="tab-pane">
+    <div class="g2">
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">CDC streams + changelog mode</span><span class="code-lang">sql</span></div>
+        <pre><span class="cm">/*
+ Flink SQL understands CHANGELOG SEMANTICS.
+ A CDC stream from Debezium contains +I (insert), -U/-D (retract),
+ and +U (update) messages. Flink treats these as:
+   - INSERT: new row enters the aggregation
+   - UPDATE_BEFORE: retract old value from aggregation
+   - UPDATE_AFTER: add new value to aggregation
+   - DELETE: retract row from aggregation
+
+ This means you can GROUP BY and aggregate a CDC stream and the
+ aggregate UPDATES as rows change in the source database.
+ Kafka ksqlDB cannot do this.
+*/</span>
+
+<span class="cm">-- CDC source (Debezium Kafka output → Flink CDC table)</span>
+<span class="kw">CREATE TABLE</span> orders_cdc (
+  order_id     <span class="ty">STRING</span>,
+  customer_id  <span class="ty">STRING</span>,
+  amount       <span class="ty">DECIMAL</span>(<span class="nu">18</span>,<span class="nu">4</span>),
+  status       <span class="ty">STRING</span>,
+  <span class="kw">PRIMARY KEY</span>  (order_id) <span class="kw">NOT ENFORCED</span>
+) <span class="kw">WITH</span> (
+  <span class="st">'connector'</span>    <span class="op">=</span> <span class="st">'kafka'</span>,
+  <span class="st">'topic'</span>        <span class="op">=</span> <span class="st">'ecommerce-prod.public.orders'</span>,  <span class="cm">-- Debezium topic</span>
+  <span class="st">'format'</span>       <span class="op">=</span> <span class="st">'debezium-json'</span>,               <span class="cm">-- understands CDC envelope</span>
+  <span class="st">'properties.bootstrap.servers'</span> <span class="op">=</span> <span class="st">'broker:9092'</span>
+);
+
+<span class="cm">-- Materialise a live sum — updates as orders change status:</span>
+<span class="kw">SELECT</span>
+  status,
+  <span class="fn">COUNT</span>(<span class="op">*</span>)    <span class="kw">AS</span> order_count,
+  <span class="fn">SUM</span>(amount) <span class="kw">AS</span> total_amount
+<span class="kw">FROM</span>    orders_cdc
+<span class="kw">GROUP BY</span> status;
+<span class="cm">-- When an order changes from PENDING → COMPLETED:
+--   -U: subtract from PENDING count/sum
+--   +U: add to COMPLETED count/sum
+-- Result is a continuously updating table.</span>
+
+<span class="cm">-- Write CDC aggregation to UPSERT Kafka topic:</span>
+<span class="kw">CREATE TABLE</span> order_status_summary_kafka (
+  status       <span class="ty">STRING</span>,
+  order_count  <span class="ty">BIGINT</span>,
+  total_amount <span class="ty">DECIMAL</span>(<span class="nu">18</span>,<span class="nu">4</span>),
+  <span class="kw">PRIMARY KEY</span> (status) <span class="kw">NOT ENFORCED</span>
+) <span class="kw">WITH</span> (
+  <span class="st">'connector'</span> <span class="op">=</span> <span class="st">'upsert-kafka'</span>,   <span class="cm">-- key-based compaction</span>
+  <span class="st">'topic'</span>     <span class="op">=</span> <span class="st">'order-status-summary'</span>,
+  <span class="st">'properties.bootstrap.servers'</span> <span class="op">=</span> <span class="st">'broker:9092'</span>,
+  <span class="st">'key.format'</span>  <span class="op">=</span> <span class="st">'json'</span>,
+  <span class="st">'value.format'</span><span class="op">=</span> <span class="st">'json'</span>
+);
+<span class="kw">INSERT INTO</span> order_status_summary_kafka
+<span class="kw">SELECT</span> status, <span class="fn">COUNT</span>(<span class="op">*</span>), <span class="fn">SUM</span>(amount) <span class="kw">FROM</span> orders_cdc <span class="kw">GROUP BY</span> status;</pre>
+      </div>
+      <div>
+        <div class="callout c-gold">
+          <strong>Flink SQL + CDC = Live Database Replica in Kafka</strong>
+          Connect Debezium → Kafka → Flink SQL. Flink materialises the CDC stream into a continuously updated, queryable state. Write the result to an Iceberg table or upsert-kafka topic. You now have a low-latency (seconds), exactly-once replica of your production database — with arbitrary SQL transformations applied — without ever touching Spark, Hadoop, or a dedicated OLAP database.
+        </div>
+        <h3>Flink CDC Connectors (without Kafka)</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Direct CDC — no Kafka required</span><span class="code-lang">sql</span></div>
+          <pre><span class="cm">-- flink-cdc-connectors: direct DB → Flink, no Kafka broker</span>
+<span class="kw">CREATE TABLE</span> mysql_orders (
+  order_id    <span class="ty">BIGINT</span>,
+  customer_id <span class="ty">BIGINT</span>,
+  amount      <span class="ty">DECIMAL</span>(<span class="nu">18</span>,<span class="nu">4</span>),
+  status      <span class="ty">STRING</span>,
+  updated_at  <span class="ty">TIMESTAMP</span>,
+  <span class="kw">PRIMARY KEY</span> (order_id) <span class="kw">NOT ENFORCED</span>
+) <span class="kw">WITH</span> (
+  <span class="st">'connector'</span>  <span class="op">=</span> <span class="st">'mysql-cdc'</span>,
+  <span class="st">'hostname'</span>   <span class="op">=</span> <span class="st">'prod-mysql'</span>,
+  <span class="st">'port'</span>       <span class="op">=</span> <span class="st">'3306'</span>,
+  <span class="st">'username'</span>   <span class="op">=</span> <span class="st">'flink_ro'</span>,
+  <span class="st">'password'</span>   <span class="op">=</span> <span class="st">'...'</span>,
+  <span class="st">'database-name'</span> <span class="op">=</span> <span class="st">'ecommerce'</span>,
+  <span class="st">'table-name'</span> <span class="op">=</span> <span class="st">'orders'</span>
+);
+<span class="cm">-- Flink reads MySQL binlog directly.
+-- Also available: postgres-cdc, oracle-cdc, mongodb-cdc,
+--                 sqlserver-cdc, oceanbase-cdc, tidb-cdc</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 6 — WINDOWS
+══════════════════════════════════════════ -->
+<section id="windows">
+  <div class="section-header">
+    <div class="section-eyebrow">Windowing Deep Dive</div>
+    <div class="section-title">WINDOW <em>TYPES</em></div>
+    <div class="section-sub">Windows are the mechanism by which Flink aggregates an unbounded stream into finite, computable buckets. Choosing the wrong window type is the most common source of incorrect streaming analytics. Here is every type with its exact semantics.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">All window types — DataStream API</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">// 1. TUMBLING EVENT TIME — fixed, non-overlapping</span>
+stream.keyBy(k <span class="op">-></span> k.id)
+    .window(<span class="ty">TumblingEventTimeWindows</span>.of(<span class="ty">Time</span>.hours(<span class="nu">1</span>)))
+    .aggregate(<span class="kw">new</span> <span class="ty">RevenueAgg</span>());
+<span class="cm">// [00:00,01:00), [01:00,02:00) ... each fires once</span>
+
+<span class="cm">// 2. SLIDING — overlapping windows</span>
+stream.keyBy(k <span class="op">-></span> k.id)
+    .window(<span class="ty">SlidingEventTimeWindows</span>.of(
+        <span class="ty">Time</span>.minutes(<span class="nu">10</span>),   <span class="cm">// window size</span>
+        <span class="ty">Time</span>.minutes(<span class="nu">5</span>)))   <span class="cm">// slide interval</span>
+    .aggregate(<span class="kw">new</span> <span class="ty">RevenueAgg</span>());
+<span class="cm">// Each event belongs to size/slide = 2 windows.
+// [00:00,00:10), [00:05,00:15), [00:10,00:20) ...</span>
+
+<span class="cm">// 3. SESSION — activity gap based, per key</span>
+stream.keyBy(k <span class="op">-></span> k.userId)
+    .window(<span class="ty">EventTimeSessionWindows</span>.withGap(<span class="ty">Time</span>.minutes(<span class="nu">30</span>)))
+    .aggregate(<span class="kw">new</span> <span class="ty">SessionAgg</span>());
+<span class="cm">// Window extends as long as events keep arriving within 30min.
+// No events for 30min → window closes → session emitted.</span>
+
+<span class="cm">// 4. GLOBAL WINDOW — one window per key, forever</span>
+stream.keyBy(k <span class="op">-></span> k.id)
+    .window(<span class="ty">GlobalWindows</span>.create())
+    .trigger(<span class="kw">new</span> <span class="ty">CountTrigger</span>(<span class="nu">100</span>))    <span class="cm">// fire every 100 events</span>
+    .aggregate(<span class="kw">new</span> <span class="ty">RevenueAgg</span>());
+<span class="cm">// Global window never closes without a custom trigger.
+// Use for: arbitrary triggers (ML model inference every N records)</span>
+
+<span class="cm">// 5. CUSTOM TRIGGER — fire on condition</span>
+stream.keyBy(k <span class="op">-></span> k.customerId)
+    .window(<span class="ty">TumblingEventTimeWindows</span>.of(<span class="ty">Time</span>.hours(<span class="nu">1</span>)))
+    .trigger(<span class="ty">PurgingTrigger</span>.of(<span class="ty">CountTrigger</span>.of(<span class="nu">50</span>)))
+    <span class="cm">// Fire AND PURGE when 50 events accumulate within the window.
+    // Fire again at window end. Useful for early/speculative results.</span>
+    .aggregate(<span class="kw">new</span> <span class="ty">RevenueAgg</span>());</pre>
+      </div>
+    </div>
+    <div>
+      <h3>AggregateFunction vs ProcessWindowFunction</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Incremental vs full-window — performance tradeoff</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">/**
+ * AggregateFunction: INCREMENTAL — O(1) state per window.
+ * Accumulator updated per event. Efficient but no access
+ * to window boundaries or all events at once.
+ */</span>
+<span class="kw">public class</span> <span class="ty">RevenueAgg</span>
+        <span class="kw">implements</span> <span class="ty">AggregateFunction</span>&lt;<span class="ty">Order</span>, <span class="ty">Double</span>, <span class="ty">Revenue</span>&gt; {
+
+    <span class="kw">public</span> <span class="ty">Double</span> <span class="fn">createAccumulator</span>() { <span class="kw">return</span> <span class="nu">0.0</span>; }
+    <span class="kw">public</span> <span class="ty">Double</span> <span class="fn">add</span>(<span class="ty">Order</span> o, <span class="ty">Double</span> acc) { <span class="kw">return</span> acc <span class="op">+</span> o.amount; }
+    <span class="kw">public</span> <span class="ty">Double</span> <span class="fn">merge</span>(<span class="ty">Double</span> a, <span class="ty">Double</span> b) { <span class="kw">return</span> a <span class="op">+</span> b; }
+    <span class="kw">public</span> <span class="ty">Revenue</span> <span class="fn">getResult</span>(<span class="ty">Double</span> acc) {
+        <span class="kw">return new</span> <span class="ty">Revenue</span>(acc);
+    }
+}
+
+<span class="cm">/**
+ * ProcessWindowFunction: FULL — buffers ALL events in window.
+ * Expensive (O(n) state) but gives access to window bounds,
+ * all events, and iteration. Use for: percentiles, medians,
+ * complex multi-pass calculations.
+ */</span>
+<span class="kw">public class</span> <span class="ty">P99Calculator</span>
+        <span class="kw">extends</span> <span class="ty">ProcessWindowFunction</span>&lt;<span class="ty">Event</span>, <span class="ty">Metrics</span>, <span class="ty">String</span>, <span class="ty">TimeWindow</span>&gt; {
+
+    <span class="kw">public void</span> <span class="fn">process</span>(<span class="ty">String</span> key,
+                         <span class="ty">Context</span> ctx,
+                         <span class="ty">Iterable</span>&lt;<span class="ty">Event</span>&gt; events,   <span class="cm">// ALL events</span>
+                         <span class="ty">Collector</span>&lt;<span class="ty">Metrics</span>&gt; out) {
+
+        <span class="ty">List</span>&lt;<span class="ty">Long</span>&gt; latencies <span class="op">=</span> <span class="ty">StreamSupport</span>
+            .stream(events.spliterator(), <span class="kw">false</span>)
+            .map(<span class="ty">Event</span>::getLatency)
+            .sorted()
+            .collect(<span class="ty">Collectors</span>.toList());
+
+        <span class="kw">long</span> p99 <span class="op">=</span> latencies.get((<span class="kw">int</span>)(latencies.size() <span class="op">*</span> <span class="nu">0.99</span>));
+        out.collect(<span class="kw">new</span> <span class="ty">Metrics</span>(key,
+            ctx.window().getStart(), ctx.window().getEnd(), p99));
+    }
+}
+
+<span class="cm">// BEST PRACTICE: combine both — incremental + window context:
+stream.keyBy(...)
+    .window(...)
+    .aggregate(
+        new RevenueAgg(),    // incremental: O(1) state
+        new EnrichWithWindowBounds()  // called once on fire
+    );</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 7 — EOS
+══════════════════════════════════════════ -->
+<section id="eos">
+  <div class="section-header">
+    <div class="section-eyebrow">Fault Tolerance</div>
+    <div class="section-title">EXACTLY-ONCE <em>IN FLINK</em></div>
+    <div class="section-sub">Flink's exactly-once is architecturally different from Kafka's. Kafka uses the transactional API and sequence numbers. Flink uses a two-phase commit protocol layered on top of its checkpointing system — making EOS available to any sink, not just Kafka.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <h3>Two-Phase Commit via Checkpoints</h3>
+      <div class="callout c-crim">
+        <strong>How Flink's EOS Differs From Kafka's</strong>
+        Kafka EOS uses PID+sequence numbers and transactions purely within the Kafka protocol. Flink's EOS is a generic protocol: any sink that implements <code>TwoPhaseCommitSinkFunction</code> gets exactly-once — whether it's Kafka, a JDBC database, an Iceberg table, or a custom system. The checkpoint acts as the global coordinator.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">2PC sequence — Kafka sink</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">/*
+ TWO-PHASE COMMIT SEQUENCE:
+ ─────────────────────────────────────────────────
+
+ PHASE 1 — PRE-COMMIT (on checkpoint barrier):
+   1. Source operators snapshot their Kafka offsets
+   2. Processing operators snapshot their keyed state
+   3. Kafka sink begins a Kafka transaction
+      (transactional.id = "flink-sink-{subtaskId}-{checkpointId}")
+   4. All records written so far go into the open transaction
+   5. Sink snapshots: transactional.id into checkpoint state
+   6. All operators report checkpoint complete to JobManager
+
+ PHASE 2 — COMMIT (after all operators confirm):
+   1. JobManager receives ALL confirmements → checkpoint complete
+   2. Kafka sink commits the open transaction (commit_transaction())
+   3. Records NOW visible to read_committed consumers
+
+ FAILURE SCENARIOS:
+   ● Crash before phase 2: transaction aborted, no duplicates
+     → restart from last complete checkpoint, reprocess from offsets
+   ● Crash mid phase 2: transactional.id persisted in checkpoint
+     → on restart, sink recovers transactional.id, aborts/commits
+     → idempotent: committing an already-committed transaction is a no-op
+*/</span>
+
+<span class="ty">KafkaSink</span>&lt;<span class="ty">Revenue</span>&gt; kafkaSink <span class="op">=</span> <span class="ty">KafkaSink</span>.&lt;<span class="ty">Revenue</span>&gt;builder()
+    .setBootstrapServers(<span class="st">"broker:9092"</span>)
+    .setDeliveryGuarantee(<span class="ty">DeliveryGuarantee</span>.EXACTLY_ONCE)
+    .setTransactionalIdPrefix(<span class="st">"hourly-revenue-sink"</span>)
+    <span class="cm">// transactionTimeout must be > checkpoint interval</span>
+    .setProperty(<span class="st">"transaction.timeout.ms"</span>, <span class="st">"900000"</span>)  <span class="cm">// 15min</span>
+    .setRecordSerializer(...)
+    .build();</pre>
+      </div>
+    </div>
+    <div>
+      <h3>Custom TwoPhaseCommitSinkFunction</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Custom EOS sink — JDBC example</span><span class="code-lang">java</span></div>
+        <pre><span class="cm">/**
+ * Implement TwoPhaseCommitSinkFunction for ANY external system.
+ * Flink calls these methods at the right checkpoint phase.
+ * Transaction state is checkpointed — survives restarts.
+ */</span>
+<span class="kw">public class</span> <span class="ty">JdbcEosSink</span>
+        <span class="kw">extends</span> <span class="ty">TwoPhaseCommitSinkFunction</span>&lt;<span class="ty">Revenue</span>, <span class="ty">Connection</span>, <span class="ty">Void</span>&gt; {
+
+    <span class="an">@Override</span>
+    <span class="kw">protected</span> <span class="ty">Connection</span> <span class="fn">beginTransaction</span>() <span class="kw">throws</span> <span class="ty">Exception</span> {
+        <span class="ty">Connection</span> conn <span class="op">=</span> dataSource.getConnection();
+        conn.setAutoCommit(<span class="kw">false</span>);    <span class="cm">// start DB transaction</span>
+        <span class="kw">return</span> conn;
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">invoke</span>(<span class="ty">Connection</span> txn, <span class="ty">Revenue</span> r, <span class="ty">Context</span> ctx) {
+        <span class="cm">// Write into the open transaction</span>
+        <span class="kw">try</span>(<span class="ty">PreparedStatement</span> ps <span class="op">=</span> txn.prepareStatement(<span class="st">"UPSERT INTO..."</span>)){
+            ps.setString(<span class="nu">1</span>, r.customerId);
+            ps.setDouble(<span class="nu">2</span>, r.amount);
+            ps.executeUpdate();
+        }
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">protected void</span> <span class="fn">preCommit</span>(<span class="ty">Connection</span> txn) {
+        <span class="cm">// Phase 1: called when checkpoint barrier arrives</span>
+        <span class="cm">// Flush any pending writes — do NOT commit yet</span>
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">protected void</span> <span class="fn">commit</span>(<span class="ty">Connection</span> txn) {
+        txn.commit();    <span class="cm">// Phase 2: ALL operators confirmed</span>
+        txn.close();
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">protected void</span> <span class="fn">abort</span>(<span class="ty">Connection</span> txn) {
+        txn.rollback();  <span class="cm">// checkpoint failed → rollback</span>
+        txn.close();
+    }
+}</pre>
+      </div>
+      <div class="callout c-teal">
+        <strong>EOS to ANY System</strong>
+        This is Flink's killer architectural advantage over Kafka Streams. Kafka Streams EOS only works Kafka→Kafka. Flink's 2PC protocol gives you exactly-once to: PostgreSQL, MySQL, Iceberg, Delta Lake, Elasticsearch, Redis — anything that supports transactions or idempotent writes. The checkpoint is the coordinator; the sink implements the protocol.
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 8 — FLINK vs KAFKA
+══════════════════════════════════════════ -->
+<section id="vs">
+  <div class="section-header">
+    <div class="section-eyebrow">Architecture Decisions</div>
+    <div class="section-title">FLINK <em>vs</em> KAFKA STREAMS</div>
+    <div class="section-sub">These are not competitors — they are complements. But understanding their exact capability differences prevents catastrophic architecture decisions. Here is the definitive, honest comparison.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="vs-grid">
+    <div class="vs-cell vs-head" style="background:var(--magma4)">Capability</div>
+    <div class="vs-cell vs-head vs-flink" style="color:var(--crim3)">Apache Flink</div>
+    <div class="vs-cell vs-head vs-kafka" style="color:var(--teal)">Kafka Streams</div>
+
+    <div class="vs-cell vs-label">Deployment model</div>
+    <div class="vs-cell vs-flink"><span class="vs-lose">Requires cluster</span> (JM + TMs) or standalone</div>
+    <div class="vs-cell vs-kafka"><span class="vs-win">Embedded library</span> — runs inside your JVM app</div>
+
+    <div class="vs-cell vs-label">Sources beyond Kafka</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">Any source:</span> files, databases, HTTP, generators, Iceberg, Delta</div>
+    <div class="vs-cell vs-kafka"><span class="vs-lose">Kafka only.</span> Cannot read from files, JDBC, S3 directly</div>
+
+    <div class="vs-cell vs-label">Event time / watermarks</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">Full:</span> BoundedOutOfOrderness, custom generators, per-partition, idleness</div>
+    <div class="vs-cell vs-kafka"><span class="vs-tie">Limited:</span> StreamTime advances with message timestamps, no grace period API</div>
+
+    <div class="vs-cell vs-label">State size</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">TB-scale</span> with RocksDB, off-heap, incremental checkpoints</div>
+    <div class="vs-cell vs-kafka"><span class="vs-tie">GB-scale</span> with RocksDB, but backed by changelog topics (slower restore)</div>
+
+    <div class="vs-cell vs-label">Checkpointing / recovery</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">Chandy-Lamport</span> — async, incremental, seconds-to-recover</div>
+    <div class="vs-cell vs-kafka">Offset commits + changelog topics — <span class="vs-tie">minutes for large state</span></div>
+
+    <div class="vs-cell vs-label">SQL layer</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">Full ANSI streaming SQL:</span> temporal joins, CDC, CUMULATE, Window TopN</div>
+    <div class="vs-cell vs-kafka">ksqlDB (separate process): <span class="vs-tie">limited temporal joins, no CDC aggregation</span></div>
+
+    <div class="vs-cell vs-label">Exactly-once sinks</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">Any sink</span> via TwoPhaseCommitSinkFunction (JDBC, Iceberg, Delta, Kafka)</div>
+    <div class="vs-cell vs-kafka"><span class="vs-lose">Kafka → Kafka only</span></div>
+
+    <div class="vs-cell vs-label">Session windows</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">Native:</span> EventTimeSessionWindows, ProcessingTimeSessionWindows</div>
+    <div class="vs-cell vs-kafka"><span class="vs-lose">Not supported</span> without custom processor implementation</div>
+
+    <div class="vs-cell vs-label">Batch + stream unified</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">Same API:</span> setBounded() turns streaming job into batch</div>
+    <div class="vs-cell vs-kafka"><span class="vs-lose">Streaming only</span></div>
+
+    <div class="vs-cell vs-label">Python API</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">PyFlink:</span> full DataStream + Table/SQL API</div>
+    <div class="vs-cell vs-kafka"><span class="vs-lose">JVM only</span> (no official Python client)</div>
+
+    <div class="vs-cell vs-label">Operations overhead</div>
+    <div class="vs-cell vs-flink"><span class="vs-lose">High:</span> cluster management, JM HA, monitoring, JobManager tuning</div>
+    <div class="vs-cell vs-kafka"><span class="vs-win">Low:</span> no separate cluster, scales with your app replicas</div>
+
+    <div class="vs-cell vs-label">Latency</div>
+    <div class="vs-cell vs-flink"><span class="vs-win">Sub-millisecond</span> possible with low buffer timeouts</div>
+    <div class="vs-cell vs-kafka"><span class="vs-tie">Single-digit milliseconds</span> (commit.interval.ms lower bound)</div>
+
+    <div class="vs-cell vs-label">When to use</div>
+    <div class="vs-cell vs-flink" style="color:var(--text2);font-size:0.72rem">Complex stateful logic, multi-source joins, large state, SQL analytics, EOS to non-Kafka sinks, ML inference pipelines</div>
+    <div class="vs-cell vs-kafka" style="color:var(--text2);font-size:0.72rem">Simple Kafka→transform→Kafka pipelines, microservice event processing, no-ops team, low operational overhead</div>
+  </div>
+
+  <hr class="sep sep-fire">
+
+  <h3>The Canonical Combined Architecture</h3>
+  <div class="g2">
+    <div>
+      <p>Kafka and Flink are designed to work together. Kafka is the <em>durable distributed log</em> — the backbone of your event infrastructure. Flink is the <em>computation engine</em> that reads from Kafka, processes with stateful operators, and writes results back to Kafka or downstream sinks.</p>
+      <div class="card" style="padding:1rem">
+        <div class="op-row" style="flex-wrap:wrap;gap:4px">
+          <div class="op-box ob-source" style="font-size:0.65rem">Postgres CDC</div>
+          <div class="op-arr">→</div>
+          <div class="op-box ob-source" style="font-size:0.65rem">Kafka Connect</div>
+          <div class="op-arr">→</div>
+          <div class="op-box ob-key" style="font-size:0.65rem">Kafka Topics</div>
+        </div>
+        <div style="text-align:center;margin:4px 0;color:var(--text3);font-family:var(--mono);font-size:0.7rem">↓ Kafka as durable buffer</div>
+        <div class="op-row" style="justify-content:center">
+          <div class="op-box ob-window" style="font-size:0.7rem;padding:8px 20px">APACHE FLINK JOB</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:0.6rem;color:var(--text3);text-align:center;margin:2px 0">Watermarks · State · Windows · Exactly-Once</div>
+        <div style="text-align:center;margin:4px 0;color:var(--text3);font-family:var(--mono);font-size:0.7rem">↓ enriched / aggregated results</div>
+        <div class="op-row" style="justify-content:center;gap:6px;flex-wrap:wrap">
+          <div class="op-box ob-sink" style="font-size:0.65rem">Kafka (results)</div>
+          <div class="op-box ob-sink" style="font-size:0.65rem">Iceberg / Delta</div>
+          <div class="op-box ob-sink" style="font-size:0.65rem">PostgreSQL</div>
+          <div class="op-box ob-sink" style="font-size:0.65rem">Elasticsearch</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3>Decision Framework</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">When to use which</span><span class="code-lang">decision tree</span></div>
+        <pre><span class="cm">Use KAFKA STREAMS when:
+  ✓ Source is exclusively Kafka topics
+  ✓ Team is 1-3 engineers without dedicated ops
+  ✓ State is < 10GB per application instance
+  ✓ No complex temporal joins needed
+  ✓ Java/Scala shop (no Python requirement)
+  ✓ Microservice per-team ownership model
+  ✓ &lt; 1M msgs/sec throughput
+
+Use FLINK when:
+  ✓ Need to join Kafka with S3, JDBC, or files
+  ✓ State > 10GB (RocksDB incremental checkpoints)
+  ✓ Need session windows (Kafka Streams: ❌)
+  ✓ Need SQL analytics on streaming data
+  ✓ EOS to non-Kafka sinks (JDBC, Iceberg)
+  ✓ Backfill / historical replay with correct time
+  ✓ Python team / PyFlink + Table SQL API
+  ✓ Multi-tenant, shared infrastructure
+  ✓ Event-time correctness is non-negotiable
+
+Use BOTH together:
+  ✓ Kafka as the durable event backbone
+  ✓ Kafka Streams for simple microservice transforms
+  ✓ Flink for complex aggregations, ML, lake writes
+  ✓ Both write results back to Kafka topics
+  ← This is the production-grade architecture</span></pre>
+      </div>
+
+      <h3>vs DuckDB + Polars (your stack)</h3>
+      <div class="callout c-amber">
+        <strong>The Boundary: Streaming vs Batch</strong>
+        Flink processes events <em>as they arrive</em> — sub-second latency, stateful, continuous. DuckDB and Polars process <em>files at rest</em> — batch, analytical, high-throughput. The production pattern: Flink writes results to S3 Parquet in micro-batches (5–60 minutes). DuckDB or Polars queries those Parquet files for ad-hoc analytics. Kafka → Flink → S3 → DuckDB is the exact stack you've been building.
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function showTab(g, id, btn) {
+  document.querySelectorAll(`[id^="${g}-"]`).forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(`${g}-${id}`);
+  if (el) el.classList.add('active');
+  btn.classList.add('active');
+}
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.querySelectorAll('.perf-fill').forEach(b => {
+      const w = b.style.width; b.style.width = '0';
+      setTimeout(() => { b.style.width = w; }, 80);
+    });
+  });
+}, {threshold: 0.3});
+document.querySelectorAll('.perf-row').forEach(r => io.observe(r));
+</script>
+</body>
+</html>

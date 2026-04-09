@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISBLKBOX // Ontology-Adaptive Visualization System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#040810; --bg1:#060D1C; --bg2:#091424; --bg3:#0C1B30;
+  --cyan:#00E5FF; --cyanm:rgba(0,229,255,.5); --cyand:rgba(0,229,255,.13);
+  --amber:#FFB300; --violet:#9C88FF; --green:#00E676; --red:#FF5252;
+  --t1:#D4E8F5; --t2:rgba(212,232,245,.56); --t3:rgba(212,232,245,.28);
+  --bd:rgba(0,229,255,.12); --bd2:rgba(0,229,255,.30);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg0);color:var(--t1);}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:9999;}
+
+/* ── HEADER ── */
+.hdr{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--bd);background:var(--bg1);position:relative;flex-shrink:0;}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.35;}
+.logo{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--cyan);letter-spacing:4px;}
+.logo em{color:var(--amber);font-style:normal;}
+.pipe{display:flex;align-items:center;gap:0;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:1px;}
+.pn{display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--cyanm);background:rgba(0,229,255,.06);color:var(--cyan);}
+.parr{color:var(--cyand);padding:0 3px;font-size:13px;}
+.dot{width:5px;height:5px;border-radius:50%;}
+.dot.g{background:var(--green);animation:pulse 2s ease-in-out infinite;}
+.dot.a{background:var(--amber);animation:pulse 2.3s ease-in-out infinite .4s;}
+.dot.v{background:var(--violet);animation:pulse 1.8s ease-in-out infinite .8s;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.clk{font-size:10px;color:var(--t3);letter-spacing:2px;font-family:'Orbitron',monospace;}
+
+/* ── MAIN GRID ── */
+.main{display:grid;grid-template-columns:252px 1fr 274px;height:calc(100vh - 46px - 78px);overflow:hidden;}
+
+/* ── SIDE PANELS ── */
+.panel{border-right:1px solid var(--bd);overflow-y:auto;background:var(--bg1);display:flex;flex-direction:column;}
+.panel.right{border-right:none;border-left:1px solid var(--bd);}
+.phdr{padding:8px 12px;border-bottom:1px solid var(--bd);font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;color:var(--cyanm);display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.phdr .bk{color:var(--amber);opacity:.5;}
+
+/* ── DATASET LIST ── */
+.dsi{padding:10px 12px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .15s;position:relative;}
+.dsi:hover{background:rgba(0,229,255,.03);}
+.dsi.act{background:rgba(0,229,255,.07);border-left:2px solid var(--cyan);padding-left:10px;}
+.dsi.act::after{content:'◈';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--cyan);font-size:8px;}
+.dsid{font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:2px;font-family:'Orbitron',monospace;}
+.dsname{font-size:10px;color:var(--t1);font-weight:500;line-height:1.35;margin-bottom:2px;}
+.dsmeta{font-size:9px;color:var(--t3);}
+.dstag{display:inline-block;font-size:8px;padding:2px 5px;border:1px solid;border-radius:2px;margin-top:4px;font-family:'Orbitron',monospace;letter-spacing:1px;}
+.tag-sp{color:var(--cyan);border-color:rgba(0,229,255,.35);}
+.tag-tf{color:var(--amber);border-color:rgba(255,179,0,.35);}
+.tag-gr{color:var(--violet);border-color:rgba(156,136,255,.35);}
+.tag-tp{color:var(--green);border-color:rgba(0,230,118,.35);}
+
+/* ── CONNECTOR STATUS ── */
+.conns{padding:10px 12px;}
+.slabel{font-family:'Orbitron',monospace;font-size:7px;letter-spacing:2px;color:var(--t3);margin-bottom:7px;}
+.cr{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:9px;color:var(--t3);}
+
+/* ── VIZ CENTER ── */
+.viz{background:var(--bg0);display:flex;flex-direction:column;}
+.vizhdr{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--bd);background:var(--bg1);flex-shrink:0;}
+.vt{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:1.5px;color:var(--t2);}
+.vbtns{display:flex;gap:4px;}
+.vb{padding:3px 9px;font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--t3);border:1px solid var(--bd);background:transparent;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.vb:hover{border-color:var(--cyanm);color:var(--cyanm);}
+.vb.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.07);}
+#plotdiv{flex:1;min-height:0;}
+
+/* ── ONTOLOGY PANEL ── */
+.sec{padding:10px 12px;border-bottom:1px solid var(--bd);}
+.srow{display:flex;justify-content:space-between;padding:2.5px 0;font-size:9px;border-bottom:1px solid rgba(255,255,255,.03);}
+.sk{color:var(--t3)}.sv{color:var(--t1)}.sv.hi{color:var(--cyan);}
+.cbar{margin:4.5px 0;}
+.clabel{display:flex;justify-content:space-between;font-size:9px;color:var(--t2);margin-bottom:2px;}
+.ctrack{height:2px;background:var(--bg3);border-radius:1px;overflow:hidden;}
+.cfill{height:100%;border-radius:1px;transition:width .9s cubic-bezier(.25,.46,.45,.94);}
+.cf-sp{background:var(--cyan);} .cf-te{background:rgba(0,229,255,.3);}
+.cf-tf{background:var(--amber);} .cf-gr{background:var(--violet);}
+.cf-tp{background:var(--green);} .cf-rl{background:rgba(0,229,255,.25);}
+.eroute{display:flex;align-items:center;gap:7px;padding:4px 0;font-size:9px;}
+.rdot{width:7px;height:7px;border-radius:50%;border:1px solid;flex-shrink:0;}
+.rdot.on{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 5px rgba(0,229,255,.45);}
+.rdot.off{border-color:var(--t3);}
+.rn{flex:1;color:var(--t2);} .rs{font-size:8px;color:var(--t3);}
+.klipp{font-size:9px;color:var(--t3);line-height:1.75;}
+
+/* ── FOOTER ── */
+.footer{height:78px;border-top:1px solid var(--bd);padding:10px 14px;background:var(--bg1);display:flex;gap:10px;align-items:flex-start;overflow:hidden;flex-shrink:0;}
+.aibadge{font-family:'Orbitron',monospace;font-size:7px;letter-spacing:1px;color:var(--violet);border:1px solid rgba(156,136,255,.3);padding:3px 6px;white-space:nowrap;margin-top:1px;flex-shrink:0;}
+.aitext{font-size:10px;color:var(--t2);line-height:1.58;font-style:italic;}
+.aitext .kw{color:var(--amber);font-style:normal;font-weight:500;}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">VISBLK<em>BOX</em> <span style="font-size:9px;color:var(--t3);letter-spacing:2px;font-weight:400">// ONTOLOGY-ADAPTIVE VIZ SYSTEM v0.1-α</span></div>
+  <div class="pipe">
+    <div class="pn"><div class="dot g"></div>INGRESS</div>
+    <div class="parr">══►</div>
+    <div class="pn"><div class="dot a"></div>CLASSIFY</div>
+    <div class="parr">══►</div>
+    <div class="pn"><div class="dot g"></div>TRANSFORM</div>
+    <div class="parr">══►</div>
+    <div class="pn"><div class="dot v"></div>EGRESS</div>
+  </div>
+  <div class="clk" id="clk">--:--:--</div>
+</div>
+
+<div class="main">
+  <!-- LEFT -->
+  <div class="panel">
+    <div class="phdr"><span class="bk">[</span>INGRESS DATASETS<span class="bk">]</span></div>
+    <div class="dsi act" onclick="sel(0)">
+      <div class="dsid">DS-001</div>
+      <div class="dsname">GJ-1214b Atmospheric Transit Spectrum</div>
+      <div class="dsmeta">225 spectral channels · 2 features</div>
+      <span class="dstag tag-sp">SPECTRAL</span>
+    </div>
+    <div class="dsi" onclick="sel(1)">
+      <div class="dsid">DS-002</div>
+      <div class="dsname">DSCOVR-SIM Solar Wind Plasma Sheet</div>
+      <div class="dsmeta">800 particles · 6 dimensions</div>
+      <span class="dstag tag-tf">TENSOR / FIELD</span>
+    </div>
+    <div class="dsi" onclick="sel(2)">
+      <div class="dsid">DS-003</div>
+      <div class="dsname">Drosophila Optic Lobe Connectome</div>
+      <div class="dsmeta">45 neurons · 127 synaptic edges</div>
+      <span class="dstag tag-gr">GRAPH / NETWORK</span>
+    </div>
+    <div class="dsi" onclick="sel(3)">
+      <div class="dsid">DS-004</div>
+      <div class="dsname">α-Synuclein Ramachandran φ/ψ Surface</div>
+      <div class="dsmeta">72×72 grid · free energy (kT)</div>
+      <span class="dstag tag-tp">TOPOLOGICAL</span>
+    </div>
+    <div class="conns">
+      <div class="slabel" style="margin-bottom:6px">INGRESS CONNECTORS</div>
+      <div class="cr"><div class="dot g"></div>CSV / Excel / Google Sheets</div>
+      <div class="cr"><div class="dot g"></div>Kaggle / GitHub Repos</div>
+      <div class="cr" style="opacity:.4"><div class="dot" style="background:var(--t3)"></div>BigQuery / Snowflake</div>
+      <div class="cr" style="opacity:.4"><div class="dot" style="background:var(--t3)"></div>Kafka / Event Streams</div>
+      <div class="cr" style="opacity:.4"><div class="dot" style="background:var(--t3)"></div>HDF5 / NetCDF / Zarr</div>
+      <div class="cr" style="opacity:.4"><div class="dot" style="background:var(--t3)"></div>Klippermann Structures</div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="viz">
+    <div class="vizhdr">
+      <div class="vt" id="vtitle">GJ-1214b // ATMOSPHERIC TRANSIT SPECTRUM</div>
+      <div class="vbtns">
+        <button class="vb on" id="btn2d" onclick="set2D()">2D</button>
+        <button class="vb" id="btn3d" onclick="set3D()">3D</button>
+      </div>
+    </div>
+    <div id="plotdiv"></div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel right">
+    <div class="phdr"><span class="bk">[</span>ONTOLOGY ENGINE<span class="bk">]</span></div>
+    <div class="sec" id="schema-sec"><div class="slabel">SCHEMA PROFILE</div></div>
+    <div class="sec"><div class="slabel">ONTOLOGY CONFIDENCE</div><div id="conf-bars"></div></div>
+    <div class="sec"><div class="slabel">EGRESS ROUTES</div><div id="egress-list"></div></div>
+    <div class="sec"><div class="slabel">KLIPPERMANN TOPOLOGY</div><div class="klipp" id="klipp-info"></div></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="aibadge">AI ORCHESTRATOR</div>
+  <div class="aitext" id="ai-text"></div>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+// ── SYNTHETIC DATA GENERATION ─────────────────────────────────────────────────
+
+function genSpec() {
+  const wl=[], fl=[];
+  for (let w=0.5; w<=5.02; w+=0.02) {
+    let f=0.0100;
+    f += 0.0045*Math.exp(-((w-1.6)/0.06)**2);
+    f += 0.0072*Math.exp(-((w-2.0)/0.09)**2);
+    f += 0.0062*Math.exp(-((w-2.7)/0.13)**2);
+    f += 0.0096*Math.exp(-((w-4.3)/0.16)**2);
+    f += 0.0038*Math.exp(-((w-1.4)/0.07)**2);
+    f += 0.0050*Math.exp(-((w-1.9)/0.09)**2);
+    f += 0.0028*Math.exp(-((w-2.5)/0.06)**2);
+    f += 0.0042*Math.exp(-((w-3.3)/0.11)**2);
+    f += 0.0026*Math.exp(-((w-0.6)/0.045)**2);
+    f += 0.0003*(Math.random()-0.5);
+    wl.push(+w.toFixed(3));
+    fl.push(+(f*100).toFixed(5));
+  }
+  return {wl, fl};
+}
+
+function genPlasma() {
+  const bx=[],by=[],bz=[],sp=[];
+  for (let i=0;i<800;i++) {
+    const t=i/800, phi=(Math.random()-0.5)*0.9;
+    const B=5+3*Math.random();
+    const cs=Math.sin(phi*3)>0?1:-1;
+    bx.push(+(B*Math.cos(phi)*cs+0.5*(Math.random()-0.5)).toFixed(3));
+    by.push(+(-B*0.42*Math.sin(phi)+0.45*(Math.random()-0.5)).toFixed(3));
+    bz.push(+(B*0.15*cs*(Math.random()-0.5)).toFixed(3));
+    sp.push(+(385+80*Math.random()+55*Math.sin(t*12)).toFixed(1));
+  }
+  return {bx,by,bz,sp};
+}
+
+function genConn() {
+  const N=45;
+  const types=['L1','L2','L3','L4','L5','Mi','Tm','T4','T5','C2'];
+  const neurons=Array.from({length:N},(_,i)=>({
+    x:(i%9)*2.7+(Math.random()-0.5)*0.9,
+    y:Math.floor(i/9)*2.7+(Math.random()-0.5)*0.9,
+    type:types[i%10], id:i
+  }));
+  const edges=[];
+  for (let i=0;i<N;i++) for (let k=0;k<3+Math.floor(Math.random()*3);k++) {
+    const j=Math.floor(Math.random()*N);
+    if(j!==i) edges.push({from:i,to:j,w:1+Math.floor(Math.random()*7),exc:Math.random()>0.2});
+  }
+  return {neurons,edges};
+}
+
+function genRama() {
+  const sz=72, phi=[], psi=[], z=[];
+  for(let i=0;i<sz;i++) phi.push(-180+i*5);
+  for(let j=0;j<sz;j++) psi.push(-180+j*5);
+  for(let j=0;j<sz;j++) {
+    const row=[];
+    for(let i=0;i<sz;i++) {
+      const p=phi[i], s=psi[j];
+      let E=0;
+      E -= 4.5*Math.exp(-(((p+63)/21)**2+((s+43)/21)**2));
+      E -= 4.0*Math.exp(-(((p+120)/26)**2+((s-130)/26)**2));
+      E -= 1.8*Math.exp(-(((p-62)/18)**2+((s-43)/18)**2));
+      E -= 2.2*Math.exp(-(((p+75)/20)**2+((s-145)/20)**2));
+      E += 4.5*Math.exp(-(((p)/33)**2+((s)/33)**2));
+      row.push(+Math.max(0,-E+5+0.22*Math.random()).toFixed(3));
+    }
+    z.push(row);
+  }
+  return {phi,psi,z};
+}
+
+const DATA=[genSpec(), genPlasma(), genConn(), genRama()];
+
+// ── METADATA ─────────────────────────────────────────────────────────────────
+
+const DS=[
+  {
+    vt:'GJ-1214b // ATMOSPHERIC TRANSIT SPECTRUM',
+    schema:[
+      ['Dimensions','2 (λ, transit depth)'],['Domain','IR/NIR 0.5–5.0 μm'],
+      ['Samples','225 spectral channels'],['Temporal','FALSE'],
+      ['Periodic','FALSE'],['Primary type','SPECTRAL']
+    ],
+    conf:[
+      {l:'Spectral',v:94,c:'cf-sp'},{l:'Temporal',v:12,c:'cf-te'},
+      {l:'Relational',v:8,c:'cf-rl'},{l:'Tensor/Field',v:5,c:'cf-tf'},
+      {l:'Graph',v:2,c:'cf-gr'},{l:'Topological',v:1,c:'cf-tp'}
+    ],
+    egress:[
+      {n:'Plotly 2D (line/area)',e:true,s:'98%'},{n:'Matplotlib / Seaborn',e:true,s:'96%'},
+      {n:'Observable / D3.js',e:true,s:'81%'},{n:'Plotly 3D',e:false,s:'22%'},
+      {n:'Three.js / WebGL',e:false,s:'11%'},{n:'WebXR / Unreal Engine',e:false,s:'4%'}
+    ],
+    klipp:'Manifold: ℝ¹ → ℝ¹<br>Topology: Linear 1-chain<br>Structure: Ordered sequence<br>Persistence: Monotone index<br>Recommendation: 1-simplex graph<br>Betti: β₀=1, β₁=0',
+    ai:'Detected <span class="kw">spectral absorption</span> pattern with 9 molecular band signatures. Schema classified as <span class="kw">SPECTRAL (94% confidence)</span>. Wavelength axis is monotone with uniform Δλ=0.02 μm — optimal for 2D multi-line area chart. Molecular IDs resolved: CO₂ (×4 bands), H₂O (×2), CH₄, O₃, CO. Recommend overlay of HITRAN model transmission for residual fitting. Instrument: simulated JWST/NIRSpec geometry.'
+  },
+  {
+    vt:'DSCOVR-SIM // SOLAR WIND PLASMA SHEET — Bx/By/Bz',
+    schema:[
+      ['Dimensions','6 (Bx, By, Bz, Vx, Vy, Vz)'],['Coordinates','GSE heliocentric'],
+      ['Samples','800 plasma parcels'],['Parker spiral','DETECTED'],
+      ['Heliospheric CS','DETECTED (Bz reversals)'],['Primary type','VECTOR FIELD']
+    ],
+    conf:[
+      {l:'Tensor/Field',v:91,c:'cf-tf'},{l:'Topological',v:22,c:'cf-tp'},
+      {l:'Temporal',v:18,c:'cf-te'},{l:'Spectral',v:14,c:'cf-sp'},
+      {l:'Relational',v:9,c:'cf-rl'},{l:'Graph',v:5,c:'cf-gr'}
+    ],
+    egress:[
+      {n:'Plotly 3D (scatter)',e:true,s:'97%'},{n:'Three.js / WebGL',e:true,s:'94%'},
+      {n:'Paraview / VTK',e:true,s:'92%'},{n:'WebXR / Immersive',e:true,s:'88%'},
+      {n:'Observable / D3',e:false,s:'41%'},{n:'Plotly 2D (scatter)',e:false,s:'38%'}
+    ],
+    klipp:'Manifold: ℝ⁶ embedded<br>Topology: Fibre bundle<br>Structure: Vector sheaf<br>Persistence: Multi-scale<br>Recommendation: 3-simplex + fibre<br>Betti: β₀=1, β₁≥3',
+    ai:'Detected <span class="kw">6-dimensional vector field</span> with correlated magnetic and velocity components. Parker spiral signature confirmed in Bx–By plane. <span class="kw">Heliospheric current sheet</span> crossings detected (Bz polarity reversals at quasi-neutral sheet). Ontology: <span class="kw">TENSOR/FIELD (91%)</span>. 3D scatter with proton-speed colour encoding is primary egress. WebXR navigation of B-field topology strongly recommended for structural insight.'
+  },
+  {
+    vt:'DROSOPHILA // OPTIC LOBE CONNECTOME FRAGMENT',
+    schema:[
+      ['Nodes','45 neurons (10 cell types)'],['Edges','127 synaptic connections'],
+      ['Directed','TRUE'],['Weighted','TRUE (synapse count)'],
+      ['Layout','Columnar — medulla layers'],['Primary type','DIRECTED GRAPH']
+    ],
+    conf:[
+      {l:'Graph/Network',v:97,c:'cf-gr'},{l:'Topological',v:38,c:'cf-tp'},
+      {l:'Relational',v:28,c:'cf-rl'},{l:'Tensor/Field',v:11,c:'cf-tf'},
+      {l:'Temporal',v:6,c:'cf-te'},{l:'Spectral',v:4,c:'cf-sp'}
+    ],
+    egress:[
+      {n:'D3 Force-Directed',e:true,s:'99%'},{n:'Gephi / Cytoscape',e:true,s:'97%'},
+      {n:'Plotly 2D (network)',e:true,s:'88%'},{n:'Three.js 3D graph',e:true,s:'82%'},
+      {n:'WebXR connectome',e:true,s:'79%'},{n:'Matplotlib',e:false,s:'44%'}
+    ],
+    klipp:'Manifold: G(V,E) graph<br>Topology: Simplicial complex<br>Structure: CW-complex<br>Persistence: Betti numbers<br>β₀ (components), β₁ (loops)<br>Recommendation: 1-skeleton + TDA',
+    ai:'Adjacency structure detected. <span class="kw">45 nodes, 127 directed edges</span> with synapse-count weights. Cell-type clustering resolves 10 morphologies consistent with <span class="kw">Drosophila medulla optic lobe</span>. Ontology: <span class="kw">GRAPH/NETWORK (97%)</span>. D3 force-directed or 3D WebGL graph strongly recommended. TDA via Betti numbers β₀, β₁ would expose circuit motifs and recurrent loops. Excitatory:inhibitory ratio ≈ 4:1.'
+  },
+  {
+    vt:'α-SYNUCLEIN // φ/ψ RAMACHANDRAN FREE ENERGY (kT)',
+    schema:[
+      ['Dimensions','2 (φ, ψ dihedral angles)'],['Grid','72×72 (5° resolution)'],
+      ['Units','Free energy (kT)'],['Periodic','TRUE — both axes ±180°'],
+      ['Differentiable','TRUE (smooth scalar field)'],['Primary type','SCALAR FIELD / T²']
+    ],
+    conf:[
+      {l:'Topological',v:93,c:'cf-tp'},{l:'Tensor/Field',v:72,c:'cf-tf'},
+      {l:'Spectral',v:18,c:'cf-sp'},{l:'Relational',v:10,c:'cf-rl'},
+      {l:'Graph',v:7,c:'cf-gr'},{l:'Temporal',v:3,c:'cf-te'}
+    ],
+    egress:[
+      {n:'Plotly 2D (contour)',e:true,s:'98%'},{n:'Matplotlib contourf',e:true,s:'96%'},
+      {n:'Plotly 3D surface',e:true,s:'94%'},{n:'PyMOL / UCSF Chimera',e:true,s:'91%'},
+      {n:'Three.js heightmap',e:true,s:'85%'},{n:'WebXR landscape',e:true,s:'77%'}
+    ],
+    klipp:'Manifold: T² (flat torus)<br>Topology: Periodic 2-manifold<br>Structure: Smooth scalar field<br>Persistence: Morse theory<br>Minima → conformational basins<br>Recommendation: Morse complex + TDA',
+    ai:'Detected <span class="kw">2D scalar field on T² torus</span> (φ,ψ both periodic ±180°). Energy minima resolved: <span class="kw">α-helix (φ≈−63°, ψ≈−43°)</span>, β-sheet (φ≈−120°, ψ≈+130°), PP-II (φ≈−75°, ψ≈+145°), and L-helix. Ontology: <span class="kw">TOPOLOGICAL (93%)</span>. Contour heatmap is primary egress. Morse theory saddle-point analysis would map conformational transition paths for this IDP substrate.'
+  }
+];
+
+// ── PLOTLY BASE THEME ──────────────────────────────────────────────────────────
+
+const BG1='rgba(9,20,36,.9)', GRID='rgba(0,229,255,.07)', LNCLR='rgba(0,229,255,.2)';
+const FONT={family:'"JetBrains Mono",monospace',color:'#7aA8C4',size:10};
+const MARG={t:16,b:52,l:56,r:16};
+const XB={gridcolor:GRID,linecolor:LNCLR,tickcolor:LNCLR,zerolinecolor:'rgba(0,229,255,.15)'};
+const YB={...XB};
+const CB={thickness:10,len:.78,bgcolor:'rgba(0,0,0,0)',bordercolor:'rgba(0,229,255,.15)',
+  tickfont:{size:8,family:'"JetBrains Mono",monospace',color:'#7aA8C4'}};
+const CFG={responsive:true,displayModeBar:false};
+
+function lyt(x){return{paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:BG1,font:FONT,margin:MARG,
+  showlegend:true,legend:{bgcolor:'rgba(4,8,16,.88)',bordercolor:'rgba(0,229,255,.18)',
+    borderwidth:1,font:{size:8}},...x};}
+
+// ── PLOT FUNCTIONS ─────────────────────────────────────────────────────────────
+
+function plotSpec() {
+  const d=DATA[0];
+  const mol=[
+    {w:.6,n:'O₃',c:'#FF5252'},{w:1.4,n:'H₂O',c:'#4FC3F7'},{w:1.6,n:'CO₂',c:'#FFB300'},
+    {w:1.9,n:'H₂O',c:'#4FC3F7'},{w:2.0,n:'CO₂',c:'#FFB300'},{w:2.7,n:'CO₂+H₂O',c:'#CE93D8'},
+    {w:3.3,n:'CH₄',c:'#66BB6A'},{w:4.3,n:'CO₂',c:'#FFB300'}
+  ];
+  Plotly.newPlot('plotdiv',[{
+    x:d.wl,y:d.fl,type:'scatter',mode:'lines',name:'Transit depth (%)',
+    line:{color:'#00E5FF',width:1.5},fill:'tozeroy',fillcolor:'rgba(0,229,255,.07)'
+  }],lyt({
+    xaxis:{...XB,title:'Wavelength (μm)',range:[.45,5.05]},
+    yaxis:{...YB,title:'Transit depth (%)'},
+    shapes:mol.map(m=>({type:'line',x0:m.w,x1:m.w,y0:0,y1:1.02,yref:'paper',
+      line:{color:m.c,width:.8,dash:'dot'}})),
+    annotations:mol.map(m=>({x:m.w,y:1.04,xref:'x',yref:'paper',text:m.n,
+      showarrow:false,font:{size:8,color:m.c},textangle:-52}))
+  }),CFG);
+}
+
+function plotPlasma(d3mode) {
+  const d=DATA[1];
+  if (d3mode) {
+    Plotly.newPlot('plotdiv',[{
+      x:d.bx,y:d.by,z:d.bz,mode:'markers',type:'scatter3d',
+      marker:{size:3,
+        color:d.sp,
+        colorscale:[[0,'#001f5c'],[.25,'#005c99'],[.5,'#00AAAA'],[.75,'#FFB300'],[1,'#FF5252']],
+        colorbar:{...CB,title:{text:'Proton speed<br>(km s⁻¹)',font:{size:8}}},
+        opacity:.78,line:{width:0}},
+      name:'Plasma parcels'
+    }],lyt({margin:{t:10,b:10,l:10,r:10},
+      scene:{
+        xaxis:{title:'Bx (nT)',gridcolor:GRID,backgroundcolor:'rgba(4,8,16,.95)'},
+        yaxis:{title:'By (nT)',gridcolor:GRID,backgroundcolor:'rgba(4,8,16,.95)'},
+        zaxis:{title:'Bz (nT)',gridcolor:GRID,backgroundcolor:'rgba(4,8,16,.95)'},
+        bgcolor:'rgba(4,8,16,.95)',
+        camera:{eye:{x:1.45,y:1.45,z:1.05}}
+      }
+    }),CFG);
+  } else {
+    Plotly.newPlot('plotdiv',[{
+      x:d.bx,y:d.by,mode:'markers',type:'scatter',
+      marker:{size:4,color:d.sp,colorscale:'Viridis',
+        colorbar:{...CB,title:{text:'Speed (km/s)',font:{size:8}}},opacity:.62},
+      name:'Bx vs By (coloured by speed)'
+    }],lyt({
+      xaxis:{...XB,title:'Bx (nT)'},yaxis:{...YB,title:'By (nT)'}
+    }),CFG);
+  }
+}
+
+function plotConn() {
+  const {neurons,edges}=DATA[2];
+  const tc={L1:'#00E5FF',L2:'#4FC3F7',L3:'#29B6F6',L4:'#FFB300',L5:'#FFA726',
+    Mi:'#9C88FF',Tm:'#BA68C8',T4:'#00E676',T5:'#26A69A',C2:'#FF5252'};
+  const eTr=edges.map(e=>({
+    x:[neurons[e.from].x,neurons[e.to].x,null],
+    y:[neurons[e.from].y,neurons[e.to].y,null],
+    type:'scatter',mode:'lines',
+    line:{color:e.exc?'rgba(0,230,118,.18)':'rgba(255,82,82,.2)',
+      width:Math.min(e.w*.42,2.4)},
+    hoverinfo:'none',showlegend:false
+  }));
+  const types=[...new Set(neurons.map(n=>n.type))];
+  const nTr=types.map(t=>{
+    const ns=neurons.filter(n=>n.type===t);
+    return {
+      x:ns.map(n=>n.x),y:ns.map(n=>n.y),
+      mode:'markers+text',type:'scatter',
+      text:ns.map(()=>t),textposition:'middle center',
+      textfont:{size:7,color:'rgba(0,0,0,.82)'},
+      marker:{size:16,color:tc[t]||'#888',line:{color:'rgba(255,255,255,.22)',width:.5}},
+      name:t,
+      hovertemplate:'<b>'+t+'</b><br>ID: %{customdata}<extra></extra>',
+      customdata:ns.map(n=>n.id)
+    };
+  });
+  Plotly.newPlot('plotdiv',[...eTr,...nTr],lyt({
+    xaxis:{...XB,showticklabels:false,zeroline:false,showgrid:false,title:''},
+    yaxis:{...YB,showticklabels:false,zeroline:false,showgrid:false,title:''},
+    legend:{bgcolor:'rgba(4,8,16,.88)',bordercolor:'rgba(0,229,255,.18)',borderwidth:1,
+      font:{size:8},title:{text:'Cell type',font:{size:8}}}
+  }),CFG);
+}
+
+function plotRama(d3mode) {
+  const d=DATA[3];
+  const CSC=[[0,'#0A1628'],[.12,'#0E2E5A'],[.28,'#104E8B'],[.44,'#157ACC'],
+    [.58,'#00AACC'],[.72,'#00E5FF'],[.84,'#FFB300'],[1,'#FF5252']];
+  if (d3mode) {
+    Plotly.newPlot('plotdiv',[{
+      x:d.phi,y:d.psi,z:d.z,type:'surface',
+      colorscale:CSC,
+      colorbar:{...CB,title:{text:'Free energy (kT)',font:{size:8}}},
+      contours:{z:{show:true,usecolormap:true,highlightcolor:'#fff',project:{z:true}}},
+      lighting:{ambient:.7,diffuse:.9,roughness:.5,specular:.2},
+      name:'Free energy surface'
+    }],lyt({margin:{t:10,b:10,l:10,r:10},
+      scene:{
+        xaxis:{title:'φ (°)',gridcolor:GRID,backgroundcolor:'rgba(4,8,16,.95)'},
+        yaxis:{title:'ψ (°)',gridcolor:GRID,backgroundcolor:'rgba(4,8,16,.95)'},
+        zaxis:{title:'G (kT)',gridcolor:GRID,backgroundcolor:'rgba(4,8,16,.95)'},
+        bgcolor:'rgba(4,8,16,.95)',camera:{eye:{x:1.2,y:1.2,z:.9}}
+      }
+    }),CFG);
+  } else {
+    Plotly.newPlot('plotdiv',[{
+      x:d.phi,y:d.psi,z:d.z,type:'contour',colorscale:CSC,
+      contours:{showlabels:false,coloring:'fill',start:0,end:8,size:.4},
+      colorbar:{...CB,title:{text:'Free energy (kT)',font:{size:8}}},
+      line:{smoothing:.85,color:'rgba(0,229,255,.22)',width:.4}
+    }],lyt({
+      xaxis:{...XB,title:'φ (degrees)',range:[-180,180],dtick:60},
+      yaxis:{...YB,title:'ψ (degrees)',range:[-180,180],dtick:60},
+      annotations:[
+        {x:-62,y:-45,text:'α-helix',font:{size:9,color:'#fff'},showarrow:false,bgcolor:'rgba(0,0,0,.45)',borderpad:2},
+        {x:-118,y:130,text:'β-sheet',font:{size:9,color:'#fff'},showarrow:false,bgcolor:'rgba(0,0,0,.45)',borderpad:2},
+        {x:62,y:44,text:'L-α',font:{size:8,color:'rgba(255,255,255,.6)'},showarrow:false},
+        {x:-75,y:145,text:'PP-II',font:{size:8,color:'rgba(255,255,255,.55)'},showarrow:false}
+      ],
+      shapes:[
+        {type:'line',x0:-180,x1:180,y0:0,y1:0,line:{color:'rgba(255,255,255,.12)',width:.5}},
+        {type:'line',x0:0,x1:0,y0:-180,y1:180,line:{color:'rgba(255,255,255,.12)',width:.5}}
+      ]
+    }),CFG);
+  }
+}
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+
+let cur=0, cur3D=false;
+const plotFns=[plotSpec, plotPlasma, plotConn, plotRama];
+
+function sel(i) {
+  cur=i; cur3D=(i===1); // default DS-002 to 3D
+  document.getElementById('btn2d').classList.toggle('on',!cur3D);
+  document.getElementById('btn3d').classList.toggle('on',cur3D);
+  document.querySelectorAll('.dsi').forEach((el,j)=>el.classList.toggle('act',j===i));
+  const ds=DS[i];
+  document.getElementById('vtitle').textContent=ds.vt;
+
+  const sc=document.getElementById('schema-sec');
+  sc.innerHTML='<div class="slabel">SCHEMA PROFILE</div>';
+  ds.schema.forEach(([k,v])=>{
+    sc.innerHTML+=`<div class="srow"><span class="sk">${k}</span><span class="sv${k==='Primary type'?' hi':''}">${v}</span></div>`;
+  });
+
+  document.getElementById('conf-bars').innerHTML=ds.conf.map(c=>`
+    <div class="cbar">
+      <div class="clabel"><span>${c.l}</span><span>${c.v}%</span></div>
+      <div class="ctrack"><div class="cfill ${c.c}" style="width:0" data-w="${c.v}"></div></div>
+    </div>`).join('');
+  setTimeout(()=>document.querySelectorAll('.cfill').forEach(el=>{el.style.width=el.dataset.w+'%';}),40);
+
+  document.getElementById('egress-list').innerHTML=ds.egress.map(r=>`
+    <div class="eroute"><div class="rdot ${r.e?'on':'off'}"></div>
+      <span class="rn">${r.n}</span><span class="rs">${r.s}</span></div>`).join('');
+
+  document.getElementById('klipp-info').innerHTML=ds.klipp;
+  document.getElementById('ai-text').innerHTML=ds.ai;
+  plotFns[i](cur3D);
+}
+
+function set2D(){cur3D=false;document.getElementById('btn2d').classList.add('on');document.getElementById('btn3d').classList.remove('on');plotFns[cur](false);}
+function set3D(){cur3D=true;document.getElementById('btn3d').classList.add('on');document.getElementById('btn2d').classList.remove('on');plotFns[cur](true);}
+
+// Clock
+setInterval(()=>{
+  const n=new Date(), f=v=>v.toString().padStart(2,'0');
+  document.getElementById('clk').textContent=`${f(n.getHours())}:${f(n.getMinutes())}:${f(n.getSeconds())}`;
+},1000);
+
+window.addEventListener('resize',()=>Plotly.Plots.resize('plotdiv'));
+sel(0);
+</script>
+</body>
+</html>

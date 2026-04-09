@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tmux Masterclass — The Terminal Multiplexer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Fira+Code:wght@300;400;500;600;700&family=Inconsolata:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --crt:      #080c08;
+  --crt2:     #0a100a;
+  --crt3:     #0d160d;
+  --crt4:     #112011;
+  --crt5:     #172817;
+  --phos:     #39ff14;
+  --phos2:    #2dd10f;
+  --phos3:    #60ff44;
+  --phos-dim: #0a2206;
+  --amber:    #ffb000;
+  --amber2:   #ffd060;
+  --amb-dim:  #2a1c00;
+  --cyan:     #00ffdd;
+  --cyan-dim: #002a24;
+  --red:      #ff3344;
+  --red-dim:  #2a0508;
+  --blue:     #4488ff;
+  --blue-dim: #0a1a3a;
+  --border:   rgba(57,255,20,0.15);
+  --border2:  rgba(57,255,20,0.06);
+  --text:     #c0e8b0;
+  --text2:    #5a8050;
+  --text3:    #2a4025;
+  --mono:     'Fira Code', monospace;
+  --alt:      'Inconsolata', monospace;
+  --display:  'VT323', monospace;
+  --glow-sm:  0 0 8px rgba(57,255,20,0.4);
+  --glow-md:  0 0 16px rgba(57,255,20,0.25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--crt);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── SCANLINE + PHOSPHOR GLOW ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(57,255,20,0.03) 0%, transparent 70%),
+    linear-gradient(rgba(57,255,20,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57,255,20,0.025) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ── HEADER — tmux status bar style ── */
+header {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--phos);
+  border-bottom: 2px solid var(--phos2);
+}
+.header-inner {
+  max-width: 1500px; margin: 0 auto;
+  padding: 0 1rem;
+  display: flex; align-items: center; height: 28px;
+  font-family: var(--display); font-size: 1.1rem;
+}
+.tmux-left {
+  display: flex; align-items: center; gap: 0;
+  flex-shrink: 0;
+}
+.tmux-session-block {
+  background: var(--crt);
+  color: var(--phos);
+  padding: 0 14px;
+  height: 28px;
+  display: flex; align-items: center;
+  letter-spacing: 0.04em;
+  font-size: 1rem;
+  border-right: 1px solid var(--phos2);
+}
+.tmux-win {
+  padding: 0 12px; height: 28px;
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: all 0.1s;
+  border-right: 1px solid rgba(0,0,0,0.2);
+  color: var(--crt);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  background: none;
+  border: none;
+}
+.tmux-win:hover { background: rgba(0,0,0,0.15); }
+.tmux-win.active {
+  background: var(--crt);
+  color: var(--phos);
+}
+.tmux-win .wnum { opacity: 0.7; font-size: 0.8rem; }
+.tmux-spacer { flex: 1; }
+.tmux-right {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0;
+  background: var(--crt);
+  height: 28px;
+}
+.tmux-r-block {
+  padding: 0 12px;
+  height: 28px; display: flex; align-items: center;
+  font-family: var(--display); font-size: 0.95rem;
+  border-left: 1px solid var(--phos2);
+  letter-spacing: 0.04em;
+}
+.rb-phos { color: var(--phos); }
+.rb-amber { background: var(--amber); color: var(--crt); }
+.rb-dim { color: var(--text3); font-size: 0.85rem; }
+
+/* ── LAYOUT ── */
+.wrapper { max-width: 1500px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+section { display: none; animation: blink-in 0.15s ease; }
+section.active { display: block; }
+@keyframes blink-in { 0%{opacity:0} 30%{opacity:0.7} 60%{opacity:0.4} 100%{opacity:1} }
+
+/* ── SECTION HEADER ── */
+.section-header { margin-bottom: 2rem; }
+.prompt-line {
+  font-family: var(--display); font-size: 1.2rem;
+  color: var(--phos); letter-spacing: 0.06em; margin-bottom: 0.25rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.prompt-line::before { content: '$ '; color: var(--text3); }
+.section-title {
+  font-family: var(--display); font-size: 3.2rem;
+  color: var(--phos); letter-spacing: 0.12em; line-height: 1;
+  margin-bottom: 0.5rem;
+  text-shadow: var(--glow-md);
+}
+.section-title em { color: var(--amber); font-style: normal; text-shadow: 0 0 12px rgba(255,176,0,0.5); }
+.section-sub {
+  font-family: var(--alt); font-size: 0.9rem;
+  color: var(--text2); max-width: 760px; line-height: 1.7; font-weight: 300;
+}
+.section-rule {
+  height: 1px; margin: 1.25rem 0 2rem;
+  background: linear-gradient(90deg, var(--phos), rgba(57,255,20,0.1), transparent);
+  box-shadow: var(--glow-sm);
+}
+
+/* ── GRIDS ── */
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+.g12 { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+@media(max-width:960px){.g2,.g3,.g12,.g21{grid-template-columns:1fr}}
+
+/* ── TERMINAL PANE (the card) ── */
+.tpane {
+  background: var(--crt2);
+  border: 1px solid var(--border);
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+.tpane:hover { border-color: rgba(57,255,20,0.3); }
+.tpane-bar {
+  background: var(--phos);
+  color: var(--crt);
+  font-family: var(--display); font-size: 0.95rem;
+  padding: 0 10px;
+  height: 22px; display: flex; align-items: center;
+  letter-spacing: 0.06em;
+}
+.tpane-body { padding: 1rem 1.25rem; }
+.tpane-label {
+  font-family: var(--display); font-size: 0.85rem;
+  color: var(--text3); margin-bottom: 0.5rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.tpane-label::before { content: '#'; color: var(--phos); }
+
+/* ── CODE BLOCKS ── */
+.code-wrap { background: rgba(0,0,0,0.6); border: 1px solid var(--border); margin: 1rem 0; overflow: hidden; }
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--crt3); border-bottom: 1px solid var(--border);
+  padding: 0.35rem 1rem;
+}
+.code-fname { font-family: var(--display); font-size: 0.95rem; color: var(--phos); letter-spacing: 0.06em; }
+.code-lang {
+  font-family: var(--display); font-size: 0.85rem; color: var(--amber);
+  background: var(--amb-dim); border: 1px solid rgba(255,176,0,0.2);
+  padding: 0 8px; letter-spacing: 0.06em;
+}
+pre {
+  padding: 1rem 1.25rem; overflow-x: auto;
+  font-family: var(--mono); font-size: 0.8rem; line-height: 1.85;
+  color: var(--text); tab-size: 2;
+  scrollbar-width: thin; scrollbar-color: var(--crt4) transparent;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--crt4); }
+
+/* Syntax */
+.kw  { color: var(--phos); font-weight: 600; }
+.fn  { color: var(--cyan); }
+.st  { color: #88ff44; }
+.cm  { color: var(--text3); font-style: italic; }
+.jj  { color: var(--amber); }
+.nm  { color: var(--phos3); }
+.op  { color: var(--phos2); }
+.nu  { color: var(--amber2); }
+.dc  { color: var(--cyan); }
+.py  { color: var(--amber); font-weight: 700; }
+.ty  { color: #88ffcc; }
+.re  { color: var(--red); }
+.ke  { color: var(--phos); font-weight: 700; } /* keybinding */
+.pr  { color: var(--phos3); }                   /* prompt */
+.co  { color: #44ff88; }                         /* command */
+.fl  { color: var(--text3); }                    /* flag */
+
+/* ── CALLOUTS ── */
+.callout {
+  border-left: 2px solid; padding: 0.8rem 1rem; margin: 1rem 0;
+  font-size: 0.87rem; line-height: 1.65; font-family: var(--alt);
+}
+.callout strong {
+  display: block; font-family: var(--display); font-size: 1rem;
+  letter-spacing: 0.1em; margin-bottom: 0.3rem;
+}
+.c-phos   { border-color: var(--phos2);  background: rgba(57,255,20,0.05);   color: var(--phos3);  }
+.c-amber  { border-color: var(--amber);  background: rgba(255,176,0,0.05);   color: var(--amber);  }
+.c-cyan   { border-color: var(--cyan);   background: rgba(0,255,221,0.05);   color: var(--cyan);   }
+.c-red    { border-color: var(--red);    background: rgba(255,51,68,0.05);   color: var(--red);    }
+.c-blue   { border-color: var(--blue);   background: rgba(68,136,255,0.05);  color: var(--blue);   }
+
+/* ── KEYBINDING TABLE ── */
+.key-grid {
+  display: grid; grid-template-columns: auto 1fr;
+  gap: 0; border: 1px solid var(--border); margin: 0.5rem 0;
+}
+.key-row {
+  display: contents;
+}
+.key-row:hover .key-k, .key-row:hover .key-d { background: rgba(57,255,20,0.06); }
+.key-k {
+  padding: 0.4rem 0.85rem;
+  border-bottom: 1px solid var(--border2);
+  border-right: 1px solid var(--border);
+  font-family: var(--display); font-size: 1rem;
+  background: var(--crt3); color: var(--phos);
+  white-space: nowrap; letter-spacing: 0.04em;
+  display: flex; align-items: center;
+}
+.key-d {
+  padding: 0.4rem 0.85rem;
+  border-bottom: 1px solid var(--border2);
+  font-family: var(--alt); font-size: 0.83rem;
+  color: var(--text2); display: flex; align-items: center;
+}
+.key-row:last-child .key-k,
+.key-row:last-child .key-d { border-bottom: none; }
+kbd {
+  display: inline-flex; align-items: center;
+  font-family: var(--display); font-size: 1rem;
+  background: var(--phos-dim); border: 1px solid var(--phos2);
+  color: var(--phos); padding: 0 6px;
+  letter-spacing: 0.04em; margin: 0 2px;
+  box-shadow: var(--glow-sm);
+}
+kbd.amb { background: var(--amb-dim); border-color: var(--amber); color: var(--amber); }
+kbd.red { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+kbd.cyn { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
+
+/* ── SESSION TREE VISUAL ── */
+.tree {
+  font-family: var(--display); font-size: 1.05rem;
+  letter-spacing: 0.04em; line-height: 2;
+  background: rgba(0,0,0,0.5); border: 1px solid var(--border);
+  padding: 1rem 1.25rem; overflow-x: auto;
+}
+.tree-server  { color: var(--amber); }
+.tree-session { color: var(--phos); }
+.tree-window  { color: var(--cyan); }
+.tree-pane    { color: var(--text2); }
+.tree-active  { color: var(--phos3); font-weight: 700; }
+.tree-indent  { color: var(--text3); }
+.tree-note    { font-family: var(--alt); font-size: 0.75rem; color: var(--text3); margin-left: 1rem; }
+
+/* ── PANE LAYOUT DIAGRAMS ── */
+.layout-vis {
+  border: 1px solid var(--border); background: rgba(0,0,0,0.6);
+  display: inline-flex; flex-direction: column;
+  overflow: hidden; margin: 0.5rem 0.5rem 0.5rem 0;
+}
+.lv-row { display: flex; }
+.lv-pane {
+  border: 1px solid rgba(57,255,20,0.2);
+  font-family: var(--display); font-size: 0.8rem;
+  color: var(--text3); display: flex; align-items: center;
+  justify-content: center; flex-direction: column; gap: 2px;
+  padding: 4px;
+}
+.lv-pane.active-p { border-color: var(--phos); color: var(--phos); }
+.lv-pane.p-b { border-color: rgba(0,255,221,0.2); color: var(--cyan-dim); }
+.lv-n { font-size: 0.65rem; opacity: 0.7; }
+
+/* ── STATUS BAR ANATOMY ── */
+.sb-demo {
+  background: var(--crt3); border: 1px solid var(--border);
+  font-family: var(--display); font-size: 1.05rem;
+  letter-spacing: 0.04em; display: flex;
+  align-items: center; padding: 0; overflow: hidden; margin: 0.5rem 0;
+}
+.sb-seg {
+  padding: 4px 12px; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.sbs-phos  { background: var(--phos);  color: var(--crt); }
+.sbs-dim   { background: var(--crt4);  color: var(--text2); }
+.sbs-win   { background: var(--crt3);  color: var(--text3); border-right: 1px solid var(--border); }
+.sbs-winact{ background: var(--phos-dim); color: var(--phos); border-right: 1px solid var(--border); }
+.sbs-sp    { flex: 1; background: var(--crt2); }
+.sbs-amber { background: var(--amb-dim); color: var(--amber); border-left: 1px solid var(--border); }
+.sbs-cyan  { background: var(--cyan-dim); color: var(--cyan); border-left: 1px solid var(--border); }
+
+/* ── AGENT PANE VIS ── */
+.agent-grid {
+  background: rgba(0,0,0,0.6); border: 1px solid var(--border);
+  display: grid; gap: 2px; padding: 2px; margin: 1rem 0;
+}
+.agent-pane {
+  background: var(--crt2); border: 1px solid var(--border2);
+  padding: 0.6rem 0.75rem; position: relative; overflow: hidden;
+}
+.agent-pane.ap-active { border-color: var(--phos); }
+.agent-pane.ap-busy   { border-color: var(--amber); }
+.agent-pane.ap-done   { border-color: rgba(57,255,20,0.3); }
+.agent-pane.ap-err    { border-color: var(--red); }
+.ap-title {
+  font-family: var(--display); font-size: 0.9rem; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 6px;
+}
+.ap-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-phos  { background: var(--phos); box-shadow: var(--glow-sm); animation: pulseGlow 1.5s infinite; }
+.dot-amber { background: var(--amber); animation: pulseAmb 0.8s infinite; }
+.dot-dim   { background: var(--text3); }
+.dot-red   { background: var(--red); }
+@keyframes pulseGlow { 0%,100%{opacity:1;box-shadow:0 0 6px rgba(57,255,20,0.8)} 50%{opacity:0.5;box-shadow:none} }
+@keyframes pulseAmb  { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.ap-cmd { font-family: var(--display); font-size: 0.8rem; color: var(--text3); line-height: 1.4; }
+.ap-log { font-family: var(--display); font-size: 0.75rem; color: var(--text3); margin-top: 4px; }
+.ap-cursor::after { content: '▋'; color: var(--phos); animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ── PERF ROW ── */
+.perf-row { display: grid; grid-template-columns: 180px 1fr 80px; gap: 1rem; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid var(--border2); }
+.perf-label { font-family: var(--display); font-size: 0.95rem; color: var(--text2); }
+.perf-track { height: 6px; background: var(--crt4); border: 1px solid var(--border2); overflow: hidden; }
+.perf-fill { height: 100%; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+.perf-val { font-family: var(--display); font-size: 0.85rem; color: var(--text3); text-align: right; }
+
+/* ── TABLES ── */
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+th {
+  font-family: var(--display); font-size: 0.95rem; letter-spacing: 0.1em;
+  color: var(--phos); border-bottom: 1px solid var(--border);
+  padding: 0.4rem 0.85rem; text-align: left; background: var(--crt3);
+}
+td { padding: 0.5rem 0.85rem; border-bottom: 1px solid var(--border2); color: var(--text2); font-family: var(--alt); font-size: 0.83rem; }
+tr:last-child td { border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(57,255,20,0.04); }
+td:first-child { color: var(--text); font-family: var(--display); font-size: 0.95rem; }
+td code, p code, li code, span code {
+  font-family: var(--mono); font-size: 0.8em;
+  background: var(--crt3); border: 1px solid var(--border);
+  padding: 0 4px; color: var(--phos);
+}
+
+/* ── PILLS / TABS ── */
+.pills { display: flex; gap: 2px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.pill {
+  font-family: var(--display); font-size: 0.95rem; padding: 0.2rem 0.85rem;
+  cursor: pointer; border: 1px solid var(--border);
+  background: none; color: var(--text3);
+  transition: all 0.1s; letter-spacing: 0.06em;
+}
+.pill:hover { border-color: var(--phos); color: var(--phos); }
+.pill.active { background: var(--phos-dim); border-color: var(--phos); color: var(--phos); box-shadow: var(--glow-sm); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── STAT STRIP ── */
+.stat-strip {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(110px,1fr));
+  border: 1px solid var(--border); margin-bottom: 2rem;
+  background: var(--crt2);
+}
+.stat { padding: 1rem; text-align: center; border-right: 1px solid var(--border); transition: background 0.12s; }
+.stat:last-child { border-right: none; }
+.stat:hover { background: var(--crt3); }
+.stat-num { font-family: var(--display); font-size: 2.4rem; line-height: 1; margin-bottom: 0.2rem; text-shadow: var(--glow-sm); }
+.stat-label { font-family: var(--display); font-size: 0.8rem; color: var(--text3); letter-spacing: 0.08em; }
+
+/* ── SEP ── */
+.sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+/* ── TEXT ── */
+p { margin-bottom: 0.85rem; color: var(--text2); font-family: var(--alt); font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+h3 { font-family: var(--display); font-size: 1.6rem; letter-spacing: 0.08em; color: var(--phos); margin: 1.75rem 0 0.6rem; text-shadow: var(--glow-sm); }
+h3:first-child { margin-top: 0; }
+h4 { font-family: var(--display); font-size: 1rem; color: var(--text3); letter-spacing: 0.12em; margin: 1.2rem 0 0.5rem; }
+ul,ol { padding-left: 1.5rem; color: var(--text2); font-family: var(--alt); font-weight: 300; }
+li { margin-bottom: 0.35rem; }
+strong { color: var(--phos3); font-weight: 600; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--crt2); }
+::-webkit-scrollbar-thumb { background: var(--crt4); }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER MIMICS A TMUX STATUS BAR ── -->
+<header>
+  <div class="header-inner">
+    <div class="tmux-left">
+      <div class="tmux-session-block">[agents]</div>
+      <button class="tmux-win active" onclick="show('orient',0)"><span class="wnum">0</span> orient</button>
+      <button class="tmux-win" onclick="show('bindings',1)"><span class="wnum">1</span> keys</button>
+      <button class="tmux-win" onclick="show('sessions',2)"><span class="wnum">2</span> sessions</button>
+      <button class="tmux-win" onclick="show('panes',3)"><span class="wnum">3</span> panes</button>
+      <button class="tmux-win" onclick="show('script',4)"><span class="wnum">4</span> scripting</button>
+      <button class="tmux-win" onclick="show('agents',5)"><span class="wnum">5</span> agents</button>
+      <button class="tmux-win" onclick="show('config',6)"><span class="wnum">6</span> config</button>
+      <button class="tmux-win" onclick="show('plugins',7)"><span class="wnum">7</span> plugins</button>
+    </div>
+    <div class="tmux-spacer"></div>
+    <div class="tmux-right">
+      <div class="tmux-r-block rb-dim">Sun Apr 5 2026</div>
+      <div class="tmux-r-block rb-amber">LLM×8</div>
+      <div class="tmux-r-block rb-phos">tmux 3.4</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<!-- ══════════════════════════════════════
+     0 — ORIENT
+══════════════════════════════════════ -->
+<section id="orient" class="active">
+  <div class="section-header">
+    <div class="prompt-line">man tmux | head -1</div>
+    <div class="section-title">THE <em>TERMINAL OS</em></div>
+    <div class="section-sub">In April 2026, the terminal is the primary interface. Every LLM agent, every pipeline, every dev tool has gone CLI. tmux is no longer optional — it's the window manager, process supervisor, session store, and agent orchestration layer all in one. You need to own it completely.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="stat-strip">
+    <div class="stat"><div class="stat-num" style="color:var(--phos)">1</div><div class="stat-label">server proc</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--amber)">∞</div><div class="stat-label">sessions</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--cyan)">∞</div><div class="stat-label">windows</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--phos)">∞</div><div class="stat-label">panes</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--amber)">C-b</div><div class="stat-label">default prefix</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--cyan)">C-a</div><div class="stat-label">power-user prefix</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <h3>The Object Hierarchy</h3>
+      <div class="tree">
+<span class="tree-server">tmux server</span>  <span class="tree-note">─ one daemon process, survives disconnects</span>
+<span class="tree-indent">├── </span><span class="tree-session">session: agents</span>  <span class="tree-note">─ named workspace</span>
+<span class="tree-indent">│   ├── </span><span class="tree-window">window 0: orchestrator</span>  <span class="tree-note">─ named tab</span>
+<span class="tree-indent">│   │   ├── </span><span class="tree-active">pane 0 [ACTIVE] ← 60%</span>
+<span class="tree-indent">│   │   └── </span><span class="tree-pane">pane 1 ← 40%</span>
+<span class="tree-indent">│   ├── </span><span class="tree-window">window 1: workers</span>
+<span class="tree-indent">│   │   ├── </span><span class="tree-pane">pane 0</span>
+<span class="tree-indent">│   │   ├── </span><span class="tree-pane">pane 1</span>
+<span class="tree-indent">│   │   └── </span><span class="tree-pane">pane 2</span>
+<span class="tree-indent">│   └── </span><span class="tree-window">window 2: logs</span>
+<span class="tree-indent">│       └── </span><span class="tree-pane">pane 0</span>
+<span class="tree-indent">├── </span><span class="tree-session">session: devenv</span>
+<span class="tree-indent">│   └── </span><span class="tree-window">window 0: editor</span>
+<span class="tree-indent">└── </span><span class="tree-session">session: monitor</span>
+    <span class="tree-indent">└── </span><span class="tree-window">window 0: htop + kubectl</span>
+      </div>
+
+      <div class="callout c-phos">
+        <strong>THE CORE INSIGHT: SESSIONS OUTLIVE YOUR TERMINAL</strong>
+        When you close your terminal window, your SSH connection drops, or your laptop lid shuts — the tmux server and all sessions keep running. Detach with <kbd>C-b d</kbd>, do anything, reattach later. This is why tmux is non-negotiable for long-running agent jobs — your agent is running inside tmux, not inside your terminal emulator.
+      </div>
+    </div>
+
+    <div>
+      <h3>Getting Oriented Fast</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">First 10 commands to learn</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># ── START / ATTACH ────────────────────────────────────</span>
+<span class="co">tmux</span>                          <span class="cm"># new unnamed session</span>
+<span class="co">tmux new -s agents</span>            <span class="cm"># new named session "agents"</span>
+<span class="co">tmux attach -t agents</span>        <span class="cm"># attach to session "agents"</span>
+<span class="co">tmux a</span>                        <span class="cm"># attach to most recent session</span>
+<span class="co">tmux ls</span>                       <span class="cm"># list all sessions</span>
+
+<span class="cm"># ── INSIDE TMUX: PREFIX KEY ───────────────────────────</span>
+<span class="cm"># Default prefix: Ctrl-b (we'll change to Ctrl-a in config)</span>
+<span class="cm"># Every tmux command: PREFIX then the key</span>
+
+<span class="ke">C-b d</span>        <span class="cm">→ detach (session keeps running!)</span>
+<span class="ke">C-b c</span>        <span class="cm">→ create new window</span>
+<span class="ke">C-b "</span>        <span class="cm">→ split pane horizontally (top/bottom)</span>
+<span class="ke">C-b %</span>        <span class="cm">→ split pane vertically (left/right)</span>
+<span class="ke">C-b arrow</span>    <span class="cm">→ move between panes</span>
+<span class="ke">C-b z</span>        <span class="cm">→ zoom pane to full window (toggle)</span>
+<span class="ke">C-b [</span>        <span class="cm">→ enter scroll/copy mode (q to exit)</span>
+<span class="ke">C-b ?</span>        <span class="cm">→ show all keybindings</span>
+<span class="ke">C-b :</span>        <span class="cm">→ command prompt (type any tmux command)</span>
+
+<span class="cm"># ── POWERFUL COMBOS RIGHT NOW ─────────────────────────</span>
+<span class="ke">C-b s</span>        <span class="cm">→ interactive session tree (arrow keys + enter)</span>
+<span class="ke">C-b w</span>        <span class="cm">→ interactive window tree</span>
+<span class="ke">C-b $</span>        <span class="cm">→ rename current session</span>
+<span class="ke">C-b ,</span>        <span class="cm">→ rename current window</span></pre>
+      </div>
+
+      <div class="callout c-amber">
+        <strong>PREFIX KEY MUSCLE MEMORY</strong>
+        Every single tmux action goes through the prefix key first. The default <kbd>C-b</kbd> (Ctrl+b) is uncomfortable — your pinky stretches. Pros remap to <kbd>C-a</kbd> (Ctrl+a) — same as GNU Screen. The config section covers this. But first, internalize that EVERY tmux key is: <strong>PREFIX → key</strong>. That's it.
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>Why Everything Lives in tmux Now (April 2026)</h3>
+  <div class="g3">
+    <div class="tpane">
+      <div class="tpane-bar">session persistence</div>
+      <div class="tpane-body">
+        <div class="tpane-label">agents don't care about your ssh session</div>
+        <p>Run <code>claude --agent research-task</code> inside tmux. Disconnect, travel, reconnect. Agent is still running. Without tmux: SSH drops → agent dies → you start over.</p>
+      </div>
+    </div>
+    <div class="tpane">
+      <div class="tpane-bar">parallel visibility</div>
+      <div class="tpane-body">
+        <div class="tpane-label">see 8 agents at once</div>
+        <p>Split into a 4×2 grid. Watch all 8 LLM agents simultaneously. One pane per agent: see their output, status, errors — all without switching contexts.</p>
+      </div>
+    </div>
+    <div class="tpane">
+      <div class="tpane-bar">scripted orchestration</div>
+      <div class="tpane-body">
+        <div class="tpane-label">spawn environments in 1 command</div>
+        <p><code>tmux new-session -d</code> + <code>send-keys</code> lets you write shell scripts that build entire workspace layouts. One script → 8 panes, 3 sessions, all agents running.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     1 — KEY BINDINGS
+══════════════════════════════════════ -->
+<section id="bindings">
+  <div class="section-header">
+    <div class="prompt-line">tmux list-keys | wc -l</div>
+    <div class="section-title">KEY <em>BINDINGS</em></div>
+    <div class="section-sub">The complete reference. Every binding organized by domain. Learn these in order of frequency — sessions first, then panes, then windows, then copy mode.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="pills" id="kb-pills">
+    <button class="pill active" onclick="showTab('kb','sessions',this)">Sessions</button>
+    <button class="pill" onclick="showTab('kb','windows',this)">Windows</button>
+    <button class="pill" onclick="showTab('kb','panes',this)">Panes</button>
+    <button class="pill" onclick="showTab('kb','copy',this)">Copy Mode</button>
+    <button class="pill" onclick="showTab('kb','misc',this)">Misc</button>
+  </div>
+
+  <div id="kb-sessions" class="tab-pane active">
+    <div class="g2">
+      <div>
+        <div class="key-grid">
+          <div class="key-row"><div class="key-k"><kbd>C-b d</kbd></div><div class="key-d">Detach from session (session keeps running)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b s</kbd></div><div class="key-d">Interactive session switcher (tree view)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b $</kbd></div><div class="key-d">Rename current session</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b (</kbd></div><div class="key-d">Switch to previous session</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b )</kbd></div><div class="key-d">Switch to next session</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b L</kbd></div><div class="key-d">Switch to last (most recently used) session</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b $</kbd></div><div class="key-d">Rename session</div></div>
+        </div>
+        <div class="code-wrap" style="margin-top:1rem">
+          <div class="code-header"><span class="code-fname">tmux session CLI commands</span><span class="code-lang">bash</span></div>
+          <pre><span class="co">tmux new-session -s agents</span>           <span class="cm"># new session named agents</span>
+<span class="co">tmux new-session -s workers -d</span>       <span class="cm"># new session, detached (background)</span>
+<span class="co">tmux attach-session -t agents</span>        <span class="cm"># attach to agents</span>
+<span class="co">tmux switch-client -t devenv</span>         <span class="cm"># switch to another session</span>
+<span class="co">tmux kill-session -t agents</span>          <span class="cm"># destroy session + all its windows</span>
+<span class="co">tmux kill-server</span>                     <span class="cm"># nuke everything</span>
+<span class="co">tmux list-sessions</span>                   <span class="cm"># ls alias: tmux ls</span>
+<span class="co">tmux rename-session -t old new</span>       <span class="cm"># rename from outside</span>
+
+<span class="cm"># Attach or create (the professional entry point):</span>
+<span class="co">tmux attach -t agents || tmux new -s agents</span></pre>
+        </div>
+      </div>
+      <div>
+        <div class="callout c-cyan">
+          <strong>NAMED SESSIONS — THE PROFESSIONAL PATTERN</strong>
+          Always name your sessions. <code>tmux new -s agents</code> not <code>tmux</code>. With names: you can attach to the right session by name, script session creation, and glance at <code>tmux ls</code> to understand your workspace instantly. Unnamed sessions are for beginners.
+        </div>
+        <h3>Session Grouping</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Grouped sessions — shared windows</span><span class="code-lang">bash</span></div>
+          <pre><span class="cm"># Session groups: two clients viewing same windows
+# Use case: pair programming, monitoring from two terminals</span>
+
+<span class="cm"># Create first session:</span>
+<span class="co">tmux new-session -s main</span>
+
+<span class="cm"># Create second session, join the group:</span>
+<span class="co">tmux new-session -s monitor -t main</span>
+
+<span class="cm"># Now both sessions share windows but can independently:
+# - Be focused on different windows
+# - Have different sizes (useful: big monitor + laptop)
+# Changes in one appear in the other in real time</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="kb-windows" class="tab-pane">
+    <div class="g2">
+      <div>
+        <div class="key-grid">
+          <div class="key-row"><div class="key-k"><kbd>C-b c</kbd></div><div class="key-d">Create new window</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b ,</kbd></div><div class="key-d">Rename current window</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b n</kbd></div><div class="key-d">Next window</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b p</kbd></div><div class="key-d">Previous window</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b l</kbd></div><div class="key-d">Last (most recently used) window</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b 0–9</kbd></div><div class="key-d">Jump to window by number</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b w</kbd></div><div class="key-d">Interactive window picker</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b &amp;</kbd></div><div class="key-d">Kill current window (confirm prompt)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b f</kbd></div><div class="key-d">Find window by name or content</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b .</kbd></div><div class="key-d">Move window to a different index number</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Window management from CLI</span><span class="code-lang">bash</span></div>
+          <pre><span class="cm"># Create named window in a session:</span>
+<span class="co">tmux new-window -t agents -n "workers"</span>
+
+<span class="cm"># Create window and run a command in it:</span>
+<span class="co">tmux new-window -t agents -n "logs" -c ~/projects</span>
+
+<span class="cm"># Move window from one session to another:</span>
+<span class="co">tmux move-window -s agents:2 -t monitor</span>
+
+<span class="cm"># Link window (mirror it across sessions):</span>
+<span class="co">tmux link-window -s agents:0 -t monitor:0</span>
+
+<span class="cm"># Kill a specific window without being inside it:</span>
+<span class="co">tmux kill-window -t agents:workers</span>
+
+<span class="cm"># Swap two windows:</span>
+<span class="co">tmux swap-window -s agents:1 -t agents:3</span>
+
+<span class="cm"># Reorder all windows (renumber from 0):</span>
+<span class="co">tmux move-window -r</span></pre>
+        </div>
+        <div class="callout c-phos">
+          <strong>WINDOW NAMING DISCIPLINE</strong>
+          Always name windows immediately after creation: <kbd>C-b ,</kbd>. In an agent workspace with 8 windows, "agents:0" tells you nothing — "agents:orchestrator" tells you everything. Name for what the window does, not what's running: "logs", "workers", "api", "monitor".
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="kb-panes" class="tab-pane">
+    <div class="g2">
+      <div>
+        <div class="key-grid">
+          <div class="key-row"><div class="key-k"><kbd>C-b "</kbd></div><div class="key-d">Split horizontal (new pane below)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b %</kbd></div><div class="key-d">Split vertical (new pane right)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b ←→↑↓</kbd></div><div class="key-d">Navigate between panes</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b z</kbd></div><div class="key-d">Zoom/unzoom current pane (fullscreen toggle)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b x</kbd></div><div class="key-d">Kill current pane</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b !</kbd></div><div class="key-d">Break pane out into its own window</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b q</kbd></div><div class="key-d">Show pane numbers (type number to jump)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b o</kbd></div><div class="key-d">Rotate through panes</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b {</kbd></div><div class="key-d">Swap pane with previous</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b }</kbd></div><div class="key-d">Swap pane with next</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b C-←→↑↓</kbd></div><div class="key-d">Resize pane (hold Ctrl, tap arrow)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b space</kbd></div><div class="key-d">Cycle through built-in layouts</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b Alt-1–5</kbd></div><div class="key-d">Jump to specific built-in layout</div></div>
+        </div>
+      </div>
+      <div>
+        <h3>Built-in Layouts</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem">
+          <div>
+            <div class="layout-vis" style="width:100px;height:70px">
+              <div class="lv-row" style="flex:1">
+                <div class="lv-pane active-p" style="flex:1">even-horizontal<div class="lv-n">Alt-1</div></div>
+                <div class="lv-pane" style="flex:1"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="layout-vis" style="width:100px;height:70px">
+              <div class="lv-row" style="height:50%">
+                <div class="lv-pane active-p" style="flex:1">even-vert<div class="lv-n">Alt-2</div></div>
+              </div>
+              <div class="lv-row" style="height:50%">
+                <div class="lv-pane p-b" style="flex:1"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="layout-vis" style="width:100px;height:70px">
+              <div class="lv-row" style="flex:1">
+                <div class="lv-pane active-p" style="flex:2">main-horiz<div class="lv-n">Alt-3</div></div>
+                <div style="display:flex;flex-direction:column;flex:1">
+                  <div class="lv-pane p-b" style="flex:1"></div>
+                  <div class="lv-pane p-b" style="flex:1"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="layout-vis" style="width:100px;height:70px">
+              <div class="lv-row" style="height:60%">
+                <div class="lv-pane active-p" style="flex:1">main-vert<div class="lv-n">Alt-4</div></div>
+              </div>
+              <div class="lv-row" style="height:40%">
+                <div class="lv-pane p-b" style="flex:1"></div>
+                <div class="lv-pane p-b" style="flex:1"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="layout-vis" style="width:100px;height:70px">
+              <div class="lv-row" style="flex:1">
+                <div class="lv-pane active-p" style="flex:1">tile<div class="lv-n">Alt-5</div></div>
+                <div class="lv-pane p-b" style="flex:1"></div>
+              </div>
+              <div class="lv-row" style="flex:1">
+                <div class="lv-pane p-b" style="flex:1"></div>
+                <div class="lv-pane p-b" style="flex:1"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">Pane operations from CLI</span><span class="code-lang">bash</span></div>
+          <pre><span class="cm"># Split pane from CLI (great for scripts):</span>
+<span class="co">tmux split-window -h</span>           <span class="cm"># split horizontal</span>
+<span class="co">tmux split-window -v -p 30</span>    <span class="cm"># split vertical, new pane 30% tall</span>
+<span class="co">tmux split-window -h -c ~/src</span> <span class="cm"># split, start in directory</span>
+
+<span class="cm"># Move pane to another window:</span>
+<span class="co">tmux join-pane -s agents:1.0 -t agents:2</span>
+
+<span class="cm"># Resize precisely:</span>
+<span class="co">tmux resize-pane -t 0 -x 80</span>   <span class="cm"># set pane 0 to exactly 80 cols</span>
+<span class="co">tmux resize-pane -Z</span>            <span class="cm"># toggle zoom (same as C-b z)</span>
+
+<span class="cm"># Apply a layout by name:</span>
+<span class="co">tmux select-layout tiled</span>
+<span class="co">tmux select-layout main-vertical</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="kb-copy" class="tab-pane">
+    <div class="g2">
+      <div>
+        <h3>Copy Mode — The Terminal Pager</h3>
+        <div class="callout c-phos">
+          <strong>Copy Mode = vim/emacs Inside Terminal</strong>
+          Press <kbd>C-b [</kbd> to enter copy mode. You're now in a scrollable buffer of your terminal's entire output history. Navigate with vim keys (or emacs if configured). Select text, copy it, paste with <kbd>C-b ]</kbd>. This replaces your mouse for every text operation in the terminal.
+        </div>
+        <div class="key-grid">
+          <div class="key-row"><div class="key-k"><kbd>C-b [</kbd></div><div class="key-d">Enter copy/scroll mode</div></div>
+          <div class="key-row"><div class="key-k"><kbd>q</kbd></div><div class="key-d">Exit copy mode</div></div>
+          <div class="key-row"><div class="key-k"><kbd>Space</kbd></div><div class="key-d">Start selection (vi mode)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>Enter</kbd></div><div class="key-d">Copy selection and exit</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b ]</kbd></div><div class="key-d">Paste buffer</div></div>
+          <div class="key-row"><div class="key-k"><kbd>g / G</kbd></div><div class="key-d">Jump to top / bottom of history</div></div>
+          <div class="key-row"><div class="key-k"><kbd>/ text</kbd></div><div class="key-d">Search forward</div></div>
+          <div class="key-row"><div class="key-k"><kbd>? text</kbd></div><div class="key-d">Search backward</div></div>
+          <div class="key-row"><div class="key-k"><kbd>n / N</kbd></div><div class="key-d">Next / previous search result</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b =</kbd></div><div class="key-d">Choose from paste buffer list</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b #</kbd></div><div class="key-d">List all paste buffers</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">vi-mode copy config (put in .tmux.conf)</span><span class="code-lang">bash</span></div>
+          <pre><span class="cm"># Enable vi keys in copy mode:</span>
+set-window-option -g mode-keys vi
+
+<span class="cm"># vi-style selection and copy:</span>
+bind-key -T copy-mode-vi v   send-keys -X begin-selection
+bind-key -T copy-mode-vi y   send-keys -X copy-selection-and-cancel
+bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
+
+<span class="cm"># Mouse: click to select, double-click word, drag to select:</span>
+set -g mouse on
+
+<span class="cm"># System clipboard integration (macOS):</span>
+bind-key -T copy-mode-vi y \
+  send-keys -X copy-pipe-and-cancel "pbcopy"
+
+<span class="cm"># System clipboard integration (Linux/X11):</span>
+bind-key -T copy-mode-vi y \
+  send-keys -X copy-pipe-and-cancel "xclip -selection clipboard"
+
+<span class="cm"># System clipboard integration (Linux/Wayland):</span>
+bind-key -T copy-mode-vi y \
+  send-keys -X copy-pipe-and-cancel "wl-copy"
+
+<span class="cm"># Increase scrollback buffer (default is only 2000 lines!):</span>
+set -g history-limit 50000</pre>
+        </div>
+        <div class="callout c-amber">
+          <strong>SCROLLBACK LIMIT IS 2000 BY DEFAULT</strong>
+          The default history limit is laughably small for agent workloads. Set <code>history-limit 50000</code> or even higher. At 50k lines of terminal output per pane, 8 agent panes = 400k lines in RAM — totally fine on modern hardware. Your agent's 3-hour log output needs to be searchable.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="kb-misc" class="tab-pane">
+    <div class="g2">
+      <div>
+        <div class="key-grid">
+          <div class="key-row"><div class="key-k"><kbd>C-b ?</kbd></div><div class="key-d">Show all keybindings (searchable)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b :</kbd></div><div class="key-d">Command prompt — type any tmux command</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b t</kbd></div><div class="key-d">Show a clock in current pane</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b ~</kbd></div><div class="key-d">Show tmux message log</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b r</kbd></div><div class="key-d">Reload config (after bind-key r below)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b C-z</kbd></div><div class="key-d">Suspend the tmux client</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b i</kbd></div><div class="key-d">Display pane info (index, size, command)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b D</kbd></div><div class="key-d">Choose client to detach (multi-client)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b m</kbd></div><div class="key-d">Mark current pane (for join-pane later)</div></div>
+          <div class="key-row"><div class="key-k"><kbd>C-b M</kbd></div><div class="key-d">Clear the marked pane</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-fname">show-options — inspect current config</span><span class="code-lang">bash</span></div>
+          <pre><span class="cm"># From inside tmux command prompt (C-b :)
+# or from shell with tmux prefix:</span>
+
+<span class="co">tmux show-options -g</span>              <span class="cm"># all global options</span>
+<span class="co">tmux show-options -g prefix</span>       <span class="cm"># current prefix key</span>
+<span class="co">tmux show-window-options -g</span>       <span class="cm"># window-specific options</span>
+<span class="co">tmux show-environment</span>             <span class="cm"># tmux environment variables</span>
+<span class="co">tmux display-message '#{session_name}'</span>  <span class="cm"># current session name</span>
+<span class="co">tmux display-message '#{window_index}'</span>  <span class="cm"># current window index</span>
+<span class="co">tmux display-message '#{pane_current_command}'</span>  <span class="cm"># running command</span>
+<span class="co">tmux display-message '#{pane_pid}'</span>     <span class="cm"># PID of shell in pane</span>
+
+<span class="cm"># List all format variables:</span>
+<span class="co">tmux display-message -a | less</span>    <span class="cm"># 200+ variables available</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     2 — SESSIONS
+══════════════════════════════════════ -->
+<section id="sessions">
+  <div class="section-header">
+    <div class="prompt-line">tmux ls</div>
+    <div class="section-title">SESSION <em>MASTERY</em></div>
+    <div class="section-sub">Sessions are your persistent workspaces. Design them with intent. One session per project, per client, per agent cluster. Name them. Script their creation. Never lose context again.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <h3>Session Design Patterns</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Professional session layout</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># Pattern: one session per project or concern
+# tmux ls output of a mature workspace:</span>
+
+<span class="pr">$</span> <span class="co">tmux ls</span>
+agents:    3 windows (created Mon Apr  5 09:00:26 2026)
+devenv:    2 windows (created Mon Apr  5 08:45:01 2026) (attached)
+monitor:   1 window  (created Mon Apr  5 08:45:55 2026)
+infra:     4 windows (created Sun Apr  4 22:15:00 2026)
+
+<span class="cm"># Switch between sessions instantly:
+#   C-b s         → interactive tree
+#   C-b (         → previous session
+#   C-b )         → next session
+#   C-b L         → last used session
+#   C-b :switch-client -t agents    → by name</span>
+
+<span class="cm"># Quick-switch with fzf (add to shell .zshrc/.bashrc):</span>
+<span class="co">alias ts='tmux switch-client -t $(tmux ls -F "#{session_name}" | fzf)'</span>
+<span class="co">alias ta='tmux attach -t $(tmux ls -F "#{session_name}" | fzf)'</span>
+
+<span class="cm"># The "attach or create" pattern — put in a shell alias:</span>
+<span class="kw">function</span> <span class="fn">t</span>() {
+  <span class="kw">if</span> [ -z "<span class="jj">$1</span>" ]; <span class="kw">then</span>
+    <span class="co">tmux attach</span> <span class="nu">2>/dev/null</span> || <span class="co">tmux new-session -s main</span>
+  <span class="kw">else</span>
+    <span class="co">tmux attach -t</span> "<span class="jj">$1</span>" <span class="nu">2>/dev/null</span> || <span class="co">tmux new-session -s</span> "<span class="jj">$1</span>"
+  <span class="kw">fi</span>
+}
+<span class="cm"># Usage: t         → attach to most recent
+#        t agents  → attach or create "agents"</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Session Persistence Beyond Reboots</h3>
+      <div class="callout c-red">
+        <strong>tmux dies on system reboot</strong>
+        The tmux server is a process — it survives disconnects but not reboots. For true persistence: use <code>tmux-resurrect</code> (saves/restores session layout) + <code>tmux-continuum</code> (auto-saves every N minutes). The Plugins section covers this. This is critical for long-running agent pipelines.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Session environment + variables</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># Set environment variable visible to all panes in session:</span>
+<span class="co">tmux set-environment -t agents OPENAI_API_KEY sk-proj-...</span>
+<span class="co">tmux set-environment -g LOG_LEVEL debug</span>   <span class="cm"># global (all sessions)</span>
+
+<span class="cm"># Remove a variable:</span>
+<span class="co">tmux set-environment -r OPENAI_API_KEY</span>
+
+<span class="cm"># Show session environment:</span>
+<span class="co">tmux show-environment -t agents</span>
+
+<span class="cm"># Access in shell (new panes inherit at creation time):</span>
+<span class="pr">$</span> <span class="co">echo $OPENAI_API_KEY</span>   <span class="cm"># works in new panes</span>
+
+<span class="cm"># Lock a session (password-protect it):</span>
+<span class="co">tmux lock-session -t sensitive</span>
+
+<span class="cm"># Set a session-specific working directory:</span>
+<span class="co">tmux new-session -s agents -c ~/projects/agents</span>
+<span class="cm"># All new windows/panes in "agents" start in ~/projects/agents</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     3 — PANES
+══════════════════════════════════════ -->
+<section id="panes">
+  <div class="section-header">
+    <div class="prompt-line">tmux split-window -h && tmux split-window -v</div>
+    <div class="section-title">PANE <em>POWER</em></div>
+    <div class="section-sub">Panes are where work happens. Splitting, navigating, synchronizing, and monitoring panes is the core operational skill of the tmux power user. This section covers everything including the killer feature: synchronized panes.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <h3>Synchronize Panes — The Killer Feature</h3>
+      <div class="callout c-phos">
+        <strong>SYNCHRONIZE-PANES: TYPE ONCE, RUN EVERYWHERE</strong>
+        Enable with <kbd>C-b :</kbd> then <code>setw synchronize-panes on</code>. Everything you type goes to ALL panes simultaneously. Use case: deploy the same command to 8 agent processes, run tests in parallel across environments, broadcast a stop signal to all running workers. Toggle off when done.
+      </div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Synchronize panes — broadcast commands</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># Toggle from command prompt:</span>
+<span class="ke">C-b :</span> setw synchronize-panes on
+<span class="ke">C-b :</span> setw synchronize-panes off
+
+<span class="cm"># Add a keybinding to .tmux.conf (toggle with C-b S):</span>
+<span class="co">bind S setw synchronize-panes \; \
+  display-message "sync: #{?pane_synchronized,ON,OFF}"</span>
+
+<span class="cm"># Practical use: stop all 8 LLM agents at once</span>
+<span class="cm"># 1. Enter sync mode</span>
+<span class="cm"># 2. Type: Ctrl+C</span>
+<span class="cm"># 3. All 8 agents receive SIGINT simultaneously</span>
+
+<span class="cm"># Send-keys to all panes WITHOUT sync mode (scripted):</span>
+<span class="kw">for</span> pane <span class="kw">in</span> $(<span class="co">tmux list-panes -t agents:workers -F '#{pane_index}'</span>); <span class="kw">do</span>
+  <span class="co">tmux send-keys -t agents:workers.$pane</span> <span class="st">"git pull && ./restart.sh"</span> Enter
+<span class="kw">done</span></pre>
+      </div>
+
+      <h3>Pane Monitoring</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Monitor panes for activity or silence</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># Monitor for activity (alert when any output appears):</span>
+<span class="ke">C-b :</span> setw monitor-activity on
+<span class="cm"># Window tab flashes when background pane has new output</span>
+<span class="cm"># Perfect for: long-running jobs you need to catch</span>
+
+<span class="cm"># Monitor for silence (alert when output stops):</span>
+<span class="ke">C-b :</span> setw monitor-silence 30
+<span class="cm"># Alert if pane has no output for 30 seconds
+# Perfect for: detecting hung/deadlocked agents</span>
+
+<span class="cm"># In .tmux.conf — visual + audible alert:</span>
+<span class="co">set -g visual-activity on</span>
+<span class="co">set -g visual-bell on</span>
+<span class="co">set -g bell-action any</span>   <span class="cm"># alert on any window bell</span>
+
+<span class="cm"># Pipe pane output to a file (live stream to log):</span>
+<span class="co">tmux pipe-pane -t agents:0.0 "cat >> /tmp/agent-0.log"</span>
+<span class="cm"># Stop piping:</span>
+<span class="co">tmux pipe-pane -t agents:0.0</span>   <span class="cm"># empty command stops it</span></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Advanced Navigation</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Smart pane navigation (vim-tmux-navigator)</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># Problem: C-b arrow is slow (two keystrokes).
+# Solution: use Alt+arrow without prefix.
+# Add to .tmux.conf:</span>
+
+<span class="co">bind -n M-Left  select-pane -L</span>   <span class="cm"># Alt+← select left pane</span>
+<span class="co">bind -n M-Right select-pane -R</span>
+<span class="co">bind -n M-Up    select-pane -U</span>
+<span class="co">bind -n M-Down  select-pane -D</span>
+
+<span class="cm"># Even better: vim-tmux-navigator plugin makes
+# Ctrl+h/j/k/l work across vim splits AND tmux panes seamlessly.
+# (See Plugins section)</span>
+
+<span class="cm"># Resize panes without prefix (Shift+Alt+arrow):</span>
+<span class="co">bind -n M-S-Left  resize-pane -L 5</span>
+<span class="co">bind -n M-S-Right resize-pane -R 5</span>
+<span class="co">bind -n M-S-Up    resize-pane -U 5</span>
+<span class="co">bind -n M-S-Down  resize-pane -D 5</span>
+
+<span class="cm"># Jump to a specific pane by number (instant):</span>
+<span class="ke">C-b q</span>   <span class="cm">→ numbers appear, type the number within 1s</span>
+
+<span class="cm"># Display pane addresses for scripting:</span>
+<span class="co">tmux list-panes -t agents:0 -F "#{pane_index}: #{pane_current_command} PID=#{pane_pid}"</span></pre>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">Custom split keybindings</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># Replace confusing " and % with more intuitive bindings:</span>
+<span class="co">bind | split-window -h -c "#{pane_current_path}"</span>
+<span class="co">bind - split-window -v -c "#{pane_current_path}"</span>
+<span class="cm"># C-b |  → split vertical (visual: | = vertical line)
+# C-b -  → split horizontal (visual: - = horizontal line)
+# "pane_current_path": new pane opens in same directory!
+# This is the #1 most useful pane config change.</span>
+
+<span class="cm"># Also propagate directory on new windows:</span>
+<span class="co">bind c new-window -c "#{pane_current_path}"</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     4 — SCRIPTING
+══════════════════════════════════════ -->
+<section id="script">
+  <div class="section-header">
+    <div class="prompt-line">tmux new-session -d -s agents && tmux send-keys...</div>
+    <div class="section-title">SCRIPTING <em>& AUTOMATION</em></div>
+    <div class="section-sub">The real power of tmux is scriptability. Every tmux action is a CLI command. Shell scripts can create entire workspaces, spawn processes in specific panes, and orchestrate complex multi-process environments with one command.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <h3>The send-keys Pattern</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">send-keys — the universal orchestration primitive</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># send-keys sends keystrokes to a pane as if you typed them.
+# Target format: session:window.pane
+# session:window   → pane 0 of that window (default)
+# session:window.N → specific pane N</span>
+
+<span class="cm"># Basic: run a command in a specific pane</span>
+<span class="co">tmux send-keys -t agents:0.0</span> <span class="st">"python agent.py --task research"</span> <span class="co">Enter</span>
+
+<span class="cm"># Send a key without a command:</span>
+<span class="co">tmux send-keys -t agents:0.0</span> <span class="st">""</span> <span class="co">C-c</span>   <span class="cm"># send Ctrl+C to pane</span>
+<span class="co">tmux send-keys -t agents:0.0 q Enter</span>  <span class="cm"># type q then Enter</span>
+
+<span class="cm"># Send to ALL panes in a window:</span>
+<span class="kw">for</span> pane <span class="kw">in</span> $(<span class="co">tmux list-panes -t agents:workers -F '#{pane_index}'</span>); <span class="kw">do</span>
+  <span class="co">tmux send-keys -t "agents:workers.$pane" "echo pane $pane ready" Enter</span>
+<span class="kw">done</span>
+
+<span class="cm"># Don't execute yet (no Enter) — populate then review:</span>
+<span class="co">tmux send-keys -t agents:0.0</span> <span class="st">"python dangerous_thing.py"</span>
+<span class="cm"># User sees the command, presses Enter themselves</span>
+
+<span class="cm"># Read output from a pane (capture pane content):</span>
+<span class="co">tmux capture-pane -t agents:0.0 -p</span>          <span class="cm"># last screenful</span>
+<span class="co">tmux capture-pane -t agents:0.0 -p -S -3000</span> <span class="cm"># last 3000 lines</span>
+<span class="co">tmux capture-pane -t agents:0.0 -p -e</span>       <span class="cm"># include escape codes</span>
+
+<span class="cm"># Write pane content to file:</span>
+<span class="co">tmux capture-pane -t agents:0.0 -pS -10000 > agent-output.txt</span></pre>
+      </div>
+    </div>
+
+    <div>
+      <h3>Full Workspace Bootstrap Script</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">~/scripts/agents.sh — one command to rule them all</span><span class="code-lang">bash</span></div>
+        <pre><span class="py">#!/bin/bash</span>
+<span class="cm"># Spawn a full 8-agent workspace with monitoring in one shot.</span>
+<span class="cm"># Usage: ./agents.sh [task_description]</span>
+
+SESSION<span class="op">=</span>"agents"
+TASK<span class="op">=</span>"<span class="jj">${1:-default-research-task}</span>"
+
+<span class="cm"># Kill existing session if running:</span>
+<span class="co">tmux kill-session -t "$SESSION" 2>/dev/null</span>
+
+<span class="cm"># ── WINDOW 0: ORCHESTRATOR ────────────────────────────</span>
+<span class="co">tmux new-session -d -s "$SESSION" -n "orchestrator" -x 220 -y 50</span>
+<span class="co">tmux send-keys -t "$SESSION:orchestrator"</span> \
+  <span class="st">"cd ~/agents && python orchestrator.py --task '$TASK'"</span> Enter
+
+<span class="cm"># ── WINDOW 1: WORKERS (4 agents in a 2x2 grid) ────────</span>
+<span class="co">tmux new-window -t "$SESSION" -n "workers"</span>
+
+<span class="cm"># Split into 4 panes:</span>
+<span class="co">tmux split-window -t "$SESSION:workers" -h</span>         <span class="cm"># pane 0 + pane 1</span>
+<span class="co">tmux split-window -t "$SESSION:workers.0" -v</span>       <span class="cm"># pane 0 + pane 2</span>
+<span class="co">tmux split-window -t "$SESSION:workers.1" -v</span>       <span class="cm"># pane 1 + pane 3</span>
+<span class="co">tmux select-layout -t "$SESSION:workers" tiled</span>
+
+<span class="cm"># Start agent in each pane:</span>
+<span class="kw">for</span> i <span class="kw">in</span> 0 1 2 3; <span class="kw">do</span>
+  <span class="co">tmux send-keys -t "$SESSION:workers.$i"</span> \
+    <span class="st">"python agent_worker.py --id $i --task '$TASK'"</span> Enter
+<span class="kw">done</span>
+
+<span class="cm"># ── WINDOW 2: LOGS + MONITOR ──────────────────────────</span>
+<span class="co">tmux new-window -t "$SESSION" -n "monitor"</span>
+<span class="co">tmux split-window -t "$SESSION:monitor" -h -p 40</span>
+
+<span class="cm"># Left pane: live log aggregation</span>
+<span class="co">tmux send-keys -t "$SESSION:monitor.0"</span> \
+  <span class="st">"tail -f /var/log/agents/*.log | grep -v DEBUG"</span> Enter
+
+<span class="cm"># Right pane: system resources</span>
+<span class="co">tmux send-keys -t "$SESSION:monitor.1"</span> \
+  <span class="st">"htop -d 5"</span> Enter
+
+<span class="cm"># ── FOCUS AND ATTACH ──────────────────────────────────</span>
+<span class="co">tmux select-window -t "$SESSION:orchestrator"</span>
+<span class="co">tmux attach-session -t "$SESSION"</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>tmuxinator — YAML-Defined Workspaces</h3>
+  <div class="g2">
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-fname">~/.config/tmuxinator/agents.yml</span><span class="code-lang">yaml</span></div>
+      <pre><span class="nm">name</span>: <span class="st">agents</span>
+<span class="nm">root</span>: <span class="st">~/projects/agents</span>
+<span class="nm">socket_name</span>: <span class="st">agents</span>      <span class="cm"># isolated tmux server socket</span>
+
+<span class="nm">windows</span>:
+  - <span class="nm">orchestrator</span>:
+      <span class="nm">layout</span>: <span class="st">main-vertical</span>
+      <span class="nm">panes</span>:
+        - <span class="st">python orchestrator.py</span>
+        - <span class="st">tail -f logs/orchestrator.log</span>
+
+  - <span class="nm">workers</span>:
+      <span class="nm">layout</span>: <span class="st">tiled</span>
+      <span class="nm">panes</span>:
+        - <span class="st">python worker.py --id 0</span>
+        - <span class="st">python worker.py --id 1</span>
+        - <span class="st">python worker.py --id 2</span>
+        - <span class="st">python worker.py --id 3</span>
+
+  - <span class="nm">monitor</span>:
+      <span class="nm">layout</span>: <span class="st">even-horizontal</span>
+      <span class="nm">panes</span>:
+        - <span class="st">htop</span>
+        - <span class="st">tail -f logs/combined.log</span>
+
+  - <span class="nm">shell</span>: <span class="cm"># empty pane for ad-hoc commands</span></pre>
+    </div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-fname">tmuxinator commands</span><span class="code-lang">bash</span></div>
+      <pre><span class="cm"># Install:</span>
+<span class="co">gem install tmuxinator</span>           <span class="cm"># Ruby gem</span>
+<span class="co">pip install tmuxinator</span>           <span class="cm"># or Python port</span>
+
+<span class="cm"># Commands:</span>
+<span class="co">tmuxinator start agents</span>         <span class="cm"># start workspace</span>
+<span class="co">tmuxinator stop agents</span>          <span class="cm"># stop workspace</span>
+<span class="co">tmuxinator edit agents</span>          <span class="cm"># edit YAML config</span>
+<span class="co">tmuxinator new agents</span>           <span class="cm"># create new config</span>
+<span class="co">tmuxinator list</span>                 <span class="cm"># list all configs</span>
+<span class="co">tmuxinator copy agents dev</span>      <span class="cm"># copy a config</span>
+<span class="co">tmuxinator doctor</span>               <span class="cm"># check dependencies</span>
+
+<span class="cm"># With arguments (interpolated in YAML):</span>
+<span class="co">tmuxinator start agents task="research openai o3"</span>
+<span class="cm"># In YAML: <%= @args[:task] %></span>
+
+<span class="cm"># Shell alias for instant access:</span>
+<span class="co">alias mux='tmuxinator'</span>
+<span class="co">alias ma='tmuxinator start agents'</span></pre>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     5 — AGENTS
+══════════════════════════════════════ -->
+<section id="agents">
+  <div class="section-header">
+    <div class="prompt-line">tmux new -s llm-cluster && python spawn_agents.py --n 8</div>
+    <div class="section-title">LLM <em>AGENT</em> ORCHESTRATION</div>
+    <div class="section-sub">In April 2026, running 8 parallel LLM agents from the command line is standard workflow. tmux is the orchestration layer. This section covers patterns for spawning, monitoring, inter-agent communication, and harvesting results — all without a single GUI.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <!-- Agent grid visual -->
+  <h3>The 8-Agent Workspace</h3>
+  <div class="agent-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;grid-template-rows:auto auto">
+    <div class="agent-pane ap-done">
+      <div class="ap-title"><span class="ap-dot dot-dim"></span>worker-0 [done]</div>
+      <div class="ap-cmd">$ python agent.py --id 0</div>
+      <div class="ap-log">✓ Task complete. Output: result_0.json</div>
+    </div>
+    <div class="agent-pane ap-busy">
+      <div class="ap-title"><span class="ap-dot dot-amber"></span>worker-1 [running]</div>
+      <div class="ap-cmd">$ python agent.py --id 1</div>
+      <div class="ap-log">Calling gpt-4o... step 7/12</div>
+    </div>
+    <div class="agent-pane ap-busy">
+      <div class="ap-title"><span class="ap-dot dot-amber"></span>worker-2 [running]</div>
+      <div class="ap-cmd">$ python agent.py --id 2</div>
+      <div class="ap-log">Searching web... 43 results</div>
+    </div>
+    <div class="agent-pane ap-err">
+      <div class="ap-title"><span class="ap-dot dot-red"></span>worker-3 [ERROR]</div>
+      <div class="ap-cmd">$ python agent.py --id 3</div>
+      <div class="ap-log" style="color:var(--red)">RateLimitError: 429</div>
+    </div>
+    <div class="agent-pane ap-active">
+      <div class="ap-title"><span class="ap-dot dot-phos"></span>worker-4 [active]</div>
+      <div class="ap-cmd">$ python agent.py --id 4</div>
+      <div class="ap-log">Writing report... <span class="ap-cursor"></span></div>
+    </div>
+    <div class="agent-pane ap-busy">
+      <div class="ap-title"><span class="ap-dot dot-amber"></span>worker-5 [running]</div>
+      <div class="ap-cmd">$ python agent.py --id 5</div>
+      <div class="ap-log">Generating embeddings...</div>
+    </div>
+    <div class="agent-pane ap-done">
+      <div class="ap-title"><span class="ap-dot dot-dim"></span>worker-6 [done]</div>
+      <div class="ap-cmd">$ python agent.py --id 6</div>
+      <div class="ap-log">✓ Task complete. Output: result_6.json</div>
+    </div>
+    <div class="agent-pane ap-busy">
+      <div class="ap-title"><span class="ap-dot dot-amber"></span>worker-7 [running]</div>
+      <div class="ap-cmd">$ python agent.py --id 7</div>
+      <div class="ap-log">Processing 1,847 tokens...</div>
+    </div>
+  </div>
+  <p style="font-family:var(--display);font-size:0.85rem;color:var(--text3);margin-top:0.5rem">↑ 8 agents running in a 4×2 tiled layout. synchronize-panes for broadcast commands. capture-pane to harvest outputs programmatically.</p>
+
+  <div class="g2" style="margin-top:1.5rem">
+    <div>
+      <h3>Python Agent Spawner</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">spawn_agents.py — Python-controlled tmux</span><span class="code-lang">python</span></div>
+        <pre><span class="py">import</span> subprocess, json, time, sys
+<span class="py">from</span> dataclasses <span class="py">import</span> dataclass
+
+<span class="kw">def</span> <span class="fn">tmux</span>(*args) -> str:
+    <span class="cm">"""Run any tmux command, return stdout."""</span>
+    result <span class="op">=</span> subprocess.run(
+        [<span class="st">"tmux"</span>] <span class="op">+</span> list(args),
+        capture_output<span class="op">=True</span>, text<span class="op">=True</span>
+    )
+    <span class="py">return</span> result.stdout.strip()
+
+<span class="kw">class</span> <span class="ty">AgentCluster</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, session: str, n_workers: int <span class="op">=</span> <span class="nu">8</span>):
+        self.session <span class="op">=</span> session
+        self.n <span class="op">=</span> n_workers
+
+    <span class="kw">def</span> <span class="fn">spawn</span>(self, task: str):
+        <span class="cm"># Kill existing session</span>
+        tmux(<span class="st">"kill-session"</span>, <span class="st">"-t"</span>, self.session)
+
+        <span class="cm"># Create session with first worker window</span>
+        tmux(<span class="st">"new-session"</span>, <span class="st">"-d"</span>, <span class="st">"-s"</span>, self.session,
+             <span class="st">"-n"</span>, <span class="st">"workers"</span>, <span class="st">"-x"</span>, <span class="st">"220"</span>, <span class="st">"-y"</span>, <span class="st">"50"</span>)
+
+        <span class="cm"># Create N-1 additional panes</span>
+        <span class="py">for</span> i <span class="py">in</span> range(<span class="nu">1</span>, self.n):
+            tmux(<span class="st">"split-window"</span>, <span class="st">"-t"</span>, f<span class="st">"{self.session}:workers"</span>,
+                 <span class="st">"-h"</span> <span class="py">if</span> i <span class="op">%</span> <span class="nu">2</span> <span class="op">==</span> <span class="nu">1</span> <span class="py">else</span> <span class="st">"-v"</span>)
+
+        tmux(<span class="st">"select-layout"</span>, <span class="st">"-t"</span>,
+             f<span class="st">"{self.session}:workers"</span>, <span class="st">"tiled"</span>)
+
+        <span class="cm"># Start agent in each pane</span>
+        <span class="py">for</span> i <span class="py">in</span> range(self.n):
+            tmux(<span class="st">"send-keys"</span>, <span class="st">"-t"</span>, f<span class="st">"{self.session}:workers.{i}"</span>,
+                 f<span class="st">"python agent.py --id {i} --task '{task}'"</span>,
+                 <span class="st">"Enter"</span>)
+
+    <span class="kw">def</span> <span class="fn">is_done</span>(self, pane: int) -> bool:
+        <span class="cm">"""Check if agent pane has exited."""</span>
+        out <span class="op">=</span> tmux(<span class="st">"display-message"</span>, <span class="st">"-t"</span>,
+                   f<span class="st">"{self.session}:workers.{pane}"</span>,
+                   <span class="st">"-p"</span>, <span class="st">"#{pane_dead}"</span>)
+        <span class="py">return</span> out.strip() <span class="op">==</span> <span class="st">"1"</span>
+
+    <span class="kw">def</span> <span class="fn">get_output</span>(self, pane: int) -> str:
+        <span class="cm">"""Capture pane output for result collection."""</span>
+        <span class="py">return</span> tmux(<span class="st">"capture-pane"</span>, <span class="st">"-t"</span>,
+                    f<span class="st">"{self.session}:workers.{pane}"</span>,
+                    <span class="st">"-p"</span>, <span class="st">"-S"</span>, <span class="st">"-10000"</span>)
+
+    <span class="kw">def</span> <span class="fn">wait_all</span>(self, poll_interval: float <span class="op">=</span> <span class="nu">5.0</span>):
+        <span class="kw">while True</span>:
+            done <span class="op">=</span> [self.is_done(i) <span class="py">for</span> i <span class="py">in</span> range(self.n)]
+            <span class="py">if</span> all(done): <span class="py">break</span>
+            time.sleep(poll_interval)
+
+    <span class="kw">def</span> <span class="fn">broadcast</span>(self, cmd: str):
+        <span class="cm">"""Send command to all agents simultaneously."""</span>
+        <span class="py">for</span> i <span class="py">in</span> range(self.n):
+            tmux(<span class="st">"send-keys"</span>, <span class="st">"-t"</span>,
+                 f<span class="st">"{self.session}:workers.{i}"</span>, cmd, <span class="st">"Enter"</span>)
+
+<span class="cm"># Usage:</span>
+cluster <span class="op">=</span> AgentCluster(<span class="st">"agents"</span>, n_workers<span class="op">=</span><span class="nu">8</span>)
+cluster.spawn(task<span class="op">=</span><span class="st">"Analyze 2026 AI landscape"</span>)
+cluster.wait_all()
+outputs <span class="op">=</span> [cluster.get_output(i) <span class="py">for</span> i <span class="py">in</span> range(<span class="nu">8</span>)]</pre>
+      </div>
+    </div>
+    <div>
+      <h3>Agent Status Dashboard Pane</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">watch_agents.sh — live status panel</span><span class="code-lang">bash</span></div>
+        <pre><span class="py">#!/bin/bash</span>
+<span class="cm"># A pane that shows live status of all agent panes.
+# Run in a separate tmux pane as your control panel.</span>
+
+SESSION<span class="op">=</span>"agents"
+WINDOW<span class="op">=</span>"workers"
+
+<span class="kw">while</span> true; <span class="kw">do</span>
+  <span class="co">clear</span>
+  <span class="co">echo</span> <span class="st">"═══ AGENT STATUS $(date '+%H:%M:%S') ═══"</span>
+  <span class="co">echo</span>
+
+  <span class="kw">for</span> pane <span class="kw">in</span> $(<span class="co">tmux list-panes -t "$SESSION:$WINDOW" \
+    -F "#{pane_index}"</span>); <span class="kw">do</span>
+
+    <span class="cm"># Get pane metadata:</span>
+    dead<span class="op">=</span>$(<span class="co">tmux display-message -t "$SESSION:$WINDOW.$pane" \
+      -p "#{pane_dead}"</span>)
+    cmd<span class="op">=</span>$(<span class="co">tmux display-message -t "$SESSION:$WINDOW.$pane" \
+      -p "#{pane_current_command}"</span>)
+    pid<span class="op">=</span>$(<span class="co">tmux display-message -t "$SESSION:$WINDOW.$pane" \
+      -p "#{pane_pid}"</span>)
+
+    <span class="cm"># Get last line of output:</span>
+    last<span class="op">=</span>$(<span class="co">tmux capture-pane -t "$SESSION:$WINDOW.$pane" -p \
+      | grep -v '^$' | tail -1</span>)
+
+    <span class="kw">if</span> [ "<span class="jj">$dead</span>" <span class="op">=</span> "1" ]; <span class="kw">then</span>
+      status<span class="op">=</span><span class="st">"[DONE]  "</span>
+    <span class="kw">else</span>
+      status<span class="op">=</span><span class="st">"[RUN] ⚡"</span>
+    <span class="kw">fi</span>
+
+    <span class="co">printf</span> <span class="st">"pane %d %s %s\n"</span> "<span class="jj">$pane</span>" "<span class="jj">$status</span>" "<span class="jj">${last:0:60}</span>"
+  <span class="kw">done</span>
+
+  <span class="co">sleep</span> 3
+<span class="kw">done</span></pre>
+      </div>
+      <div class="callout c-cyan">
+        <strong>capture-pane — The Programmatic Interface</strong>
+        <code>tmux capture-pane -t SESSION:WINDOW.PANE -p -S -N</code> captures the last N lines of a pane's output as text. This is how you harvest agent outputs, check for error strings, build status dashboards, and implement polling loops — all from outside the pane, without interrupting the running agent.
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     6 — CONFIG
+══════════════════════════════════════ -->
+<section id="config">
+  <div class="section-header">
+    <div class="prompt-line">cat ~/.tmux.conf</div>
+    <div class="section-title">THE <em>.tmux.conf</em></div>
+    <div class="section-sub">A good .tmux.conf transforms tmux from a tool you tolerate into a tool you love. This is a production-grade config with every decision explained — copy it, understand it, adapt it.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">~/.tmux.conf — Part 1: Core Settings</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># ── PREFIX ────────────────────────────────────────────
+# Remap prefix from C-b to C-a (like GNU Screen, more ergonomic)</span>
+unbind C-b
+set-option -g prefix C-a
+bind-key C-a send-prefix   <span class="cm"># C-a C-a sends literal C-a to terminal</span>
+
+<span class="cm"># ── GENERAL ────────────────────────────────────────────</span>
+set -g default-terminal "tmux-256color"
+set -ag terminal-overrides ",xterm-256color:RGB"  <span class="cm"># true color</span>
+set -g history-limit 50000           <span class="cm"># scrollback lines per pane</span>
+set -g base-index 1                  <span class="cm"># windows start at 1 (not 0)</span>
+setw -g pane-base-index 1           <span class="cm"># panes start at 1</span>
+set -g renumber-windows on           <span class="cm"># auto-renumber on window close</span>
+set -g mouse on                      <span class="cm"># enable mouse (click, drag, scroll)</span>
+set -sg escape-time 0                <span class="cm"># zero delay for vim Escape key</span>
+set -g focus-events on               <span class="cm"># pass focus events to apps (vim autoread)</span>
+set -g display-time 3000            <span class="cm"># status messages visible 3s</span>
+set -g status-interval 5            <span class="cm"># refresh status bar every 5s</span>
+set -g automatic-rename on          <span class="cm"># auto-rename windows to running command</span>
+set -g automatic-rename-format "#{pane_current_command}"
+
+<span class="cm"># ── SPLITS (intuitive | and -) ─────────────────────────</span>
+bind | split-window -h -c "#{pane_current_path}"
+bind - split-window -v -c "#{pane_current_path}"
+bind c new-window      -c "#{pane_current_path}"
+unbind '"'   <span class="cm"># remove old horizontal split</span>
+unbind %     <span class="cm"># remove old vertical split</span>
+
+<span class="cm"># ── PANE NAVIGATION (Alt+arrow, no prefix needed) ──────</span>
+bind -n M-Left  select-pane -L
+bind -n M-Right select-pane -R
+bind -n M-Up    select-pane -U
+bind -n M-Down  select-pane -D
+
+<span class="cm"># ── PANE RESIZE (prefix + Ctrl+arrow) ──────────────────</span>
+bind -r C-Left  resize-pane -L 5
+bind -r C-Right resize-pane -R 5
+bind -r C-Up    resize-pane -U 5
+bind -r C-Down  resize-pane -D 5
+
+<span class="cm"># ── WINDOW SWITCHING (prefix + Shift+arrow) ────────────</span>
+bind -n S-Left  previous-window
+bind -n S-Right next-window</pre>
+      </div>
+    </div>
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">~/.tmux.conf — Part 2: Status Bar + Copy</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># ── COPY MODE (vi keys) ────────────────────────────────</span>
+setw -g mode-keys vi
+bind-key -T copy-mode-vi v   send-keys -X begin-selection
+bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
+bind-key -T copy-mode-vi y   send-keys -X copy-selection-and-cancel
+bind-key -T copy-mode-vi Y   send-keys -X copy-end-of-line
+
+<span class="cm"># System clipboard (pick ONE for your OS):</span>
+<span class="cm"># macOS:</span>
+bind-key -T copy-mode-vi y \
+  send-keys -X copy-pipe-and-cancel "pbcopy"
+<span class="cm"># Linux X11:</span>
+<span class="cm"># send-keys -X copy-pipe-and-cancel "xclip -selection clipboard"</span>
+<span class="cm"># Linux Wayland:</span>
+<span class="cm"># send-keys -X copy-pipe-and-cancel "wl-copy"</span>
+
+<span class="cm"># ── UTILITIES ──────────────────────────────────────────</span>
+bind r source-file ~/.tmux.conf \; display-message "Config reloaded!"
+bind S setw synchronize-panes \; \
+  display-message "sync: #{?pane_synchronized,ON,OFF}"
+bind K confirm-before -p "Kill session? (y/n)" kill-session
+bind-key / copy-mode \; send-keys "?"  <span class="cm"># quick backward search</span>
+
+<span class="cm"># ── STATUS BAR ─────────────────────────────────────────</span>
+set -g status-position bottom
+set -g status-style "bg=colour234 fg=colour136"
+set -g status-left-length 40
+set -g status-right-length 80
+
+set -g status-left \
+  "#[bg=colour64 fg=colour232 bold] #{session_name} \
+   #[bg=colour234 fg=colour64]"
+
+set -g status-right \
+  "#[fg=colour136] %a %d %b #[fg=colour64 bold] %H:%M \
+   #[fg=colour232 bg=colour64 bold] #h "
+
+setw -g window-status-format " #I:#W "
+setw -g window-status-current-format \
+  "#[bg=colour136 fg=colour232 bold] #I:#W "
+
+<span class="cm"># ── PANE BORDERS ───────────────────────────────────────</span>
+set -g pane-border-style "fg=colour238"
+set -g pane-active-border-style "fg=colour64"
+
+<span class="cm"># ── PLUGINS (TPM) ──────────────────────────────────────</span>
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'christoomey/vim-tmux-navigator'
+
+set -g @continuum-restore 'on'
+set -g @continuum-save-interval '10'
+
+run '~/.tmux/plugins/tpm/tpm'</pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Status Bar Format Variables</h3>
+  <div class="sb-demo">
+    <div class="sb-seg sbs-phos">[agents]</div>
+    <div class="sb-seg sbs-dim">0:orchestrator</div>
+    <div class="sb-seg sbs-winact">1:workers*</div>
+    <div class="sb-seg sbs-win">2:monitor</div>
+    <div class="sb-seg sbs-sp"></div>
+    <div class="sb-seg sbs-amber">sync:ON</div>
+    <div class="sb-seg sbs-cyan">Sun 05 Apr</div>
+    <div class="sb-seg" style="background:var(--phos);color:var(--crt)">14:22</div>
+  </div>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-fname">Key format variables for status-left/right</span><span class="code-lang">bash</span></div>
+    <pre><span class="cm"># Session:</span>   #{session_name}  #{session_windows}  #{session_attached}
+<span class="cm"># Window:</span>    #{window_name}   #{window_index}     #{window_flags}  (flags: *=active, -=last)
+<span class="cm"># Pane:</span>      #{pane_index}    #{pane_current_command}  #{pane_pid}  #{pane_width}x#{pane_height}
+<span class="cm"># Host:</span>      #{host}          #{host_short}
+<span class="cm"># System:</span>    #{load_average}  (via tmux-cpu plugin)
+<span class="cm"># Time:</span>      #[fg=colour64]%H:%M#[default]  (strftime format)
+<span class="cm"># Conditional:</span> #{?pane_synchronized,SYNC ON,}  (? = ternary)</pre>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     7 — PLUGINS
+══════════════════════════════════════ -->
+<section id="plugins">
+  <div class="section-header">
+    <div class="prompt-line">~/.tmux/plugins/tpm/bin/install_plugins</div>
+    <div class="section-title">PLUGIN <em>ECOSYSTEM</em></div>
+    <div class="section-sub">TPM (tmux Plugin Manager) manages plugins with three keys: install, update, uninstall. These are the essential plugins for 2026 developer and agent workflows.</div>
+  </div>
+  <div class="section-rule"></div>
+
+  <div class="g2">
+    <div>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">TPM — installation + management</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># Install TPM:</span>
+<span class="co">git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm</span>
+
+<span class="cm"># In .tmux.conf — declare plugins BEFORE run line:</span>
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'    <span class="cm"># sane defaults</span>
+<span class="cm"># ... more plugins ...</span>
+run '~/.tmux/plugins/tpm/tpm'                  <span class="cm"># MUST BE LAST LINE</span>
+
+<span class="cm"># Inside tmux after editing .tmux.conf:</span>
+<span class="ke">prefix + I</span>   <span class="cm">→ Install plugins (capital I)</span>
+<span class="ke">prefix + U</span>   <span class="cm">→ Update all plugins</span>
+<span class="ke">prefix + M-u</span> <span class="cm">→ Remove unneeded plugins</span>
+
+<span class="cm"># Then reload config:</span>
+<span class="ke">prefix + r</span>   <span class="cm">→ source ~/.tmux.conf</span></pre>
+      </div>
+
+      <h3>Essential Plugins</h3>
+      <table>
+        <thead><tr><th>Plugin</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>tmux-sensible</td><td>Sane defaults every tmux user wants. The baseline. Always install first.</td></tr>
+          <tr><td>tmux-resurrect</td><td>Save and restore sessions across reboots. Saves panes, windows, sessions, and running programs. Critical for long agent runs.</td></tr>
+          <tr><td>tmux-continuum</td><td>Automatic periodic save (every N minutes). Works with resurrect. Set-and-forget persistence.</td></tr>
+          <tr><td>vim-tmux-navigator</td><td>Ctrl+h/j/k/l navigates between vim splits AND tmux panes seamlessly. Eliminates the C-b prefix for navigation.</td></tr>
+          <tr><td>tmux-fzf</td><td>Fuzzy search sessions, windows, panes, commands. Type prefix+F and fuzzy-find anything.</td></tr>
+          <tr><td>tmux-yank</td><td>Copy to system clipboard from copy-mode. Handles macOS/Linux/WSL automatically.</td></tr>
+          <tr><td>tmux-cpu</td><td>CPU/memory stats in status bar: <code>#{cpu_percentage}</code> <code>#{ram_percentage}</code></td></tr>
+          <tr><td>tmux-battery</td><td>Battery level in status bar. Adds <code>#{battery_percentage}</code>.</td></tr>
+          <tr><td>tmux-open</td><td>Open URLs and files under cursor. Highlight a URL, press O, it opens in browser.</td></tr>
+          <tr><td>tmux-sessionist</td><td>Enhanced session management: move pane to new session, merge sessions.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h3>tmux-resurrect Config</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">resurrect + continuum setup</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># In .tmux.conf:</span>
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+
+<span class="cm"># Resurrect: what to save</span>
+set -g @resurrect-capture-pane-contents 'on'  <span class="cm"># save pane output too</span>
+set -g @resurrect-strategy-vim 'session'       <span class="cm"># restore vim sessions</span>
+set -g @resurrect-strategy-nvim 'session'      <span class="cm"># restore neovim sessions</span>
+set -g @resurrect-processes 'ssh psql python3 node'  <span class="cm"># restore these processes</span>
+
+<span class="cm"># Continuum: auto-save interval</span>
+set -g @continuum-restore 'on'         <span class="cm"># auto-restore on tmux start</span>
+set -g @continuum-save-interval '10'  <span class="cm"># save every 10 minutes</span>
+
+<span class="cm"># Manual save/restore:</span>
+<span class="ke">prefix + C-s</span>   <span class="cm">→ save session</span>
+<span class="ke">prefix + C-r</span>   <span class="cm">→ restore session</span>
+
+<span class="cm"># Where sessions are saved:</span>
+<span class="co">ls ~/.tmux/resurrect/</span>    <span class="cm"># last.symlink + timestamped saves</span>
+
+<span class="cm"># For agent workloads: continuum saves every 10min.
+# System reboots: run tmux, prefix + C-r → entire agent
+# workspace back exactly as you left it.</span></pre>
+      </div>
+
+      <h3>Custom Plugin — Agent Monitor in Status Bar</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-fname">agents in status bar via shell script</span><span class="code-lang">bash</span></div>
+        <pre><span class="cm"># ~/scripts/tmux-agent-status.sh
+# Shows live agent count in tmux status bar</span>
+<span class="py">#!/bin/bash</span>
+
+SESSION<span class="op">=</span>"agents"
+WINDOW<span class="op">=</span>"workers"
+
+total<span class="op">=</span>$(<span class="co">tmux list-panes -t "$SESSION:$WINDOW" 2>/dev/null | wc -l</span>)
+<span class="kw">if</span> [ "<span class="jj">$total</span>" <span class="op">=</span> "0" ]; <span class="kw">then</span>
+  <span class="co">echo</span> <span class="st">"no agents"</span>; exit
+<span class="kw">fi</span>
+
+running<span class="op">=</span>$(<span class="co">tmux list-panes -t "$SESSION:$WINDOW" \
+  -F "#{pane_dead}" 2>/dev/null | grep -c "^0$"</span>)
+done<span class="op">=</span>$(( total - running ))
+
+<span class="co">echo</span> <span class="st">"⚡${running}/${total} agents"</span>
+
+<span class="cm"># In .tmux.conf status-right:</span>
+<span class="cm"># set -g status-right "#(~/scripts/tmux-agent-status.sh) | %H:%M"</span>
+<span class="cm"># set -g status-interval 5   ← refresh every 5s</span></pre>
+      </div>
+      <div class="callout c-phos">
+        <strong>status-right + Shell Scripts = Live Dashboard</strong>
+        Any shell script output can appear in your status bar. Poll <code>tmux capture-pane</code> outputs, check process counts, read files — all refreshed on <code>status-interval</code>. Your status bar becomes a live agent dashboard showing running count, error state, and last update time — without an extra monitoring tool.
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+  <h3>The Complete Modern Stack — April 2026</h3>
+  <div class="code-wrap">
+    <div class="code-header"><span class="code-fname">Everything running in one tmux workspace</span><span class="code-lang">bash</span></div>
+    <pre><span class="cm"># Session: devenv</span>
+<span class="cm">#   window 0: editor (nvim with vim-tmux-navigator)</span>
+<span class="cm">#   window 1: shell (zsh + starship prompt)</span>
+<span class="cm">#   window 2: git (lazygit)</span>
+
+<span class="cm"># Session: agents</span>
+<span class="cm">#   window 0: orchestrator (LLM pipeline controller)</span>
+<span class="cm">#   window 1: workers     (8 LLM agents tiled 4x2)</span>
+<span class="cm">#   window 2: monitor     (htop + log tail)</span>
+<span class="cm">#   window 3: results     (DuckDB querying agent outputs)</span>
+
+<span class="cm"># Session: infra</span>
+<span class="cm">#   window 0: k8s        (k9s — kubernetes TUI)</span>
+<span class="cm">#   window 1: db         (pgcli / mycli REPL)</span>
+<span class="cm">#   window 2: kafka      (kcat consumer watching topics)</span>
+<span class="cm">#   window 3: flink      (Flink SQL REPL)</span>
+
+<span class="cm"># All sessions: auto-restored by tmux-continuum on boot.
+# Status bar: shows active agents, time, host.
+# Navigation: C-a s → jump anywhere in &lt;2 keystrokes.
+# Everything is persistent, scriptable, reproducible.
+# This is the CLI-first 2026 workspace.</span>
+
+<span class="pr">$</span> <span class="co">tmux ls</span>
+devenv:   3 windows (created Mon Apr  5 08:45:01 2026) (attached)
+agents:   4 windows (created Mon Apr  5 09:00:26 2026) ⚡6/8 running
+infra:    4 windows (created Sun Apr  4 22:15:00 2026)</pre>
+  </div>
+</section>
+
+</div>
+
+<script>
+const wins = document.querySelectorAll('.tmux-win');
+function show(id, winIdx) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  wins.forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (winIdx !== undefined) wins[winIdx].classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function showTab(g, id, btn) {
+  document.querySelectorAll(`[id^="${g}-"]`).forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(`${g}-${id}`);
+  if (el) el.classList.add('active');
+  btn.classList.add('active');
+}
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.querySelectorAll('.perf-fill').forEach(b => {
+      const w = b.style.width; b.style.width = '0';
+      setTimeout(() => { b.style.width = w; }, 80);
+    });
+  });
+}, {threshold: 0.3});
+document.querySelectorAll('.perf-row').forEach(r => io.observe(r));
+</script>
+</body>
+</html>

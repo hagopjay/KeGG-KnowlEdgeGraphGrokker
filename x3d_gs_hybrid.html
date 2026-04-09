@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>X3D ✕ 3DGS Hybrid</title>
+<script defer src="https://cdn.jsdelivr.net/npm/x_ite@14.0.1/dist/x_ite.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;500;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#03030d}
+#vp{position:relative;width:100vw;height:100vh}
+x3d-canvas,#sc,#ol{position:absolute;inset:0;width:100%!important;height:100%!important}
+#sc{pointer-events:none}
+#ol{cursor:grab;background:transparent;z-index:10}
+#ol:active{cursor:grabbing}
+#hud{
+  position:absolute;z-index:20;top:14px;left:14px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.8;
+  color:#6ab4d0;background:rgba(3,8,22,.85);
+  padding:13px 16px;border-radius:3px;
+  border-left:2px solid #1a6fa0;border-top:1px solid rgba(30,100,160,.3);
+  backdrop-filter:blur(8px);pointer-events:none;min-width:252px
+}
+.htitle{
+  font-family:'Barlow',sans-serif;font-weight:700;font-size:12px;
+  letter-spacing:3px;color:#b8dff8;text-transform:uppercase;
+  margin-bottom:9px;padding-bottom:7px;
+  border-bottom:1px solid rgba(30,100,160,.25)
+}
+.row{display:flex;align-items:center;gap:8px;margin:2px 0}
+.pip{width:7px;height:7px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px currentColor}
+.pa{background:#3aa8ff;color:#3aa8ff}
+.pb{background:#ff8030;color:#ff8030}
+.pc{background:#40ffaa;color:#40ffaa}
+#csync{margin-top:8px;padding-top:7px;border-top:1px solid rgba(30,100,160,.2);font-size:10px;color:#2a5870}
+#csync.live{color:#40ffaa}
+#hint{margin-top:6px;font-size:10px;color:#2a5870}
+#btns{position:absolute;z-index:20;top:14px;right:14px;display:flex;flex-direction:column;gap:5px}
+.btn{
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;
+  color:#6ab4d0;background:rgba(3,8,22,.85);
+  border:1px solid rgba(30,100,160,.35);border-radius:2px;
+  padding:6px 11px;cursor:pointer;transition:.14s;text-transform:uppercase
+}
+.btn:hover{border-color:#1a6fa0;color:#b8dff8;background:rgba(26,111,160,.15)}
+.btn.off{border-color:#ff8030;color:#ff8030;background:rgba(255,128,48,.1)}
+#stats{
+  position:absolute;z-index:20;bottom:12px;left:14px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:rgba(60,130,90,.7);display:flex;gap:14px;pointer-events:none
+}
+.sv{color:rgba(80,180,120,.9)}
+#dd{
+  position:absolute;z-index:15;bottom:12px;right:14px;
+  width:176px;height:99px;border:1px solid rgba(30,100,160,.2);
+  border-radius:2px;display:none
+}
+#dd.show{display:block}
+#dl{
+  position:absolute;z-index:16;bottom:118px;right:14px;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:rgba(30,100,160,.5);display:none;pointer-events:none
+}
+#dl.show{display:block}
+#vp::after{
+  content:'';position:absolute;inset:0;z-index:25;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,transparent,transparent 2px,rgba(0,0,0,.035) 2px,rgba(0,0,0,.035) 4px)
+}
+</style>
+</head>
+<body>
+<div id="vp">
+
+<!-- LAYER 1: x_ite X3D scene -->
+<x3d-canvas id="x3d" update="always" contentScale="auto">
+<X3D profile="Immersive" version="4.0">
+<head><meta name="title" content="Hybrid"/></head>
+<Scene>
+  <Background skyColor="0.006 0.008 0.04 0.015 0.03 0.10 0.03 0.06 0.16"
+              skyAngle="0.55 1.25"
+              groundColor="0.02 0.02 0.05" groundAngle="1.5707963"/>
+  <NavigationInfo type='"NONE"' headlight="false" speed="0"/>
+  <Viewpoint DEF="CAM" position="4 5 14" orientation="0 1 0 0" fieldOfView="0.7854"/>
+  <!-- Lights -->
+  <DirectionalLight direction="-0.4 -1 -0.3" intensity="1.1" color="1 0.93 0.82" ambientIntensity="0.1"/>
+  <DirectionalLight direction="0.7 0.3 0.6"  intensity="0.38" color="0.3 0.45 1"/>
+  <PointLight location="-3.5 7 0.5" color="1 0.45 0.06" intensity="4" radius="15" attenuation="0 0.05 0.1"/>
+  <PointLight location="0.5 6 1.5"  color="0.15 0.55 1"  intensity="2" radius="9"  attenuation="0 0.08 0.18"/>
+  <!-- Ground -->
+  <Transform translation="0 -0.1 0">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.11 0.11 0.18" metallic="0" roughness="0.92"/></Appearance>
+    <Box size="28 0.2 28"/></Shape>
+  </Transform>
+  <!-- Red pillar (fire source) -->
+  <Transform translation="-3.5 2.5 0">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.62 0.08 0.03" metallic="0" roughness="0.55"
+      emissiveColor="0.32 0.05 0"/></Appearance><Box size="1.5 5 1.5"/></Shape>
+  </Transform>
+  <!-- Blue gate -->
+  <Transform translation="1.5 2 -4.5">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.07 0.2 0.8" metallic="0.42" roughness="0.3"
+      emissiveColor="0 0.03 0.25"/></Appearance><Box size="5 4 1"/></Shape>
+  </Transform>
+  <!-- Green platform -->
+  <Transform translation="4.5 0.6 1.8">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.07 0.58 0.11" metallic="0" roughness="0.74"/></Appearance>
+    <Box size="3.5 1.2 3.5"/></Shape>
+  </Transform>
+  <!-- Gold sphere (hero) -->
+  <Transform translation="0.5 2.8 1.5">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.97 0.74 0.12" metallic="0.93" roughness="0.11"
+      emissiveColor="0.05 0.03 0"/></Appearance><Sphere radius="1.8"/></Shape>
+  </Transform>
+  <!-- Steel pillar -->
+  <Transform translation="7.2 2 -1.5">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.5 0.52 0.6" metallic="0.86" roughness="0.2"/></Appearance>
+    <Cylinder radius="0.35" height="4"/></Shape>
+  </Transform>
+  <!-- Accent blocks -->
+  <Transform translation="3.2 0.35 4.2">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.52 0.09 0.65" metallic="0.2" roughness="0.5"/></Appearance>
+    <Box size="1.2 0.7 1.2"/></Shape>
+  </Transform>
+  <Transform translation="-5.5 0.6 -3.2">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.09 0.48 0.7" metallic="0.48" roughness="0.4"/></Appearance>
+    <Box size="1.5 1.2 1.5"/></Shape>
+  </Transform>
+  <Transform translation="6 0.35 3.5">
+    <Shape><Appearance><PhysicalMaterial baseColor="0.76 0.7 0.18" metallic="0.58" roughness="0.46"/></Appearance>
+    <Box size="1 0.7 1"/></Shape>
+  </Transform>
+</Scene>
+</X3D>
+</x3d-canvas>
+
+<!-- LAYER 2: WebGL2 splat canvas -->
+<canvas id="sc"></canvas>
+
+<!-- LAYER 3: orbit input -->
+<div id="ol"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="htitle">X3D ✕ 3DGS Hybrid</div>
+  <div class="row"><div class="pip pa"></div><span>x_ite — PBR mesh + lights</span></div>
+  <div class="row"><div class="pip pb"></div><span>WebGL2 — Gaussian splats</span></div>
+  <div class="row"><div class="pip pc"></div><span>Proxy depth-FBO occlusion</span></div>
+  <div id="csync">◌ waiting for x_ite…</div>
+  <div id="hint">drag · scroll=zoom · pinch</div>
+</div>
+
+<!-- Buttons -->
+<div id="btns">
+  <button class="btn" id="bsp" onclick="tog('sp')">Splats ON</button>
+  <button class="btn" id="boc" onclick="tog('oc')">Occlude ON</button>
+  <button class="btn" id="bdp" onclick="tog('dp')">Depth View</button>
+</div>
+
+<!-- Stats -->
+<div id="stats">
+  <span>FPS <span class="sv" id="sfps">—</span></span>
+  <span>SPLATS <span class="sv">3 500</span></span>
+  <span>PROXY <span class="sv" id="spv">—</span></span>
+</div>
+
+<!-- Depth debug preview -->
+<canvas id="dd"></canvas>
+<div id="dl">PROXY DEPTH</div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════
+   FLAGS
+═══════════════════════════════════════════ */
+const F={sp:true,oc:true,dp:false};
+function tog(k){
+  F[k]=!F[k];
+  const b=document.getElementById('b'+k);
+  if(k==='sp') b.textContent=F.sp?'Splats ON':'Splats OFF';
+  if(k==='oc') b.textContent=F.oc?'Occlude ON':'Occlude OFF';
+  if(k==='dp') b.textContent=F.dp?'Depth View':'Depth View';
+  b.classList.toggle('off',!F[k]);
+  if(k==='dp'){
+    document.getElementById('dd').classList.toggle('show',F.dp);
+    document.getElementById('dl').classList.toggle('show',F.dp);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   MATH
+═══════════════════════════════════════════ */
+const V={
+  sub:(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],
+  add:(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],
+  sc:(a,s)=>[a[0]*s,a[1]*s,a[2]*s],
+  dot:(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+  len:a=>Math.sqrt(V.dot(a,a)),
+  nor:a=>{const l=V.len(a);return l<1e-12?[0,1,0]:V.sc(a,1/l)},
+  cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]
+};
+
+function lookAt(e,t,u){
+  const f=V.nor(V.sub(t,e)),r=V.nor(V.cross(f,u)),uu=V.cross(r,f);
+  return new Float32Array([
+    r[0],uu[0],-f[0],0, r[1],uu[1],-f[1],0, r[2],uu[2],-f[2],0,
+    -V.dot(r,e),-V.dot(uu,e),V.dot(f,e),1
+  ]);
+}
+
+function persp(fov,asp,n,fa){
+  const f=1/Math.tan(fov*.5),d=1/(n-fa);
+  return new Float32Array([f/asp,0,0,0, 0,f,0,0, 0,0,(fa+n)*d,-1, 0,0,2*fa*n*d,0]);
+}
+
+function m4mul(a,b){
+  const o=new Float32Array(16);
+  for(let i=0;i<4;i++) for(let j=0;j<4;j++){
+    let s=0;for(let k=0;k<4;k++) s+=a[i+k*4]*b[k+j*4];
+    o[i+j*4]=s;
+  }
+  return o;
+}
+
+/* Convert orbit camera to X3D axis-angle.
+   X3D default cam: looks down -Z, up=+Y.
+   We need rotation R: R·(0,0,-1)=fwd, R·(0,1,0)=up */
+function toAA(eye,tgt){
+  const up=[0,1,0],f=V.nor(V.sub(tgt,eye)),r=V.nor(V.cross(f,up)),u=V.cross(r,f);
+  // R = [r | u | -f] as columns → trace
+  const tr=r[0]+u[1]+(-f[2]);
+  const ang=Math.acos(Math.max(-1,Math.min(1,(tr-1)*.5)));
+  if(ang<1e-7) return [0,0,1,0];
+  const s=1/(2*Math.sin(ang));
+  const ax=[(u[2]-(-f[1]))*s,((-f[0])-r[2])*s,(r[1]-u[0])*s];
+  return [...V.nor(ax),ang];
+}
+
+/* ═══════════════════════════════════════════
+   CAMERA / ORBIT
+═══════════════════════════════════════════ */
+const CAM={
+  th:0.38, ph:0.30, rad:14.5,
+  tgt:[0.5,2.2,0],
+  fov:0.7854, near:0.12, far:160,
+  get eye(){
+    const {th,ph,rad,tgt}=this;
+    return [tgt[0]+rad*Math.sin(th)*Math.cos(ph),
+            tgt[1]+rad*Math.sin(ph),
+            tgt[2]+rad*Math.cos(th)*Math.cos(ph)];
+  },
+  get view(){ return lookAt(this.eye,this.tgt,[0,1,0]); },
+  proj(asp){ return persp(this.fov,asp,this.near,this.far); }
+};
+
+(()=>{
+  const el=document.getElementById('ol');
+  let drag=false,lx=0,ly=0;
+  el.addEventListener('mousedown',e=>{drag=true;lx=e.clientX;ly=e.clientY});
+  window.addEventListener('mouseup',()=>drag=false);
+  window.addEventListener('mousemove',e=>{
+    if(!drag) return;
+    CAM.th-=(e.clientX-lx)*.006;
+    CAM.ph=Math.max(-1.35,Math.min(1.35,CAM.ph+(e.clientY-ly)*.006));
+    lx=e.clientX;ly=e.clientY;
+  });
+  el.addEventListener('wheel',e=>{
+    CAM.rad=Math.max(3,Math.min(50,CAM.rad+e.deltaY*.024));
+    e.preventDefault();
+  },{passive:false});
+  let lt=null;
+  el.addEventListener('touchstart',e=>{lt=e.touches;e.preventDefault()},{passive:false});
+  el.addEventListener('touchend',()=>lt=null);
+  el.addEventListener('touchmove',e=>{
+    if(!lt) return;
+    if(e.touches.length===1&&lt.length===1){
+      CAM.th-=(e.touches[0].clientX-lt[0].clientX)*.007;
+      CAM.ph=Math.max(-1.35,Math.min(1.35,CAM.ph+(e.touches[0].clientY-lt[0].clientY)*.007));
+    } else if(e.touches.length===2&&lt.length>=2){
+      const d0=Math.hypot(lt[1].clientX-lt[0].clientX,lt[1].clientY-lt[0].clientY);
+      const d1=Math.hypot(e.touches[1].clientX-e.touches[0].clientX,e.touches[1].clientY-e.touches[0].clientY);
+      if(d1>1) CAM.rad=Math.max(3,Math.min(50,CAM.rad*d0/d1));
+    }
+    lt=e.touches;e.preventDefault();
+  },{passive:false});
+})();
+
+/* ═══════════════════════════════════════════
+   PROXY GEOMETRY  (mirrors X3D scene)
+═══════════════════════════════════════════ */
+function makeBox(cx,cy,cz,sx,sy,sz){
+  const[hx,hy,hz]=[sx/2,sy/2,sz/2];
+  const faces=[
+    // front +Z
+    cx-hx,cy-hy,cz+hz, cx+hx,cy-hy,cz+hz, cx+hx,cy+hy,cz+hz,
+    cx-hx,cy-hy,cz+hz, cx+hx,cy+hy,cz+hz, cx-hx,cy+hy,cz+hz,
+    // back -Z
+    cx+hx,cy-hy,cz-hz, cx-hx,cy-hy,cz-hz, cx-hx,cy+hy,cz-hz,
+    cx+hx,cy-hy,cz-hz, cx-hx,cy+hy,cz-hz, cx+hx,cy+hy,cz-hz,
+    // left -X
+    cx-hx,cy-hy,cz-hz, cx-hx,cy-hy,cz+hz, cx-hx,cy+hy,cz+hz,
+    cx-hx,cy-hy,cz-hz, cx-hx,cy+hy,cz+hz, cx-hx,cy+hy,cz-hz,
+    // right +X
+    cx+hx,cy-hy,cz+hz, cx+hx,cy-hy,cz-hz, cx+hx,cy+hy,cz-hz,
+    cx+hx,cy-hy,cz+hz, cx+hx,cy+hy,cz-hz, cx+hx,cy+hy,cz+hz,
+    // top +Y
+    cx-hx,cy+hy,cz+hz, cx+hx,cy+hy,cz+hz, cx+hx,cy+hy,cz-hz,
+    cx-hx,cy+hy,cz+hz, cx+hx,cy+hy,cz-hz, cx-hx,cy+hy,cz-hz,
+    // bottom -Y
+    cx-hx,cy-hy,cz-hz, cx+hx,cy-hy,cz-hz, cx+hx,cy-hy,cz+hz,
+    cx-hx,cy-hy,cz-hz, cx+hx,cy-hy,cz+hz, cx-hx,cy-hy,cz+hz
+  ];
+  return faces;
+}
+
+function makeSphere(cx,cy,cz,r,stk=22,slc=22){
+  const v=[];
+  for(let i=0;i<stk;i++){
+    const p0=i/stk*Math.PI-Math.PI/2, p1=(i+1)/stk*Math.PI-Math.PI/2;
+    for(let j=0;j<slc;j++){
+      const t0=j/slc*Math.PI*2, t1=(j+1)/slc*Math.PI*2;
+      const P=(p,t)=>[cx+r*Math.cos(p)*Math.cos(t),cy+r*Math.sin(p),cz+r*Math.cos(p)*Math.sin(t)];
+      const[a,b,c,d]=[P(p0,t0),P(p1,t0),P(p0,t1),P(p1,t1)];
+      v.push(...a,...b,...d, ...a,...d,...c);
+    }
+  }
+  return v;
+}
+
+function makeCyl(cx,cy,cz,r,h,seg=24){
+  const v=[],hy=h/2;
+  for(let i=0;i<seg;i++){
+    const t0=i/seg*Math.PI*2, t1=(i+1)/seg*Math.PI*2;
+    const x0=cx+r*Math.cos(t0),z0=cz+r*Math.sin(t0);
+    const x1=cx+r*Math.cos(t1),z1=cz+r*Math.sin(t1);
+    v.push(x0,cy-hy,z0, x1,cy-hy,z1, x1,cy+hy,z1,
+           x0,cy-hy,z0, x1,cy+hy,z1, x0,cy+hy,z0);
+    v.push(cx,cy+hy,cz, x0,cy+hy,z0, x1,cy+hy,z1);
+    v.push(cx,cy-hy,cz, x1,cy-hy,z1, x0,cy-hy,z0);
+  }
+  return v;
+}
+
+const PROXY=new Float32Array([
+  ...makeBox(0,-0.1,0,28,.2,28),
+  ...makeBox(-3.5,2.5,0,1.5,5,1.5),
+  ...makeBox(1.5,2,-4.5,5,4,1),
+  ...makeBox(4.5,0.6,1.8,3.5,1.2,3.5),
+  ...makeSphere(0.5,2.8,1.5,1.8),
+  ...makeCyl(7.2,2,-1.5,.35,4),
+  ...makeBox(3.2,.35,4.2,1.2,.7,1.2),
+  ...makeBox(-5.5,.6,-3.2,1.5,1.2,1.5),
+  ...makeBox(6,.35,3.5,1,.7,1)
+]);
+document.getElementById('spv').textContent=(PROXY.length/3).toLocaleString();
+
+/* ═══════════════════════════════════════════
+   SPLAT DATA  (9 floats/splat: xyz rgb pad scale opacity)
+═══════════════════════════════════════════ */
+const NS=3500, FPSP=9;
+const BASE=new Float32Array(NS*FPSP);
+const SORT=new Float32Array(NS*FPSP);
+
+(()=>{
+  const rng=(a,b)=>a+Math.random()*(b-a);
+  const gauss=()=>{
+    let u,v,s;
+    do{u=rng(-1,1);v=rng(-1,1);s=u*u+v*v}while(s>=1||s===0);
+    return u*Math.sqrt(-2*Math.log(s)/s);
+  };
+  let idx=0;
+  const put=(x,y,z,r,g,b,sc,op)=>{
+    if(idx>=NS) return;
+    const k=idx++*FPSP;
+    BASE[k]=x;BASE[k+1]=y;BASE[k+2]=z;
+    BASE[k+3]=r;BASE[k+4]=g;BASE[k+5]=b;BASE[k+6]=0;
+    BASE[k+7]=sc;BASE[k+8]=op;
+  };
+  // Fire/ember column above red pillar
+  for(let i=0;i<1200;i++){
+    const t=Math.random();
+    const ht=Math.abs(gauss())*3.8*(0.3+0.7*Math.random());
+    put(-3.5+gauss()*1.1, 0.1+ht, gauss()*0.9,
+      0.97+rng(-.03,.03), 0.18+t*0.6+rng(-.04,.07), t*0.1,
+      rng(.15,.6), rng(.22,.72)*(1-Math.min(1,ht/4.5)*.55));
+  }
+  // Aura ring around gold sphere
+  for(let i=0;i<950;i++){
+    const ang=rng(0,Math.PI*2), ring=Math.random()<0.62, dist=rng(1.8,4.2);
+    const x=0.5+(ring?Math.cos(ang)*dist:gauss()*1.5);
+    const y=2.8+(ring?gauss()*.85:Math.abs(gauss())*3.0);
+    const z=1.5+(ring?Math.sin(ang)*dist:gauss()*1.5);
+    const t=Math.random();
+    put(x,y,z, 0.06+t*0.7, 0.35+t*0.45, 0.9+rng(-.1,.1),
+      rng(.12,.44), rng(.16,.55));
+  }
+  // Atmospheric haze
+  for(;idx<NS;){
+    const x=rng(-11,11),y=rng(.05,7),z=rng(-9,9),t=Math.random();
+    put(x,y,z, 0.16+t*0.16, 0.25+t*0.16, 0.5+t*0.3,
+      rng(.08,.3), rng(.02,.12));
+  }
+})();
+
+function sortSplats(view){
+  const[m2,m6,m10,m14]=[view[2],view[6],view[10],view[14]];
+  const dep=new Float32Array(NS);
+  for(let i=0;i<NS;i++){
+    const k=i*FPSP;
+    dep[i]=m2*BASE[k]+m6*BASE[k+1]+m10*BASE[k+2]+m14;
+  }
+  const ord=Array.from({length:NS},(_,i)=>i).sort((a,b)=>dep[a]-dep[b]);
+  for(let j=0;j<NS;j++){
+    const s=ord[j]*FPSP, d=j*FPSP;
+    for(let f=0;f<FPSP;f++) SORT[d+f]=BASE[s+f];
+  }
+}
+
+/* ═══════════════════════════════════════════
+   WEBGL2
+═══════════════════════════════════════════ */
+const SC=document.getElementById('sc');
+const gl=SC.getContext('webgl2',{alpha:true,premultipliedAlpha:false,antialias:false,preserveDrawingBuffer:false});
+if(!gl) alert('WebGL2 required');
+
+function mksh(type,src){
+  const s=gl.createShader(type);
+  gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))
+    console.error(gl.getShaderInfoLog(s));
+  return s;
+}
+function mkprog(vs,fs){
+  const p=gl.createProgram();
+  gl.attachShader(p,mksh(gl.VERTEX_SHADER,vs));
+  gl.attachShader(p,mksh(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))
+    console.error(gl.getProgramInfoLog(p));
+  return p;
+}
+
+/* ── Proxy depth-write shader ──────────────────── */
+const PPROG=mkprog(
+`#version 300 es
+in vec3 aP; uniform mat4 uMVP;
+void main(){ gl_Position=uMVP*vec4(aP,1.); }`,
+`#version 300 es
+precision mediump float; out vec4 oC;
+void main(){ oC=vec4(0.); }`
+);
+
+/* ── Splat shader ─────────────────────────────── */
+const SPROG=mkprog(
+`#version 300 es
+precision highp float;
+in vec3 aXYZ;
+in vec3 aRGB;
+in float aScale;
+in float aAlpha;
+uniform mat4 uV;
+uniform mat4 uP;
+uniform vec2 uVP;   // viewport pixels
+out vec3 vRGB;
+out float vAlpha;
+out vec2 vUV;
+void main(){
+  vec4 vs = uV * vec4(aXYZ,1.);
+  vRGB   = aRGB;
+  vAlpha = aAlpha;
+  vUV    = vec2(0.);
+  gl_Position = uP * vs;
+  // perspective-correct point size
+  float sz = aScale * uVP.y * uP[1][1] / (-vs.z);
+  gl_PointSize = clamp(sz, 1., 200.);
+}`,
+`#version 300 es
+precision highp float;
+uniform sampler2D uDepth;
+uniform vec2 uVP;
+uniform bool uOcclude;
+in vec3  vRGB;
+in float vAlpha;
+in vec2  vUV;
+out vec4 oC;
+void main(){
+  // Circular Gaussian falloff
+  vec2 uv = gl_PointCoord - .5;
+  float d2 = dot(uv,uv);
+  if(d2 > .25) discard;
+  float gauss = exp(-8.*d2);
+  // Depth occlusion
+  if(uOcclude){
+    vec2 sc = gl_FragCoord.xy / uVP;
+    float proxyZ = texture(uDepth, sc).r;
+    float splatZ = gl_FragCoord.z;
+    if(splatZ > proxyZ + 0.0003) discard;
+    // soft fade at edges of occluders
+    float margin = proxyZ - splatZ;
+    if(margin < 0.006) gauss *= smoothstep(0., 0.006, margin);
+  }
+  oC = vec4(vRGB * gauss, vAlpha * gauss);
+}`
+);
+
+/* ── Depth-debug blit shader ──────────────────── */
+const DPROG=mkprog(
+`#version 300 es
+in vec2 aP; out vec2 vU;
+void main(){ vU=(aP+1.)*.5; gl_Position=vec4(aP,0.,1.); }`,
+`#version 300 es
+precision mediump float;
+uniform sampler2D uD; in vec2 vU; out vec4 oC;
+void main(){
+  float d=texture(uD,vU).r;
+  // linearise for display (rough)
+  float lin=pow(d,8.);
+  oC=vec4(lin,lin*0.5+d*0.3,d,1.);
+}`
+);
+
+/* ── Buffers ──────────────────────────────────── */
+const proxyVAO=gl.createVertexArray();
+gl.bindVertexArray(proxyVAO);
+const proxyBuf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,proxyBuf);
+gl.bufferData(gl.ARRAY_BUFFER,PROXY,gl.STATIC_DRAW);
+const aP_proxy=gl.getAttribLocation(PPROG,'aP');
+gl.enableVertexAttribArray(aP_proxy);
+gl.vertexAttribPointer(aP_proxy,3,gl.FLOAT,false,0,0);
+gl.bindVertexArray(null);
+
+const splatVAO=gl.createVertexArray();
+gl.bindVertexArray(splatVAO);
+const splatBuf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,splatBuf);
+gl.bufferData(gl.ARRAY_BUFFER,SORT,gl.DYNAMIC_DRAW);
+const aXYZ=gl.getAttribLocation(SPROG,'aXYZ');
+const aRGB=gl.getAttribLocation(SPROG,'aRGB');
+const aSc =gl.getAttribLocation(SPROG,'aScale');
+const aAl =gl.getAttribLocation(SPROG,'aAlpha');
+const STR=FPSP*4;
+gl.enableVertexAttribArray(aXYZ); gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,STR,0);
+gl.enableVertexAttribArray(aRGB); gl.vertexAttribPointer(aRGB,3,gl.FLOAT,false,STR,12);
+gl.enableVertexAttribArray(aSc);  gl.vertexAttribPointer(aSc, 1,gl.FLOAT,false,STR,28);
+gl.enableVertexAttribArray(aAl);  gl.vertexAttribPointer(aAl, 1,gl.FLOAT,false,STR,32);
+gl.bindVertexArray(null);
+
+// Debug quad (for depth preview)
+const quadVAO=gl.createVertexArray();
+gl.bindVertexArray(quadVAO);
+const quadBuf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,quadBuf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+gl.enableVertexAttribArray(gl.getAttribLocation(DPROG,'aP'));
+gl.vertexAttribPointer(gl.getAttribLocation(DPROG,'aP'),2,gl.FLOAT,false,0,0);
+gl.bindVertexArray(null);
+
+/* ── Depth FBO ───────────────────────────────── */
+let depthFBO=null, depthTex=null, colorRB=null, fboW=0, fboH=0;
+
+function makeFBO(w,h){
+  if(depthFBO) gl.deleteFramebuffer(depthFBO);
+  if(depthTex) gl.deleteTexture(depthTex);
+  if(colorRB)  gl.deleteRenderbuffer(colorRB);
+  fboW=w; fboH=h;
+  depthTex=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,depthTex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT32F,w,h,0,gl.DEPTH_COMPONENT,gl.FLOAT,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  colorRB=gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER,colorRB);
+  gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA8,w,h);
+  depthFBO=gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER,depthFBO);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,depthTex,0);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,colorRB);
+  const st=gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  if(st!==gl.FRAMEBUFFER_COMPLETE) console.warn('FBO status:',st);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  gl.bindTexture(gl.TEXTURE_2D,null);
+}
+
+/* ── Uniform helpers ─────────────────────────── */
+function setM4(prog,name,val){ gl.uniformMatrix4fv(gl.getUniformLocation(prog,name),false,val); }
+function set1i(prog,name,val){ gl.uniform1i(gl.getUniformLocation(prog,name),val); }
+function set1b(prog,name,val){ gl.uniform1i(gl.getUniformLocation(prog,name),val?1:0); }
+function set2f(prog,name,x,y){ gl.uniform2f(gl.getUniformLocation(prog,name),x,y); }
+
+/* ═══════════════════════════════════════════
+   X3D CAMERA SYNC
+═══════════════════════════════════════════ */
+let x3dVP=null;
+let camSynced=false;
+
+function tryGetX3DVP(){
+  try{
+    const x3dEl=document.getElementById('x3d');
+    if(!x3dEl) return;
+    const browser=window.X3D&&window.X3D.getBrowser&&window.X3D.getBrowser(x3dEl);
+    if(!browser) return;
+    const scene=browser.currentScene;
+    if(!scene) return;
+    x3dVP=scene.getNamedNode('CAM');
+    if(x3dVP){
+      document.getElementById('csync').textContent='● x_ite linked';
+      document.getElementById('csync').classList.add('live');
+      camSynced=true;
+    }
+  } catch(e){ /* still loading */ }
+}
+
+function syncX3DCam(){
+  if(!x3dVP) return;
+  const e=CAM.eye, aa=toAA(e,CAM.tgt);
+  try{
+    x3dVP.position.setValue(e[0],e[1],e[2]);
+    x3dVP.orientation.setValue(aa[0],aa[1],aa[2],aa[3]);
+  } catch(ex){ camSynced=false; x3dVP=null; }
+}
+
+/* ═══════════════════════════════════════════
+   DEBUG DEPTH PREVIEW
+═══════════════════════════════════════════ */
+const DDC=document.getElementById('dd');
+const ddCtx=DDC.getContext('2d');
+
+function drawDepthPreview(){
+  if(!F.dp||!depthTex) return;
+  const w=DDC.width=176,h=DDC.height=99;
+  // Read pixels from depth FBO
+  gl.bindFramebuffer(gl.FRAMEBUFFER,depthFBO);
+  // We can't directly readPixels a depth texture in WebGL2 easily
+  // Blit to debug canvas by rendering with DPROG
+  const tmp=gl.createFramebuffer();
+  const tmpRB=gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER,tmpRB);
+  gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA8,w,h);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,tmp);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,tmpRB);
+  gl.viewport(0,0,w,h);
+  gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.useProgram(DPROG);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D,depthTex);
+  set1i(DPROG,'uD',0);
+  gl.bindVertexArray(quadVAO);
+  gl.disable(gl.DEPTH_TEST);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  // readback
+  const px=new Uint8Array(w*h*4);
+  gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,px);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  gl.deleteFramebuffer(tmp);
+  gl.deleteRenderbuffer(tmpRB);
+  // draw to 2D canvas (flip Y)
+  const id=ddCtx.createImageData(w,h);
+  for(let y=0;y<h;y++){
+    const sy=(h-1-y)*w*4, dy=y*w*4;
+    for(let x=0;x<w*4;x++) id.data[dy+x]=px[sy+x];
+  }
+  ddCtx.putImageData(id,0,0);
+}
+
+/* ═══════════════════════════════════════════
+   RENDER LOOP
+═══════════════════════════════════════════ */
+let fpsT=performance.now(), fpsC=0;
+
+function resize(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const w=Math.floor(window.innerWidth*dpr), h=Math.floor(window.innerHeight*dpr);
+  if(SC.width!==w||SC.height!==h){
+    SC.width=w; SC.height=h;
+    makeFBO(w,h);
+  }
+  return{w,h,asp:w/h};
+}
+
+function frame(){
+  requestAnimationFrame(frame);
+
+  if(!camSynced) tryGetX3DVP();
+  syncX3DCam();
+
+  const{w,h,asp}=resize();
+
+  // FPS
+  fpsC++;
+  const now=performance.now();
+  if(now-fpsT>=1000){
+    document.getElementById('sfps').textContent=fpsC;
+    fpsC=0; fpsT=now;
+  }
+
+  const view=CAM.view, proj=CAM.proj(asp);
+  const mvp=m4mul(proj,view);
+
+  /* ── PASS 1: Proxy geometry → depth FBO ─── */
+  gl.bindFramebuffer(gl.FRAMEBUFFER,depthFBO);
+  gl.viewport(0,0,fboW,fboH);
+  gl.clearColor(0,0,0,1);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthFunc(gl.LESS);
+  gl.depthMask(true);
+  gl.disable(gl.BLEND);
+  gl.colorMask(false,false,false,false);
+  gl.enable(gl.CULL_FACE);
+  gl.useProgram(PPROG);
+  setM4(PPROG,'uMVP',mvp);
+  gl.bindVertexArray(proxyVAO);
+  gl.drawArrays(gl.TRIANGLES,0,PROXY.length/3);
+  gl.bindVertexArray(null);
+  gl.colorMask(true,true,true,true);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+
+  /* ── PASS 2: Splats → main framebuffer ──── */
+  gl.viewport(0,0,w,h);
+  gl.clearColor(0,0,0,0);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.disable(gl.CULL_FACE);
+
+  if(F.sp){
+    sortSplats(view);
+    gl.bindBuffer(gl.ARRAY_BUFFER,splatBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER,0,SORT);
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.depthMask(false);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+
+    gl.useProgram(SPROG);
+    setM4(SPROG,'uV',view);
+    setM4(SPROG,'uP',proj);
+    set2f(SPROG,'uVP',w,h);
+    set1b(SPROG,'uOcclude',F.oc);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D,depthTex);
+    set1i(SPROG,'uDepth',0);
+
+    gl.bindVertexArray(splatVAO);
+    gl.drawArrays(gl.POINTS,0,NS);
+    gl.bindVertexArray(null);
+
+    gl.disable(gl.BLEND);
+    gl.depthMask(true);
+  }
+
+  /* ── Depth preview (expensive — only on toggle) ─ */
+  if(F.dp) drawDepthPreview();
+}
+
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
+makeFBO(window.innerWidth,window.innerHeight);
+requestAnimationFrame(frame);
+// Attempt sync every 400ms until x_ite is ready
+setInterval(()=>{ if(!camSynced) tryGetX3DVP(); }, 400);
+</script>
+</body>
+</html>
