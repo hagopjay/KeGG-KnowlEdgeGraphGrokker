@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for broken internal links
+        run: |
+          echo "Scanning HTML files for broken internal references..."
+          FAIL=0
+          for html in $(find . -name "*.html" -not -path "./.git/*"); do
+            grep -oP '(?:href|src)="([^"#:]*)"' "$html" | grep -oP '"[^"]*"' | tr -d '"' | while read -r ref; do
+              [ -z "$ref" ] && continue
+              dir=$(dirname "$html")
+              target="$dir/$ref"
+              if [ ! -f "$target" ]; then
+                echo "BROKEN: $html -> $ref (resolved: $target)"
+                FAIL=1
+              fi
+            done
+          done
+          if [ "$FAIL" -ne 0 ]; then
+            echo "::warning::Broken internal links detected"
+          else
+            echo "All internal links OK"
+          fi
+
+      - name: Verify index.html exists
+        run: test -f index.html && echo "index.html present" || (echo "Missing index.html" && exit 1)
+
+      - name: Report file counts
+        run: |
+          echo "Repository structure:"
+          echo "  HTML files: $(find . -name '*.html' -not -path './.git/*' | wc -l)"
+          echo "  MD files:   $(find . -name '*.md' -not -path './.git/*' | wc -l)"
+          echo "  Directories:"
+          find . -maxdepth 2 -type d -not -path './.git/*' -not -path './.git/*/*' | sort | sed 's/^/    /'

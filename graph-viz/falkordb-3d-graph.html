@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FalkorDB · 3D Knowledge Graph</title>
+<meta property="og:title" content="FalkorDB · 3D Knowledge Graph">
+<meta property="og:description" content="Interactive 3D knowledge graph visualization powered by FalkorDB and Three.js.">
+<meta property="og:image" content="../mathsGraph.jpg">
+<meta property="og:type" content="article">
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/3d-force-graph@1.73.0/dist/3d-force-graph.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #020408;
+    --panel-bg:  rgba(4, 10, 20, 0.88);
+    --border:    rgba(0, 200, 255, 0.15);
+    --accent:    #00c8ff;
+    --accent2:   #7b2fff;
+    --accent3:   #ff3d6e;
+    --text:      #c8dff0;
+    --text-dim:  #4a6a80;
+    --mono:      'Space Mono', monospace;
+    --sans:      'Syne', sans-serif;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    overflow: hidden;
+  }
+
+  #graph-container {
+    position: fixed; inset: 0;
+    cursor: grab;
+  }
+  #graph-container:active { cursor: grabbing; }
+
+  /* ── HUD: top bar ── */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 52px;
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 20px;
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+  .logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: #fff;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+
+  .badge {
+    font-size: 10px; letter-spacing: 1.5px;
+    padding: 3px 8px; border-radius: 3px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .stat-row { display: flex; gap: 16px; margin-left: auto; align-items: center; }
+  .stat { font-size: 11px; color: var(--text-dim); }
+  .stat span { color: var(--accent); font-weight: 700; }
+
+  /* ── Legend panel ── */
+  #legend {
+    position: fixed; top: 68px; left: 16px;
+    width: 200px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+  .legend-title {
+    font-family: var(--sans);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--text);
+    margin-bottom: 6px; cursor: pointer;
+    transition: color .2s;
+  }
+  .legend-item:hover { color: #fff; }
+  .legend-item.dimmed { opacity: .35; }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* ── Controls panel ── */
+  #controls {
+    position: fixed; top: 68px; right: 16px;
+    width: 220px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+  .ctrl-title {
+    font-family: var(--sans);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 12px;
+  }
+  .ctrl-row { margin-bottom: 12px; }
+  .ctrl-label { font-size: 10px; color: var(--text-dim); margin-bottom: 5px; display: flex; justify-content: space-between; }
+  .ctrl-label span { color: var(--accent); }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%; height: 3px;
+    background: rgba(0,200,255,.15);
+    border-radius: 2px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 6px var(--accent);
+  }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .btn {
+    flex: 1; min-width: 60px;
+    padding: 6px 8px; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .5px;
+    background: rgba(0,200,255,.07);
+    border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text);
+    cursor: pointer; transition: all .2s;
+    text-align: center;
+  }
+  .btn:hover { background: rgba(0,200,255,.18); border-color: var(--accent); color: #fff; }
+  .btn.active { background: rgba(0,200,255,.25); border-color: var(--accent); color: var(--accent); }
+
+  /* ── Node detail panel ── */
+  #detail {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    width: 480px; max-width: calc(100vw - 32px);
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    backdrop-filter: blur(16px);
+    transition: transform .3s cubic-bezier(.16,1,.3,1);
+    z-index: 10;
+  }
+  #detail.open { transform: translateX(-50%) translateY(0); }
+  .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .detail-type {
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px;
+    font-family: var(--mono);
+  }
+  .detail-name {
+    font-family: var(--sans); font-size: 17px; font-weight: 700;
+    color: #fff; flex: 1;
+  }
+  .detail-close {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,255,255,.06); border: 1px solid var(--border);
+    color: var(--text-dim); cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .detail-close:hover { background: rgba(255,61,110,.2); color: var(--accent3); }
+  .detail-props {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .prop {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.05);
+    border-radius: 5px; padding: 8px 10px;
+  }
+  .prop-key { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .prop-val { font-size: 12px; color: var(--text); }
+  .detail-relations { margin-top: 10px; font-size: 11px; color: var(--text-dim); }
+  .rel-tag {
+    display: inline-block; margin: 3px 3px 0 0;
+    padding: 2px 8px; border-radius: 3px;
+    background: rgba(123,47,255,.15);
+    border: 1px solid rgba(123,47,255,.3);
+    color: #b090ff; font-size: 10px;
+  }
+
+  /* ── Query bar ── */
+  #querybar {
+    position: fixed; bottom: 20px; right: 16px;
+    width: 220px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+    backdrop-filter: blur(12px); z-index: 10;
+  }
+  .q-title { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .q-input-wrap { position: relative; }
+  .q-input {
+    width: 100%; padding: 7px 10px; padding-right: 32px;
+    background: rgba(0,0,0,.4);
+    border: 1px solid var(--border);
+    border-radius: 5px; font-family: var(--mono); font-size: 11px;
+    color: var(--text); outline: none; transition: border-color .2s;
+  }
+  .q-input:focus { border-color: var(--accent); }
+  .q-run {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,200,255,.15); border: 1px solid var(--border);
+    border-radius: 3px; cursor: pointer; font-size: 10px; color: var(--accent);
+    transition: all .15s;
+  }
+  .q-run:hover { background: rgba(0,200,255,.3); }
+  .q-result { margin-top: 8px; font-size: 10px; color: var(--accent2); min-height: 16px; }
+
+  /* ── Scanning line ── */
+  #scan {
+    position: fixed; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,200,255,.4), transparent);
+    top: 0; z-index: 5; pointer-events: none;
+    animation: scan 8s linear infinite;
+    opacity: .6;
+  }
+  @keyframes scan { from{top:0} to{top:100vh} }
+</style>
+</head>
+<body>
+<nav style="font-family:'DM Mono',monospace;font-size:0.7rem;padding:8px 16px;background:#1c1a16;color:#b8b0a4;border-bottom:1px solid #333;letter-spacing:0.03em;position:sticky;top:0;z-index:9999;">
+  <a href="../index.html" style="color:#cc4400;text-decoration:none;">KeGG</a>
+  <span style="color:#555;margin:0 6px;">/</span>
+  <span style="color:#b8b0a4;">Graph &amp; Viz</span>
+  <span style="color:#555;margin:0 6px;">/</span>
+  <span style="color:#f2ece0;">FalkorDB · 3D Knowledge Graph</span>
+</nav>
+
+<div id="scan"></div>
+<div id="graph-container"></div>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    FalkorDB
+  </div>
+  <div class="badge">Knowledge Graph Explorer</div>
+  <div class="badge" id="mode-badge">3D · Force Layout</div>
+  <div class="stat-row">
+    <div class="stat">Nodes <span id="stat-nodes">0</span></div>
+    <div class="stat">Edges <span id="stat-edges">0</span></div>
+    <div class="stat">Clusters <span id="stat-clusters">0</span></div>
+    <div class="stat" id="stat-fps">60 FPS</div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div id="legend">
+  <div class="legend-title">Node Types</div>
+  <div id="legend-items"></div>
+</div>
+
+<!-- Controls -->
+<div id="controls">
+  <div class="ctrl-title">Controls</div>
+
+  <div class="ctrl-row">
+    <div class="ctrl-label">Link distance <span id="val-ld">80</span></div>
+    <input type="range" id="sl-ld" min="20" max="200" value="80">
+  </div>
+  <div class="ctrl-row">
+    <div class="ctrl-label">Charge strength <span id="val-cs">-80</span></div>
+    <input type="range" id="sl-cs" min="-300" max="-10" value="-80">
+  </div>
+  <div class="ctrl-row">
+    <div class="ctrl-label">Link opacity <span id="val-lo">0.4</span></div>
+    <input type="range" id="sl-lo" min="0" max="100" value="40">
+  </div>
+
+  <div class="btn-row">
+    <div class="btn active" id="btn-3d" onclick="setMode('3d')">3D</div>
+    <div class="btn" id="btn-2d" onclick="setMode('2d')">2D</div>
+  </div>
+
+  <div class="btn-row" style="margin-top:8px">
+    <div class="btn" onclick="Graph.zoomToFit(800)">Fit</div>
+    <div class="btn" onclick="pauseResume()" id="btn-pause">Pause</div>
+    <div class="btn" onclick="reheat()">Reheat</div>
+  </div>
+
+  <div class="btn-row" style="margin-top:8px">
+    <div class="btn" onclick="filterType('all')">All</div>
+    <div class="btn" onclick="highlightHubs()">Hubs</div>
+    <div class="btn" onclick="expandSelected()">Expand</div>
+  </div>
+</div>
+
+<!-- Node detail -->
+<div id="detail">
+  <div class="detail-header">
+    <div class="detail-type" id="d-type"></div>
+    <div class="detail-name" id="d-name"></div>
+    <div class="detail-close" onclick="closeDetail()">✕</div>
+  </div>
+  <div class="detail-props" id="d-props"></div>
+  <div class="detail-relations" id="d-rels"></div>
+</div>
+
+<!-- Cypher query bar -->
+<div id="querybar">
+  <div class="q-title">Cypher Query</div>
+  <div class="q-input-wrap">
+    <input class="q-input" id="q-input" type="text" placeholder="MATCH (n) RETURN n" value="MATCH (n)-[r]->(m) RETURN n,r,m"/>
+    <div class="q-run" onclick="runQuery()">▶</div>
+  </div>
+  <div class="q-result" id="q-result"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  MOCK FALKORDB DATASET
+//  Simulates:  MATCH (n)-[r]->(m) RETURN n, type(r), m
+// ══════════════════════════════════════════════════════════
+
+const TYPE_COLORS = {
+  User:       '#00c8ff',
+  Session:    '#7b2fff',
+  Entity:     '#ff3d6e',
+  Concept:    '#00e5a0',
+  Document:   '#ffb340',
+  Community:  '#ff6ec7',
+  Event:      '#a8ff3e',
+};
+
+const TYPE_SIZES = {
+  User: 8, Session: 5, Entity: 7,
+  Concept: 6, Document: 6, Community: 10, Event: 5,
+};
+
+function makeId(prefix, n) { return `${prefix}_${n}`; }
+
+function buildMockGraph() {
+  const nodes = [];
+  const links = [];
+  const add = (id, type, name, props={}) =>
+    nodes.push({ id, type, name, ...props,
+      color: TYPE_COLORS[type] || '#888',
+      val: TYPE_SIZES[type] || 5 });
+
+  // Communities (cluster hubs)
+  ['AI & ML', 'Infrastructure', 'Product', 'Data', 'Security', 'Research'].forEach((name, i) => {
+    add(`com_${i}`, 'Community', name, { members: Math.floor(Math.random()*40+20), score: (Math.random()*0.4+0.6).toFixed(2) });
+  });
+
+  // Concepts
+  const concepts = ['GraphBLAS','FalkorDB','Neo4j','Graphiti','Zep','LightRAG',
+    'Cognee','Kafka','Flink','GraphML','JSON-LD','SHACL','OpenCypher',
+    'Embeddings','Transformers','HNSW','BM25','RAG','CDC','Semiring'];
+  concepts.forEach((name, i) => {
+    const com = ['com_0','com_0','com_1','com_0','com_0','com_0',
+                 'com_0','com_1','com_1','com_3','com_3','com_3','com_0',
+                 'com_0','com_0','com_0','com_0','com_0','com_1','com_0'][i];
+    add(`con_${i}`, 'Concept', name, {
+      pagerank: (Math.random()*0.9+0.1).toFixed(3),
+      degree: Math.floor(Math.random()*15+3),
+      community: com,
+    });
+    links.push({ source: `con_${i}`, target: com, type: 'BELONGS_TO' });
+  });
+
+  // Documents
+  ['FalkorDB Whitepaper','Graphiti Paper','iText2KG ATOM','Netflix Graph Pipeline',
+   'Zep Docs','GraphBLAS Spec','LightRAG EMNLP','Knowledge Graph Survey',
+   'W3C GraphML Spec','Cosmos GPU Paper'].forEach((name, i) => {
+    add(`doc_${i}`, 'Document', name, {
+      pages: Math.floor(Math.random()*40+5),
+      year: 2023 + Math.floor(Math.random()*3),
+      citations: Math.floor(Math.random()*500),
+    });
+  });
+
+  // Users
+  const userNames = ['alice','bob','carol','dave','eve','frank','grace','henry','iris','jack',
+                     'kate','leo','mia','noah','olivia','pete','quinn','rosa','sam','tina'];
+  userNames.forEach((name, i) => {
+    add(`usr_${i}`, 'User', name, {
+      sessions: Math.floor(Math.random()*200+1),
+      since: `2024-${String(Math.floor(Math.random()*12+1)).padStart(2,'0')}-01`,
+      tier: ['free','pro','enterprise'][Math.floor(Math.random()*3)],
+    });
+  });
+
+  // Sessions (connect users → concepts/events)
+  for (let i = 0; i < 30; i++) {
+    add(`ses_${i}`, 'Session', `session_${i}`, {
+      duration_ms: Math.floor(Math.random()*3000+100),
+      queries: Math.floor(Math.random()*20+1),
+    });
+    const u = `usr_${Math.floor(Math.random()*userNames.length)}`;
+    const c = `con_${Math.floor(Math.random()*concepts.length)}`;
+    links.push({ source: u,        target: `ses_${i}`, type: 'HAS_SESSION' });
+    links.push({ source: `ses_${i}`,target: c,         type: 'QUERIED' });
+  }
+
+  // Entities (extracted from docs)
+  const entityNames = ['sparse matrix','adjacency list','property graph','vector index',
+    'bi-temporal model','entity resolution','force simulation','WebGL renderer',
+    'schema validation','community detection'];
+  entityNames.forEach((name, i) => {
+    add(`ent_${i}`, 'Entity', name, {
+      confidence: (Math.random()*0.4+0.6).toFixed(2),
+      occurrences: Math.floor(Math.random()*50+5),
+    });
+    const doc = `doc_${Math.floor(Math.random()*10)}`;
+    const con = `con_${Math.floor(Math.random()*concepts.length)}`;
+    links.push({ source: doc,      target: `ent_${i}`, type: 'CONTAINS_ENTITY' });
+    links.push({ source: `ent_${i}`, target: con,      type: 'RELATES_TO' });
+  });
+
+  // Events
+  const events = ['Q3 Review','FalkorDB Launch','Graphiti v3','GraphBLAS Summit',
+                  'RAG Hackathon','KG Workshop'];
+  events.forEach((name, i) => {
+    add(`evt_${i}`, 'Event', name, {
+      date: `2025-${String(i*2+1).padStart(2,'0')}-15`,
+      attendees: Math.floor(Math.random()*500+50),
+    });
+    links.push({ source: `evt_${i}`, target: `com_${i % 6}`, type: 'PART_OF' });
+    links.push({ source: `usr_${i*3 % userNames.length}`, target: `evt_${i}`, type: 'ATTENDED' });
+  });
+
+  // Concept → concept relationships
+  const conLinks = [[0,7],[1,0],[2,0],[3,1],[4,3],[5,6],[6,1],
+                    [7,8],[9,12],[10,11],[13,14],[15,17],[16,17],[18,7],[19,0]];
+  conLinks.forEach(([a,b]) => {
+    links.push({ source: `con_${a}`, target: `con_${b}`,
+      type: ['EXTENDS','IMPLEMENTS','USES','COMPARES_TO','INTEGRATES'][Math.floor(Math.random()*5)] });
+  });
+
+  // Doc → concept links
+  [[0,0],[1,3],[2,5],[3,7],[4,4],[5,0],[6,5],[7,0],[8,9],[9,15]].forEach(([d,c]) => {
+    links.push({ source: `doc_${d}`, target: `con_${c}`, type: 'REFERENCES' });
+  });
+
+  return { nodes, links };
+}
+
+const graphData = buildMockGraph();
+
+// ══════════════════════════════════════════════════════════
+//  BUILD GRAPH
+// ══════════════════════════════════════════════════════════
+
+let currentMode = '3d';
+let paused = false;
+let highlightNodes = new Set();
+let highlightLinks = new Set();
+let selectedNode = null;
+
+const container = document.getElementById('graph-container');
+
+let Graph = ForceGraph3D()(container)
+  .backgroundColor('#020408')
+  .graphData(graphData)
+  .nodeId('id')
+  .nodeLabel(n => `<div style="font:11px 'Space Mono',monospace;background:rgba(2,4,8,.9);border:1px solid rgba(0,200,255,.3);padding:6px 10px;border-radius:5px;color:#c8dff0">
+    <b style="color:#fff">${n.name}</b><br>
+    <span style="color:#4a6a80">${n.type}</span>
+  </div>`)
+  .nodeColor(n => {
+    if (highlightNodes.size === 0) return n.color;
+    return highlightNodes.has(n.id) ? n.color : 'rgba(80,80,80,0.25)';
+  })
+  .nodeVal(n => {
+    const base = n.val || 5;
+    return highlightNodes.has(n.id) ? base * 1.8 : base;
+  })
+  .nodeResolution(12)
+  .linkColor(l => {
+    if (highlightLinks.size === 0) return 'rgba(0,200,255,0.15)';
+    return highlightLinks.has(l) ? 'rgba(0,200,255,0.9)' : 'rgba(40,40,60,0.1)';
+  })
+  .linkWidth(l => highlightLinks.has(l) ? 2 : 0.5)
+  .linkDirectionalArrowLength(4)
+  .linkDirectionalArrowRelPos(1)
+  .linkDirectionalArrowColor(() => 'rgba(0,200,255,0.6)')
+  .linkDirectionalParticles(l => highlightLinks.has(l) ? 4 : 0)
+  .linkDirectionalParticleSpeed(0.004)
+  .linkDirectionalParticleColor(() => '#00c8ff')
+  .linkDirectionalParticleWidth(2)
+  .linkLabel(l => `<span style="font:10px 'Space Mono',monospace;background:rgba(2,4,8,.9);border:1px solid rgba(123,47,255,.3);padding:3px 7px;border-radius:3px;color:#b090ff">${l.type}</span>`)
+  .onNodeClick(onNodeClick)
+  .onNodeHover(onNodeHover)
+  .onBackgroundClick(() => {
+    clearHighlight();
+    closeDetail();
+  });
+
+// Stats
+document.getElementById('stat-nodes').textContent = graphData.nodes.length;
+document.getElementById('stat-edges').textContent = graphData.links.length;
+document.getElementById('stat-clusters').textContent = 6;
+
+// Build legend
+const legendEl = document.getElementById('legend-items');
+const visibleTypes = new Set(Object.keys(TYPE_COLORS));
+Object.entries(TYPE_COLORS).forEach(([type, color]) => {
+  const div = document.createElement('div');
+  div.className = 'legend-item';
+  div.id = `leg_${type}`;
+  div.innerHTML = `<div class="legend-dot" style="background:${color};box-shadow:0 0 6px ${color}40"></div>${type}`;
+  div.onclick = () => toggleType(type);
+  legendEl.appendChild(div);
+});
+
+// ── Interactions ──
+function onNodeHover(node) {
+  if (!node) { clearHighlight(); return; }
+  highlightNodes.clear();
+  highlightLinks.clear();
+  highlightNodes.add(node.id);
+  const linked = graphData.links.filter(l =>
+    (l.source.id || l.source) === node.id ||
+    (l.target.id || l.target) === node.id
+  );
+  linked.forEach(l => {
+    highlightLinks.add(l);
+    highlightNodes.add(l.source.id || l.source);
+    highlightNodes.add(l.target.id || l.target);
+  });
+  Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()).linkWidth(Graph.linkWidth());
+}
+
+function onNodeClick(node) {
+  selectedNode = node;
+  showDetail(node);
+
+  const dist = 200;
+  const distRatio = 1 + dist / Math.hypot(node.x||1, node.y||1, node.z||1);
+  Graph.cameraPosition(
+    { x: (node.x||0)*distRatio, y: (node.y||0)*distRatio, z: (node.z||0)*distRatio },
+    node, 800
+  );
+}
+
+function clearHighlight() {
+  if (highlightNodes.size === 0) return;
+  highlightNodes.clear();
+  highlightLinks.clear();
+  Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()).linkWidth(Graph.linkWidth());
+}
+
+// ── Detail panel ──
+function showDetail(node) {
+  const typeEl = document.getElementById('d-type');
+  typeEl.textContent = node.type;
+  typeEl.style.background = TYPE_COLORS[node.type] + '22';
+  typeEl.style.color = TYPE_COLORS[node.type];
+  typeEl.style.border = `1px solid ${TYPE_COLORS[node.type]}44`;
+
+  document.getElementById('d-name').textContent = node.name;
+
+  const propsEl = document.getElementById('d-props');
+  const skip = new Set(['id','type','name','color','val','x','y','z','vx','vy','vz','fx','fy','fz','__indexColor','index']);
+  const props = Object.entries(node).filter(([k]) => !skip.has(k));
+  propsEl.innerHTML = props.map(([k,v]) =>
+    `<div class="prop"><div class="prop-key">${k}</div><div class="prop-val">${v}</div></div>`
+  ).join('');
+  if (props.length === 0) propsEl.innerHTML = '<div class="prop"><div class="prop-val" style="color:var(--text-dim)">No extra properties</div></div>';
+
+  const relLinks = graphData.links.filter(l =>
+    (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id
+  );
+  const relsEl = document.getElementById('d-rels');
+  if (relLinks.length) {
+    const tags = [...new Set(relLinks.map(l => l.type))];
+    relsEl.innerHTML = `<div style="margin-bottom:5px;font-size:9px;letter-spacing:1px;text-transform:uppercase">Relations (${relLinks.length})</div>` +
+      tags.map(t => `<span class="rel-tag">${t}</span>`).join('');
+  } else relsEl.innerHTML = '';
+
+  document.getElementById('detail').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail').classList.remove('open');
+  selectedNode = null;
+}
+
+// ── Controls ──
+document.getElementById('sl-ld').addEventListener('input', function() {
+  document.getElementById('val-ld').textContent = this.value;
+  Graph.d3Force('link').distance(+this.value);
+  Graph.numDimensions(currentMode === '3d' ? 3 : 2);
+});
+document.getElementById('sl-cs').addEventListener('input', function() {
+  document.getElementById('val-cs').textContent = this.value;
+  Graph.d3Force('charge').strength(+this.value);
+  Graph.numDimensions(currentMode === '3d' ? 3 : 2);
+});
+document.getElementById('sl-lo').addEventListener('input', function() {
+  const v = this.value / 100;
+  document.getElementById('val-lo').textContent = v.toFixed(2);
+  Graph.linkOpacity(v);
+});
+
+function setMode(mode) {
+  currentMode = mode;
+  Graph.numDimensions(mode === '3d' ? 3 : 2);
+  document.getElementById('btn-3d').classList.toggle('active', mode==='3d');
+  document.getElementById('btn-2d').classList.toggle('active', mode==='2d');
+  document.getElementById('mode-badge').textContent = mode === '3d' ? '3D · Force Layout' : '2D · Force Layout';
+  setTimeout(() => Graph.zoomToFit(600), 800);
+}
+
+function pauseResume() {
+  paused = !paused;
+  Graph.pauseAnimation && (paused ? Graph.pauseAnimation() : Graph.resumeAnimation());
+  document.getElementById('btn-pause').textContent = paused ? 'Resume' : 'Pause';
+  document.getElementById('btn-pause').classList.toggle('active', paused);
+}
+
+function reheat() {
+  Graph.d3ReheatSimulation();
+}
+
+function highlightHubs() {
+  const degree = {};
+  graphData.links.forEach(l => {
+    const s = l.source.id || l.source, t = l.target.id || l.target;
+    degree[s] = (degree[s]||0)+1;
+    degree[t] = (degree[t]||0)+1;
+  });
+  const sorted = Object.entries(degree).sort((a,b)=>b[1]-a[1]);
+  const top = new Set(sorted.slice(0, 10).map(([id])=>id));
+  highlightNodes.clear(); highlightLinks.clear();
+  top.forEach(id => highlightNodes.add(id));
+  graphData.links.forEach(l => {
+    const s = l.source.id || l.source, t = l.target.id || l.target;
+    if (top.has(s) && top.has(t)) highlightLinks.add(l);
+  });
+  Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()).linkWidth(Graph.linkWidth());
+  showQuery(`Found ${top.size} hub nodes by degree centrality`);
+}
+
+function expandSelected() {
+  if (!selectedNode) { showQuery('Click a node first, then expand'); return; }
+  const neighbors = new Set([selectedNode.id]);
+  graphData.links.forEach(l => {
+    const s = l.source.id || l.source, t = l.target.id || l.target;
+    if (s === selectedNode.id) { neighbors.add(t); highlightLinks.add(l); }
+    if (t === selectedNode.id) { neighbors.add(s); highlightLinks.add(l); }
+  });
+  highlightNodes.clear(); neighbors.forEach(id => highlightNodes.add(id));
+  Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()).linkWidth(Graph.linkWidth());
+  showQuery(`Expanded ${selectedNode.name}: ${neighbors.size - 1} neighbors`);
+}
+
+function toggleType(type) {
+  const leg = document.getElementById(`leg_${type}`);
+  if (visibleTypes.has(type)) {
+    visibleTypes.delete(type);
+    leg.classList.add('dimmed');
+  } else {
+    visibleTypes.add(type);
+    leg.classList.remove('dimmed');
+  }
+  const filtered = {
+    nodes: graphData.nodes.filter(n => visibleTypes.has(n.type)),
+    links: graphData.links.filter(l => {
+      const s = l.source.id || l.source, t = l.target.id || l.target;
+      const sn = graphData.nodes.find(n=>n.id===s), tn = graphData.nodes.find(n=>n.id===t);
+      return sn && tn && visibleTypes.has(sn.type) && visibleTypes.has(tn.type);
+    })
+  };
+  Graph.graphData(filtered);
+  document.getElementById('stat-nodes').textContent = filtered.nodes.length;
+  document.getElementById('stat-edges').textContent = filtered.links.length;
+}
+
+function filterType(t) {
+  if (t === 'all') {
+    Object.keys(TYPE_COLORS).forEach(type => {
+      visibleTypes.add(type);
+      const leg = document.getElementById(`leg_${type}`);
+      if (leg) leg.classList.remove('dimmed');
+    });
+    Graph.graphData(graphData);
+    document.getElementById('stat-nodes').textContent = graphData.nodes.length;
+    document.getElementById('stat-edges').textContent = graphData.links.length;
+  }
+}
+
+// ── Mock Cypher query runner ──
+const QUERY_MOCKS = {
+  default: () => `Returned ${graphData.nodes.length} nodes, ${graphData.links.length} edges`,
+  user: () => {
+    const users = graphData.nodes.filter(n=>n.type==='User');
+    highlightSet(users.map(n=>n.id));
+    return `Matched ${users.length} :User nodes`;
+  },
+  concept: () => {
+    const nodes = graphData.nodes.filter(n=>n.type==='Concept');
+    highlightSet(nodes.map(n=>n.id));
+    return `Matched ${nodes.length} :Concept nodes`;
+  },
+  community: () => {
+    const nodes = graphData.nodes.filter(n=>n.type==='Community');
+    highlightSet(nodes.map(n=>n.id));
+    return `Matched ${nodes.length} :Community nodes`;
+  },
+  session: () => {
+    const nodes = graphData.nodes.filter(n=>n.type==='Session');
+    highlightSet(nodes.map(n=>n.id));
+    return `Matched ${nodes.length} :Session nodes`;
+  },
+  falkordb: () => {
+    const node = graphData.nodes.find(n=>n.name==='FalkorDB');
+    if (node) onNodeClick(node);
+    return `Found FalkorDB concept node — zoomed in`;
+  },
+};
+
+function highlightSet(ids) {
+  highlightNodes.clear(); highlightLinks.clear();
+  ids.forEach(id => highlightNodes.add(id));
+  graphData.links.forEach(l => {
+    const s = l.source.id || l.source, t = l.target.id || l.target;
+    if (highlightNodes.has(s) && highlightNodes.has(t)) highlightLinks.add(l);
+  });
+  Graph.nodeColor(Graph.nodeColor()).linkColor(Graph.linkColor()).linkWidth(Graph.linkWidth());
+}
+
+function runQuery() {
+  const q = document.getElementById('q-input').value.toLowerCase();
+  let result = QUERY_MOCKS.default();
+  for (const [key, fn] of Object.entries(QUERY_MOCKS)) {
+    if (key !== 'default' && q.includes(key)) { result = fn(); break; }
+  }
+  showQuery(result);
+}
+
+function showQuery(msg) {
+  const el = document.getElementById('q-result');
+  el.textContent = '▸ ' + msg;
+  el.style.color = '#00e5a0';
+  setTimeout(() => el.style.color = '#7b2fff', 2000);
+}
+
+document.getElementById('q-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runQuery();
+});
+
+// FPS counter
+let frames = 0, last = performance.now();
+function countFps() {
+  frames++;
+  const now = performance.now();
+  if (now - last >= 1000) {
+    document.getElementById('stat-fps').textContent = frames + ' FPS';
+    frames = 0; last = now;
+  }
+  requestAnimationFrame(countFps);
+}
+requestAnimationFrame(countFps);
+
+// Initial camera
+setTimeout(() => {
+  Graph.cameraPosition({ x: 0, y: 0, z: 600 });
+  Graph.zoomToFit(1200);
+}, 500);
+
+// Hint
+setTimeout(() => showQuery('Click any node to explore • hover to highlight neighbors'), 1500);
+</script>
+</body>
+</html>
