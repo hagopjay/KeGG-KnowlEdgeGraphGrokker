@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Software Engineer — Curriculum</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@300;400;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111418;
+    --surface2: #181c22;
+    --border: #242830;
+    --amber: #e8a838;
+    --amber-dim: #b07a1a;
+    --amber-glow: rgba(232, 168, 56, 0.12);
+    --teal: #3ecfb2;
+    --teal-dim: #1a8a76;
+    --red: #e85555;
+    --text: #d4cfc4;
+    --text-dim: #7a7568;
+    --text-bright: #f0ebe0;
+    --white: #f5f2ea;
+    --week-colors: #e8a838, #3ecfb2, #a78bfa, #f97316, #34d399, #60a5fa, #f472b6, #fb923c, #a3e635, #38bdf8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* === NOISE OVERLAY === */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* === HERO === */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 60px;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; left: -200px;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(232,168,56,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -100px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(62,207,178,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 6vw, 88px);
+    font-weight: 900;
+    line-height: 1.0;
+    color: var(--white);
+    margin-bottom: 16px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--amber);
+  }
+
+  .hero-sub {
+    font-size: clamp(16px, 2vw, 22px);
+    color: var(--text-dim);
+    font-style: italic;
+    max-width: 600px;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.8s forwards;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .hero-divider {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(to right, var(--amber), transparent);
+    margin: 48px 0;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1.0s forwards;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 60px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1.2s forwards;
+  }
+
+  .scroll-hint::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: var(--text-dim);
+  }
+
+  /* === SECTION WRAPPER === */
+  .section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    max-width: 60px;
+    background: var(--amber-dim);
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-title em { color: var(--amber); font-style: italic; }
+
+  .section-intro {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 700px;
+    margin-bottom: 56px;
+    font-style: italic;
+    line-height: 1.8;
+  }
+
+  /* === PHILOSOPHY CARDS === */
+  .phil-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 60px;
+  }
+
+  .phil-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .phil-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--amber), transparent);
+  }
+
+  .phil-card:hover {
+    border-color: var(--amber-dim);
+    transform: translateY(-2px);
+  }
+
+  .phil-icon {
+    font-size: 24px;
+    margin-bottom: 14px;
+  }
+
+  .phil-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  .phil-card p {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.65;
+  }
+
+  /* === WEEK CARDS === */
+  .week-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .week-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .week-card:hover { border-color: var(--border); }
+
+  .week-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 28px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+
+  .week-header:hover { background: var(--surface2); }
+
+  .week-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    min-width: 60px;
+  }
+
+  .week-bar {
+    width: 4px;
+    height: 40px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .week-info { flex: 1; }
+
+  .week-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.2;
+  }
+
+  .week-tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    margin-top: 3px;
+  }
+
+  .week-toggle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--text-dim);
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .week-card.open .week-toggle { transform: rotate(45deg); }
+
+  .week-body {
+    display: none;
+    padding: 0 28px 28px 112px;
+  }
+
+  .week-card.open .week-body { display: block; }
+
+  .week-topics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .topic-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+  }
+
+  .topic-block h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+  }
+
+  .topic-block ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .topic-block ul li {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.4;
+    display: flex;
+    gap: 8px;
+  }
+
+  .topic-block ul li::before {
+    content: '›';
+    color: var(--amber-dim);
+    flex-shrink: 0;
+  }
+
+  .week-insight {
+    background: var(--amber-glow);
+    border-left: 3px solid var(--amber);
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  .week-insight strong {
+    font-style: normal;
+    color: var(--amber);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .lab-badge {
+    display: inline-block;
+    background: rgba(62,207,178,0.1);
+    border: 1px solid var(--teal-dim);
+    color: var(--teal);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    margin-right: 6px;
+    margin-top: 6px;
+  }
+
+  /* === JVM PERSPECTIVE TABLE === */
+  .jvm-table-wrap {
+    overflow-x: auto;
+    margin: 40px 0;
+  }
+
+  .jvm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .jvm-table thead tr {
+    border-bottom: 2px solid var(--amber-dim);
+  }
+
+  .jvm-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    padding: 12px 16px;
+    text-align: left;
+    background: var(--surface);
+  }
+
+  .jvm-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+
+  .jvm-table tr:hover td { background: var(--surface2); }
+
+  .lang-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 8px;
+    display: inline-block;
+  }
+
+  .lang-kotlin { color: #a78bfa; border: 1px solid #5b3fa8; background: rgba(167,139,250,0.08); }
+  .lang-scala { color: #f97316; border: 1px solid #7a3a08; background: rgba(249,115,22,0.08); }
+  .lang-clojure { color: #3ecfb2; border: 1px solid #1a6b5e; background: rgba(62,207,178,0.08); }
+  .lang-groovy { color: #60a5fa; border: 1px solid #1d4e8f; background: rgba(96,165,250,0.08); }
+
+  /* === JAVA VERSIONS === */
+  .java-timeline {
+    position: relative;
+    padding-left: 40px;
+    margin: 40px 0;
+  }
+
+  .java-timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--amber), transparent);
+  }
+
+  .java-version {
+    position: relative;
+    margin-bottom: 28px;
+  }
+
+  .java-version::before {
+    content: '';
+    position: absolute;
+    left: -36px;
+    top: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--amber-dim);
+  }
+
+  .java-version.lts::before {
+    background: var(--amber);
+    border-color: var(--amber);
+    width: 12px;
+    height: 12px;
+    left: -37px;
+  }
+
+  .java-ver-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .java-ver-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--amber);
+  }
+
+  .java-ver-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--white);
+  }
+
+  .lts-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    background: rgba(232,168,56,0.15);
+    color: var(--amber);
+    border: 1px solid var(--amber-dim);
+    padding: 2px 6px;
+  }
+
+  .java-ver-features {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .java-ver-features code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    color: var(--teal);
+  }
+
+  /* === AI TOOLS GRID === */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 40px 0;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 22px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tool-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle at bottom right, var(--amber-glow), transparent 70%);
+  }
+
+  .tool-card:hover {
+    border-color: var(--amber-dim);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+
+  .tool-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+
+  .tool-category {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .tool-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  /* === CAPSTONE === */
+  .capstone-box {
+    background: var(--surface);
+    border: 1px solid var(--amber-dim);
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+    margin: 40px 0;
+  }
+
+  .capstone-box::before {
+    content: 'CAPSTONE';
+    position: absolute;
+    top: -1px; right: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    background: var(--amber);
+    color: var(--bg);
+    padding: 4px 12px;
+    font-weight: 600;
+  }
+
+  .capstone-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+
+  .capstone-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 28px;
+  }
+
+  .capstone-step {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 18px;
+  }
+
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--amber);
+    opacity: 0.3;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .step-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  /* === FOOTER === */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: gap;
+    gap: 24px;
+  }
+
+  .footer-left {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .footer-left strong {
+    color: var(--amber);
+    font-style: normal;
+  }
+
+  .footer-right {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* === DIVIDER === */
+  .full-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* === CODE SNIPPET === */
+  .code-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--teal-dim);
+    padding: 18px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--teal);
+    line-height: 1.8;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+
+  .code-block .comment { color: var(--text-dim); }
+  .code-block .keyword { color: var(--amber); }
+  .code-block .string { color: #a3e635; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    .hero, .section, .footer { padding: 48px 24px; }
+    .week-body { padding-left: 24px; }
+    .hero-stats { gap: 28px; }
+    .capstone-box { padding: 28px 24px; }
+  }
+
+  /* Nav */
+  .toc {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 12, 16, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 60px;
+    display: flex;
+    gap: 32px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .toc::-webkit-scrollbar { display: none; }
+
+  .toc a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 16px 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toc a:hover {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-label">Entry Level AI Software Engineer · Curriculum Guide</div>
+  <h1>From <em>Greybeard</em><br>to AI-First<br>Engineer</h1>
+  <p class="hero-sub">A 10-week curriculum for the Java veteran entering the era of AI-assisted fintech engineering.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">10</div><div class="stat-label">Weeks</div></div>
+    <div class="stat"><div class="stat-num">5</div><div class="stat-label">JVM Languages</div></div>
+    <div class="stat"><div class="stat-num">8</div><div class="stat-label">AI Tools</div></div>
+    <div class="stat"><div class="stat-num">$110k+</div><div class="stat-label">Target Salary</div></div>
+  </div>
+  <div class="hero-divider"></div>
+  <div class="scroll-hint">Scroll to explore</div>
+</section>
+
+<!-- NAV -->
+<nav class="toc">
+  <a href="#philosophy">Philosophy</a>
+  <a href="#java-versions">Java Versions</a>
+  <a href="#jvm-perspectives">JVM Languages</a>
+  <a href="#ai-tools">AI Tools</a>
+  <a href="#curriculum">Curriculum</a>
+  <a href="#capstone">Capstone</a>
+</nav>
+
+<!-- PHILOSOPHY -->
+<section class="section reveal" id="philosophy">
+  <div class="section-label">Foundations</div>
+  <h2 class="section-title">Your Strategic <em>Advantage</em></h2>
+  <p class="section-intro">You are not starting over. You are translating three decades of deep instinct into a new medium — where the compiler is an LLM and the IDE talks back.</p>
+
+  <div class="phil-grid">
+    <div class="phil-card">
+      <div class="phil-icon">⚡</div>
+      <h3>30 Years Is a Superpower</h3>
+      <p>You've seen Java evolve through applets, EJBs, Spring XML hell, and microservices. That context lets you evaluate AI-generated code with a seasoned eye that junior engineers simply don't have yet.</p>
+    </div>
+    <div class="phil-card">
+      <div class="phil-icon">🧠</div>
+      <h3>Python + Algos = AI Fluency</h3>
+      <p>Your Python advanced-intermediate level is perfect: you can read LangChain, understand embeddings pipelines, and prototype AI tooling. Your algo fluency means you can audit what AI produces.</p>
+    </div>
+    <div class="phil-card">
+      <div class="phil-icon">🔒</div>
+      <h3>Fintech Demands Trust</h3>
+      <p>In regulated environments, someone must own AI output quality, security compliance, and audit trails. A greybeard who understands both legacy systems and AI tools is precisely who fintechs need.</p>
+    </div>
+    <div class="phil-card">
+      <div class="phil-icon">🚀</div>
+      <h3>The Entry Tier Is a Gift</h3>
+      <p>Entry level salary of $110k+ with 8–10 weeks of paid training and then being plugged into a Silicon Valley fintech client? This is a launchpad, not a ceiling. Play it right and you own the team in 18 months.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<!-- JAVA VERSIONS -->
+<section class="section reveal" id="java-versions">
+  <div class="section-label">Language Mastery</div>
+  <h2 class="section-title">Modern Java — <em>What Changed</em></h2>
+  <p class="section-intro">You lived through Java 1.0 to Java 8. Here's the critical delta — every major version since, with the features that matter for backend fintech services and AI toolchain integration.</p>
+
+  <div class="java-timeline">
+
+    <div class="java-version lts">
+      <div class="java-ver-head">
+        <span class="java-ver-num">Java 11</span>
+        <span class="java-ver-name">The New Baseline</span>
+        <span class="lts-badge">LTS</span>
+      </div>
+      <div class="java-ver-features">
+        <code>var</code> in lambdas, <code>HttpClient</code> (finally native HTTP/2), <code>String::lines()</code>, <code>String::strip()</code>. Removal of JavaEE and CORBA modules. Many fintech shops still target this — know it cold.
+      </div>
+    </div>
+
+    <div class="java-version">
+      <div class="java-ver-head">
+        <span class="java-ver-num">Java 14–15</span>
+        <span class="java-ver-name">Preview Power</span>
+      </div>
+      <div class="java-ver-features">
+        <code>record</code> types (preview → final in 16) — immutable data carriers, perfect for DTOs. <code>instanceof</code> pattern matching. Helpful NullPointerExceptions. Text blocks (<code>"""..."""</code>) — huge for embedding JSON/SQL/prompts in code.
+      </div>
+    </div>
+
+    <div class="java-version lts">
+      <div class="java-ver-head">
+        <span class="java-ver-num">Java 17</span>
+        <span class="java-ver-name">Sealed Classes, Pattern Matchers</span>
+        <span class="lts-badge">LTS</span>
+      </div>
+      <div class="java-ver-features">
+        <code>sealed</code> classes for algebraic data types. <code>switch</code> expressions (not statements). Strong encapsulation of JDK internals. Most Spring Boot 3.x targets this. This is your primary production target — study it deeply.
+      </div>
+    </div>
+
+    <div class="java-version">
+      <div class="java-ver-head">
+        <span class="java-ver-num">Java 19–20</span>
+        <span class="java-ver-name">Virtual Threads Preview</span>
+      </div>
+      <div class="java-ver-features">
+        Project Loom: <code>Thread.ofVirtual()</code> previewed. Structured concurrency. This is game-changing for high-throughput fintech services — thousands of concurrent operations without thread pool hell.
+      </div>
+    </div>
+
+    <div class="java-version lts">
+      <div class="java-ver-head">
+        <span class="java-ver-num">Java 21</span>
+        <span class="java-ver-name">The Modern Java Landmark</span>
+        <span class="lts-badge">LTS · Target This</span>
+      </div>
+      <div class="java-ver-features">
+        Virtual threads finalized. <code>sequenced collections</code>. Pattern matching in <code>switch</code> (final). Record patterns. String templates (preview). <code>StructuredTaskScope</code> for structured concurrency. This is the version that makes Java feel like Kotlin wrote it.
+      </div>
+    </div>
+
+    <div class="java-version lts">
+      <div class="java-ver-head">
+        <span class="java-ver-num">Java 23–25</span>
+        <span class="java-ver-name">Cutting Edge</span>
+        <span class="lts-badge">Java 25 LTS</span>
+      </div>
+      <div class="java-ver-features">
+        Primitive types in patterns, <code>String Templates</code> finalized, <code>Module Import Declarations</code>, refined structured concurrency APIs. Java 25 (2025 LTS) is where greenfield fintech services will land. Stay current.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="code-block">
+<span class="comment">// Java 21 — what modern Java actually looks like now</span>
+<span class="keyword">record</span> Payment(<span class="keyword">String</span> id, <span class="keyword">BigDecimal</span> amount, PaymentStatus status) {}
+
+<span class="keyword">sealed interface</span> PaymentStatus <span class="keyword">permits</span> Pending, Cleared, Failed {}
+<span class="keyword">record</span> Pending() <span class="keyword">implements</span> PaymentStatus {}
+<span class="keyword">record</span> Cleared(<span class="keyword">Instant</span> at) <span class="keyword">implements</span> PaymentStatus {}
+<span class="keyword">record</span> Failed(<span class="keyword">String</span> reason) <span class="keyword">implements</span> PaymentStatus {}
+
+<span class="comment">// Pattern matching switch — no instanceof chains, no casting</span>
+<span class="keyword">String</span> describe(PaymentStatus s) {
+  <span class="keyword">return switch</span> (s) {
+    <span class="keyword">case</span> Pending p   -> <span class="string">"Awaiting clearance"</span>;
+    <span class="keyword">case</span> Cleared c   -> <span class="string">"Cleared at "</span> + c.at();
+    <span class="keyword">case</span> Failed f    -> <span class="string">"Failed: "</span> + f.reason();
+  };
+}
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<!-- JVM LANGUAGE PERSPECTIVES -->
+<section class="section reveal" id="jvm-perspectives">
+  <div class="section-label">JVM Ecosystem</div>
+  <h2 class="section-title">Other JVM Languages — <em>What They Teach You</em></h2>
+  <p class="section-intro">You don't need to master these. But studying each one will sharpen your Java, give you vocabulary in design discussions, and make you formidable when reviewing AI-generated code.</p>
+
+  <div class="jvm-table-wrap">
+    <table class="jvm-table">
+      <thead>
+        <tr>
+          <th>Language</th>
+          <th>Core Philosophy</th>
+          <th>What It Teaches a Java Veteran</th>
+          <th>Fintech Relevance</th>
+          <th>What to Study</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="lang-badge lang-kotlin">Kotlin</span></td>
+          <td>Pragmatic, concise, null-safe Java. Google's Android pick, JetBrains' own language.</td>
+          <td>Data classes, extension functions, coroutines, and sealed classes — all of which inspired Java 21's own features. Studying Kotlin makes your modern Java sharper.</td>
+          <td>Spring Boot officially supports Kotlin. Many fintech backends, especially newer services, are written in Kotlin. Interops cleanly with Java.</td>
+          <td><code>data class</code>, <code>when</code> expressions, null safety operators (<code>?.</code>, <code>?:</code>), coroutine basics, <code>Flow</code></td>
+        </tr>
+        <tr>
+          <td><span class="lang-badge lang-scala">Scala</span></td>
+          <td>Academic-strength FP meets OOP on the JVM. Akka, Spark, and Wall Street's back offices.</td>
+          <td>Pattern matching (which Java copied), higher-kinded types, immutability as default, case classes, for-comprehensions. Trains you to think in transformations, not mutations.</td>
+          <td>Many legacy fintech quant systems run Scala. Spark is Scala-native. Understanding Scala helps you read ML pipeline code and big-data ETL that AI tools often generate.</td>
+          <td>Case classes, companion objects, Option/Either monads, pattern matching, implicits (conceptually)</td>
+        </tr>
+        <tr>
+          <td><span class="lang-badge lang-clojure">Clojure</span></td>
+          <td>A Lisp on the JVM. Radical immutability, persistent data structures, REPL-driven development.</td>
+          <td>Pure functional thinking: no mutable state, composable transformations, data-as-values. The REPL workflow maps remarkably well to AI-assisted development — fast feedback loops, exploratory coding.</td>
+          <td>Used at Nubank, Funding Circle, and other fintechs. REPL-driven development is the closest thing traditional languages have to Cursor's chat-driven coding flow.</td>
+          <td>Persistent vectors/maps, <code>reduce</code>/<code>map</code>/<code>filter</code>, atoms, transducers, REPL workflow</td>
+        </tr>
+        <tr>
+          <td><span class="lang-badge lang-groovy">Groovy</span></td>
+          <td>Dynamic, scripting-friendly Java superset. Groovy = Java + Python ergonomics on the JVM.</td>
+          <td>Dynamic typing, closures, and GStrings (interpolation). Critically: <strong>Jenkinsfiles are Groovy DSL</strong>. If you touch CI/CD pipelines, you will write Groovy whether you want to or not.</td>
+          <td>Gradle build scripts use Groovy or Kotlin DSL. Jenkins pipelines are Groovy. In a DevSecOps role at a fintech, you will see Groovy everywhere in automation tooling.</td>
+          <td>Groovy closures, GString interpolation, list/map literals, Groovy DSL patterns, Jenkinsfile pipeline syntax</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="week-insight">
+    <strong>💡 Veteran Insight</strong>
+    The deeper pattern: Kotlin pushed Java to add sealed classes and records. Scala pushed Java on pattern matching. Clojure pushed the industry on immutability. Groovy pushed on DSLs. Java 21 is what happens when Java absorbs 15 years of JVM language competition. You can say this in an interview. It lands.
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<!-- AI TOOLS -->
+<section class="section reveal" id="ai-tools">
+  <div class="section-label">Toolchain Mastery</div>
+  <h2 class="section-title">The <em>AI Toolkit</em> You'll Actually Use</h2>
+  <p class="section-intro">The job lists these by name. Know each one's personality, strengths, and failure modes before day one.</p>
+
+  <div class="tools-grid">
+    <div class="tool-card">
+      <div class="tool-name">GitHub Copilot</div>
+      <div class="tool-category">Inline Completion · Code Review</div>
+      <div class="tool-desc">Lives in your editor, completes functions as you type, generates tests from method signatures. Think of it as a fast, pattern-following junior dev. Review everything it produces — it is confidently wrong as often as it is right.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Cursor</div>
+      <div class="tool-category">AI-First IDE</div>
+      <div class="tool-desc">VSCode fork with Claude/GPT baked in. The "Composer" feature lets you describe a multi-file refactor and watch it execute. For a Java greybeard: think of it as your pair-programmer that never gets tired. Use it for legacy modernization sprints.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Windsurf</div>
+      <div class="tool-category">AI-First IDE · Cascade Agent</div>
+      <div class="tool-desc">Cursor competitor from Codeium. "Cascade" is its agentic coding feature — it can traverse your codebase, understand dependencies, and make coordinated edits. Great for containerization tasks like this job specifically mentions.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">LangChain (Java/Python)</div>
+      <div class="tool-category">LLM Orchestration Framework</div>
+      <div class="tool-desc">Chains LLM calls, RAG pipelines, tool use, and memory. Your Python fluency is key here — LangChain Python is the canonical version. LangChain4j exists for Java. For this job: use it to build the AI tooling that automates security policy generation.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">AI Test Generators</div>
+      <div class="tool-category">Diffblue · CodiumAI · Copilot Tests</div>
+      <div class="tool-desc">Diffblue Cover is the industrial-strength Java test generator. It analyzes bytecode and generates JUnit tests automatically. In fintech, test coverage is compliance. Knowing how to drive Diffblue and validate its output is a genuine competitive skill.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Code Review Assistants</div>
+      <div class="tool-category">CodeRabbit · Copilot PR Review</div>
+      <div class="tool-desc">Bot-reviewers that summarize PRs, flag security risks, check style, and suggest refactors. Your job description literally lists "AI-assisted reviews, summaries, and risk notes." Know CodeRabbit and GitHub's native review summarization.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Documentation Copilots</div>
+      <div class="tool-category">Mintlify · Swimm · Copilot Docs</div>
+      <div class="tool-desc">Generate and keep documentation synchronized with code changes. For legacy containerization projects, up-to-date docs are not optional — they're audit evidence. Learn to wire these into your CI pipeline.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Prompt Engineering</div>
+      <div class="tool-category">Core Skill, Not a Tool</div>
+      <div class="tool-desc">Chain-of-thought prompting, few-shot examples, role-setting, and output constraints are skills that multiply the value of every other tool. Study Anthropic's prompt engineering guide. This is the highest-ROI thing on this list.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<!-- CURRICULUM WEEKS -->
+<section class="section reveal" id="curriculum">
+  <div class="section-label">The Program</div>
+  <h2 class="section-title">10-Week <em>Curriculum</em></h2>
+  <p class="section-intro">Structured for the job's training timeline. Click any week to expand it. Each week builds on the last — don't skip. You have the fundamentals; this is about filling the modern gaps strategically.</p>
+
+  <div class="week-grid" id="weekGrid">
+
+    <!-- WEEK 1 -->
+    <div class="week-card" data-week="1">
+      <div class="week-header">
+        <span class="week-num">Week 01</span>
+        <div class="week-bar" style="background:#e8a838"></div>
+        <div class="week-info">
+          <div class="week-title">Modern Java Deep Dive (11→21)</div>
+          <div class="week-tagline">records · sealed types · pattern matching · virtual threads · text blocks</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>Core Language Features</h4>
+            <ul>
+              <li>Records as immutable DTOs — replace your old POJOs</li>
+              <li>Sealed interfaces for domain modeling (Payment, Order, etc.)</li>
+              <li>Pattern matching in switch — no more instanceof chains</li>
+              <li>Text blocks for JSON, SQL, prompt templates</li>
+              <li>Local variable type inference (<code>var</code>) and limits</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>Concurrency Modernization</h4>
+            <ul>
+              <li>Virtual threads (Project Loom) — why they matter for high-throughput APIs</li>
+              <li>StructuredTaskScope for parallel calls with structured cancellation</li>
+              <li>CompletableFuture vs virtual threads — when to use each</li>
+              <li>Sequenced Collections (Java 21) — SequencedList, SequencedMap</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Greybeard Bridge</strong>
+          You know the pain of Callable/ExecutorService thread pool tuning for I/O-bound fintech services. Virtual threads obsolete 80% of that work. When an interviewer asks how you'd handle 50k concurrent payment webhook callbacks, "virtual threads with structured concurrency in Java 21" is a mic-drop answer.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: Refactor legacy payment service</span>
+          <span class="lab-badge">Lab: Record-based domain model</span>
+          <span class="lab-badge">Lab: Virtual thread HTTP fan-out</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 2 -->
+    <div class="week-card" data-week="2">
+      <div class="week-header">
+        <span class="week-num">Week 02</span>
+        <div class="week-bar" style="background:#3ecfb2"></div>
+        <div class="week-info">
+          <div class="week-title">Spring Boot 3.x + Microservices Patterns</div>
+          <div class="week-tagline">Spring Boot 3 · Spring Security · REST + gRPC · resilience patterns</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>Spring Boot 3 Changes</h4>
+            <ul>
+              <li>Jakarta EE namespace migration (javax → jakarta) — the breaking change</li>
+              <li>Native image support via GraalVM — AOT compilation</li>
+              <li>Spring Security 6.x — SecurityFilterChain lambda DSL, no more extend WebSecurityConfigurerAdapter</li>
+              <li>Observability: Micrometer + Spring Actuator + tracing</li>
+              <li>Spring Data JPA 3 — Hibernate 6 under the hood</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>Microservices Patterns</h4>
+            <ul>
+              <li>API Gateway pattern — Spring Cloud Gateway</li>
+              <li>Circuit Breaker with Resilience4j</li>
+              <li>Saga pattern for distributed transactions (fintech critical)</li>
+              <li>Outbox pattern for eventual consistency</li>
+              <li>gRPC service definition and Spring integration</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Fintech Focus</strong>
+          The Saga pattern is non-negotiable in fintech. When a payment spans 3 microservices and one fails mid-flight, how do you compensate? This is what interviewers at fintech firms actually test. Know Choreography vs Orchestration Sagas cold.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: Build a payments REST API in Spring Boot 3</span>
+          <span class="lab-badge">Lab: Add Resilience4j circuit breaker</span>
+          <span class="lab-badge">Lab: gRPC service definition + client</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 3 -->
+    <div class="week-card" data-week="3">
+      <div class="week-header">
+        <span class="week-num">Week 03</span>
+        <div class="week-bar" style="background:#a78bfa"></div>
+        <div class="week-info">
+          <div class="week-title">AI-Assisted Development — Tools & Workflow</div>
+          <div class="week-tagline">Cursor · Copilot · Windsurf · prompt patterns · code review AI</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>Core AI Dev Tools</h4>
+            <ul>
+              <li>Set up Cursor with Java + Spring Boot project — configure context rules</li>
+              <li>GitHub Copilot: inline vs chat mode, slash commands</li>
+              <li>Windsurf Cascade: multi-file agentic refactors</li>
+              <li>Using AI for legacy code explanation and documentation generation</li>
+              <li>When NOT to trust AI output — hallucination patterns in code</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>Prompt Engineering for Code</h4>
+            <ul>
+              <li>Role + context + constraint + format pattern</li>
+              <li>Chain-of-thought for algorithm generation</li>
+              <li>Few-shot prompting for consistent code style</li>
+              <li>Negative constraints: "do not use X, ensure Y"</li>
+              <li>Test-first prompting: prompt tests before implementation</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Greybeard Advantage</strong>
+          Junior devs accept AI output. You audit it. Your three decades mean you know that AI code that compiles is not the same as code that handles edge cases, deals with distributed failure, or passes a security review. Build the habit: Accept → Understand → Harden.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: Refactor a legacy Java class using Cursor Composer</span>
+          <span class="lab-badge">Lab: Generate + review 20 unit tests via Copilot</span>
+          <span class="lab-badge">Lab: Prompt a REST endpoint with security constraints</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 4 -->
+    <div class="week-card" data-week="4">
+      <div class="week-header">
+        <span class="week-num">Week 04</span>
+        <div class="week-bar" style="background:#f97316"></div>
+        <div class="week-info">
+          <div class="week-title">Testing — AI-Generated, High-Coverage, High-Trust</div>
+          <div class="week-tagline">JUnit 5 · Mockito · Diffblue · Testcontainers · contract testing</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>Modern Java Testing Stack</h4>
+            <ul>
+              <li>JUnit 5: parameterized tests, nested tests, extensions</li>
+              <li>Mockito 5: strict mocking, argument captors, deep stubs</li>
+              <li>AssertJ for fluent, readable assertions over JUnit native</li>
+              <li>Testcontainers: spin up real Postgres/Kafka/Redis in tests</li>
+              <li>ArchUnit: enforce architectural rules as tests</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>AI Test Generation</h4>
+            <ul>
+              <li>Diffblue Cover: bytecode analysis → JUnit tests, no source needed</li>
+              <li>CodiumAI: behavior-driven test generation from method intent</li>
+              <li>Copilot test generation: method → test class in seconds</li>
+              <li>Contract testing with Pact — for microservices integration</li>
+              <li>Mutation testing with PIT — verify tests actually catch bugs</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Fintech Compliance Note</strong>
+          In regulated fintech environments, test coverage is audit evidence, not just engineering hygiene. Target 85%+ branch coverage on financial calculation code. AI test generators can get you to 60% quickly — the remaining 40% of edge cases is where your domain expertise earns its salary.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: Run Diffblue on legacy payment service</span>
+          <span class="lab-badge">Lab: Write PIT mutation tests</span>
+          <span class="lab-badge">Lab: Testcontainers integration test with real DB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 5 -->
+    <div class="week-card" data-week="5">
+      <div class="week-header">
+        <span class="week-num">Week 05</span>
+        <div class="week-bar" style="background:#34d399"></div>
+        <div class="week-info">
+          <div class="week-title">DevSecOps — CI/CD, Docker, Security Automation</div>
+          <div class="week-tagline">GitHub Actions · Docker · OWASP · SAST · container security · Jenkinsfile</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>CI/CD Pipeline Mastery</h4>
+            <ul>
+              <li>GitHub Actions: workflow syntax, secrets, matrix builds, reusable workflows</li>
+              <li>Jenkinsfile Groovy DSL — you will see this at legacy fintechs</li>
+              <li>Pipeline stages: build → test → SAST → DAST → container scan → deploy</li>
+              <li>Caching strategies for Maven/Gradle in CI (critical for speed)</li>
+              <li>AI-generated pipeline configs — using LLMs to scaffold GitHub Actions</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>Container Security</h4>
+            <ul>
+              <li>Docker multi-stage builds for minimal Java images</li>
+              <li>Distroless base images — no shell = smaller attack surface</li>
+              <li>Trivy + Grype: container vulnerability scanning in CI</li>
+              <li>OWASP Dependency-Check: Java library CVE scanning</li>
+              <li>Secrets management: HashiCorp Vault basics, AWS Secrets Manager</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Job Alignment</strong>
+          The job description says: "AI-assisted DevSecOps… accelerate secure containerization of legacy applications." This week is literally your job description. Build a pipeline that takes a legacy Spring Boot app and containerizes it securely, automatically, with AI-generated Dockerfiles and security policies.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: Build GitHub Actions pipeline for Spring Boot</span>
+          <span class="lab-badge">Lab: Containerize legacy app with distroless image</span>
+          <span class="lab-badge">Lab: AI-generate Dockerfile + security policy</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 6 -->
+    <div class="week-card" data-week="6">
+      <div class="week-header">
+        <span class="week-num">Week 06</span>
+        <div class="week-bar" style="background:#60a5fa"></div>
+        <div class="week-info">
+          <div class="week-title">Cloud Deployment — AWS & GCP Basics</div>
+          <div class="week-tagline">ECS · EKS · Cloud Run · IAM · S3 · RDS · infrastructure-as-code</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>AWS Essentials for Java Devs</h4>
+            <ul>
+              <li>ECS Fargate: deploy containers without managing EC2</li>
+              <li>EKS basics: pods, services, deployments, configmaps</li>
+              <li>RDS (Postgres): multi-AZ, read replicas, parameter groups</li>
+              <li>SQS/SNS: messaging patterns for async payment processing</li>
+              <li>IAM roles for ECS tasks — least-privilege principle</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>Infrastructure as Code</h4>
+            <ul>
+              <li>Terraform basics: resources, variables, state, modules</li>
+              <li>AI-generated Terraform: use Cursor/Copilot to scaffold IaC</li>
+              <li>Pulumi with Java SDK (native Java infrastructure code)</li>
+              <li>AWS CDK with Java — familiar for Java devs</li>
+              <li>Validating AI-generated IaC: checkov, tfsec</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Leverage Move</strong>
+          With your Java background, AWS CDK in Java is a superpower. You write real Java code that generates CloudFormation. No YAML wrestling, no Terraform HCL learning curve. This is the one IaC tool that plays directly to your strengths — lead with it.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: Deploy Spring Boot app to ECS Fargate</span>
+          <span class="lab-badge">Lab: CDK stack for a microservice + RDS</span>
+          <span class="lab-badge">Lab: AI-generate Terraform, validate with checkov</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 7 -->
+    <div class="week-card" data-week="7">
+      <div class="week-header">
+        <span class="week-num">Week 07</span>
+        <div class="week-bar" style="background:#f472b6"></div>
+        <div class="week-info">
+          <div class="week-title">LangChain & AI Integration in Java/Python</div>
+          <div class="week-tagline">LangChain4j · RAG · tool use · AI pipelines · prompt chaining</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>LangChain Concepts</h4>
+            <ul>
+              <li>Chains, agents, tools, and memory — the four primitives</li>
+              <li>RAG (Retrieval-Augmented Generation) — vector stores, embeddings</li>
+              <li>Tool use / function calling — LLM that calls your API</li>
+              <li>Structured output parsing — JSON schema enforcement</li>
+              <li>LangSmith: tracing and debugging LLM pipelines</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>Java Integration (LangChain4j)</h4>
+            <ul>
+              <li>LangChain4j: native Java, Spring Boot integration, annotation-driven</li>
+              <li>AiServices: declare an interface, LangChain generates implementation</li>
+              <li>Document ingestion pipeline: PDF → chunks → embeddings → Postgres pgvector</li>
+              <li>Building an AI agent that generates security policies from app configs</li>
+              <li>Spring AI (Pivotal's answer to LangChain) — getting traction fast</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Career Trajectory</strong>
+          This is the week that separates "I use AI tools" from "I build AI tools." Your Python fluency means you can prototype in LangChain Python and then port to LangChain4j for production. That dual-language AI pipeline skill is rare and valuable in fintech.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: RAG pipeline over compliance documents</span>
+          <span class="lab-badge">Lab: AI agent that generates Docker security policies</span>
+          <span class="lab-badge">Lab: LangChain4j AiService with Spring Boot</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 8 -->
+    <div class="week-card" data-week="8">
+      <div class="week-header">
+        <span class="week-num">Week 08</span>
+        <div class="week-bar" style="background:#fb923c"></div>
+        <div class="week-info">
+          <div class="week-title">Fintech-Specific: Security, Compliance & Regulated Systems</div>
+          <div class="week-tagline">PCI-DSS · OWASP Top 10 · data encryption · audit logs · GDPR basics</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>Security Fundamentals</h4>
+            <ul>
+              <li>OWASP Top 10 in Java Spring context — injection, broken auth, IDOR</li>
+              <li>Spring Security: OAuth2/OIDC, JWT validation, RBAC</li>
+              <li>Data encryption at rest and in transit: JCE, TLS config</li>
+              <li>SQL injection prevention: parameterized queries, Hibernate HQL</li>
+              <li>Secrets in code: how to find and fix them (git-secrets, trufflehog)</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>Compliance in Practice</h4>
+            <ul>
+              <li>PCI-DSS scope: what it means for your Spring Boot service</li>
+              <li>Audit logging: who did what, when, to which financial record</li>
+              <li>Data masking for PII in logs (a very common fintech mistake)</li>
+              <li>AI use in regulated environments: data residency, prompt logging, model governance</li>
+              <li>SAST tools: SonarQube, Semgrep — integrate with CI</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 AI + Compliance = Your Unique Value</strong>
+          The intersection almost nobody owns yet: using AI to generate compliance documentation, security policies, and audit evidence — while also knowing how to govern AI use in a PCI-regulated environment. The job description mentions both. You can own both. This is your moat.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: Add audit logging to payment service</span>
+          <span class="lab-badge">Lab: SonarQube scan + fix critical findings</span>
+          <span class="lab-badge">Lab: PII masking in Spring Boot logging</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 9 -->
+    <div class="week-card" data-week="9">
+      <div class="week-header">
+        <span class="week-num">Week 09</span>
+        <div class="week-bar" style="background:#a3e635"></div>
+        <div class="week-info">
+          <div class="week-title">Agile, Code Review & Delivery Excellence</div>
+          <div class="week-tagline">Agile sprints · PR culture · AI-assisted reviews · documentation · SDLC automation</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>Agile & Delivery</h4>
+            <ul>
+              <li>Sprint ceremonies: planning, standup, review, retro — the real cadence</li>
+              <li>Writing good tickets: acceptance criteria, definition of done</li>
+              <li>Realistic estimation with AI assistance — what changes, what doesn't</li>
+              <li>Feature flags for safe deployment of financial logic changes</li>
+              <li>Trunk-based development vs feature branching in fintech CI/CD</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>AI-Enhanced Code Review</h4>
+            <ul>
+              <li>CodeRabbit setup: automated PR summaries, issue detection</li>
+              <li>Writing AI-assisted PR descriptions that include risk notes</li>
+              <li>Using AI to find security issues before human review</li>
+              <li>Mintlify / Swimm for living documentation tied to code</li>
+              <li>ArchUnit tests as living architectural documentation</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Senior Move in an Entry Role</strong>
+          You can set up CodeRabbit + Mintlify + Diffblue in a single sprint and dramatically raise the quality floor of the whole team. That's a senior engineer move, not an entry-level move. Do it week two on the job. Let your results speak before your title does.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Lab: Configure CodeRabbit on a GitHub repo</span>
+          <span class="lab-badge">Lab: Write AI-assisted PR with risk assessment</span>
+          <span class="lab-badge">Lab: ArchUnit test suite for service boundaries</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 10 -->
+    <div class="week-card" data-week="10">
+      <div class="week-header">
+        <span class="week-num">Week 10</span>
+        <div class="week-bar" style="background:#38bdf8"></div>
+        <div class="week-info">
+          <div class="week-title">Capstone Preparation & Interview Sharpening</div>
+          <div class="week-tagline">portfolio · system design · behavioral prep · AI toolchain demo</div>
+        </div>
+        <div class="week-toggle">+</div>
+      </div>
+      <div class="week-body">
+        <div class="week-topics">
+          <div class="topic-block">
+            <h4>Portfolio & Demo Prep</h4>
+            <ul>
+              <li>Package your capstone project: README, architecture diagram, demo video</li>
+              <li>Document AI tools used and measurable impact (% coverage increase, cycle time reduction)</li>
+              <li>GitHub portfolio: clean commit history, meaningful PR descriptions</li>
+              <li>One-page technical narrative: your 30 years → this role</li>
+              <li>Metrics that matter to fintechs: latency P99, error rates, MTTR</li>
+            </ul>
+          </div>
+          <div class="topic-block">
+            <h4>Technical Interview Readiness</h4>
+            <ul>
+              <li>System design: design a payment processing service at scale</li>
+              <li>Algo review: sliding window, two-pointer, BFS/DFS — your weak spots</li>
+              <li>Java-specific: garbage collection, memory model, happens-before</li>
+              <li>Behavioral: STAR stories from your 30 years mapped to fintech scenarios</li>
+              <li>AI ethics question prep: "How do you govern AI use in a PCI environment?"</li>
+            </ul>
+          </div>
+        </div>
+        <div class="week-insight">
+          <strong>💡 Your Narrative</strong>
+          "I've been writing Java since before Spring existed, I've built systems at scale, and now I'm combining that foundation with modern AI tooling to accelerate what previously took teams weeks." That's not an entry-level story. That's a force multiplier story. Tell it confidently.
+        </div>
+        <div style="margin-top:16px">
+          <span class="lab-badge">Mock interview: design a payment gateway</span>
+          <span class="lab-badge">AI toolchain live demo preparation</span>
+          <span class="lab-badge">Capstone final polish and deploy</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<!-- CAPSTONE -->
+<section class="section reveal" id="capstone">
+  <div class="section-label">Final Project</div>
+  <h2 class="section-title">The <em>Capstone</em></h2>
+  <p class="section-intro">This is what you build, demo, and put on GitHub. It is aligned precisely with the job's stated capstone goal: "use AI tools to cut cycle time, raise test coverage, and improve documentation quality."</p>
+
+  <div class="capstone-box">
+    <h3>AI-Accelerated Legacy Payment Service Modernization</h3>
+    <p style="color:var(--text-dim); font-size:15px; margin-top:8px; line-height:1.7">
+      Take a deliberately under-tested, undocumented Spring Boot 2.x payment microservice and modernize it using an AI-first workflow. Measure everything. The output is both a working service and a documented case study of AI-assisted engineering productivity.
+    </p>
+
+    <div class="capstone-steps">
+      <div class="capstone-step">
+        <div class="step-num">01</div>
+        <div class="step-title">Baseline Assessment</div>
+        <div class="step-desc">Document existing code coverage (target: &lt;20%), identify security issues with SonarQube, capture deployment time. This is your "before" state.</div>
+      </div>
+      <div class="capstone-step">
+        <div class="step-num">02</div>
+        <div class="step-title">AI-Generated Test Suite</div>
+        <div class="step-desc">Use Diffblue + Copilot to generate tests. Get to 80%+ branch coverage. Validate every test manually — document which AI tests were wrong and why.</div>
+      </div>
+      <div class="capstone-step">
+        <div class="step-num">03</div>
+        <div class="step-title">Java 21 Modernization</div>
+        <div class="step-desc">Use Cursor Composer to migrate: POJOs → records, instanceof chains → pattern matching, thread pool → virtual threads. Measure LOC reduction.</div>
+      </div>
+      <div class="capstone-step">
+        <div class="step-num">04</div>
+        <div class="step-title">Containerization Pipeline</div>
+        <div class="step-desc">AI-generate Dockerfile, GitHub Actions pipeline, and security policy. Trivy scan in CI. Deploy to ECS Fargate or GCP Cloud Run.</div>
+      </div>
+      <div class="capstone-step">
+        <div class="step-num">05</div>
+        <div class="step-title">AI Documentation Layer</div>
+        <div class="step-desc">Mintlify docs generated from code. AI-written README with architecture diagram. PR descriptions auto-generated with risk notes.</div>
+      </div>
+      <div class="capstone-step">
+        <div class="step-num">06</div>
+        <div class="step-title">Results Dashboard</div>
+        <div class="step-desc">A single-page dashboard: coverage delta, cycle time delta, security finding count, documentation completeness. This is what you show in an interview.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-left">
+    Thirty years of Java.<br>
+    <strong>One more act. The best one.</strong>
+  </div>
+  <div class="footer-right">
+    Entry Level AI Software Engineer<br>
+    Silicon Valley Fintech<br>
+    10-Week Curriculum · 2025
+  </div>
+</footer>
+
+<script>
+  // Accordion toggle
+  document.querySelectorAll('.week-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const card = header.closest('.week-card');
+      const isOpen = card.classList.contains('open');
+      // Close all
+      document.querySelectorAll('.week-card').forEach(c => c.classList.remove('open'));
+      // Toggle current
+      if (!isOpen) card.classList.add('open');
+    });
+  });
+
+  // Open first card by default
+  document.querySelector('.week-card').classList.add('open');
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

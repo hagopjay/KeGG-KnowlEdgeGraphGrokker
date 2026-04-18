@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Engineer's Codex</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Fira+Code:wght@300;400;500;600&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f5f0e8;
+  --bg2:     #ede8df;
+  --bg3:     #e4ddd0;
+  --ink:     #1a1610;
+  --ink2:    #3d3428;
+  --ink3:    #6b5e4a;
+  --ink4:    #9c8e7c;
+  --rule:    #c8bfb0;
+  --rule2:   #d8d0c4;
+
+  /* Accent palette — copper / verdigris / vermillion */
+  --copper:  #b5631a;
+  --copper2: #8a4a12;
+  --copper-tint: rgba(181,99,26,0.08);
+  --verd:    #2a7a5c;
+  --verd2:   #1a5a42;
+  --verd-tint: rgba(42,122,92,0.08);
+  --red:     #c0392b;
+  --red-tint: rgba(192,57,43,0.07);
+  --slate:   #2c3e50;
+  --gold:    #8B7355;
+
+  --mono: 'Fira Code', monospace;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Barlow', system-ui, sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* Paper texture */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:0; mix-blend-mode: multiply;
+}
+
+/* ── GRID LINES (blueprint feel) ── */
+.blueprint-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.4;
+  background-image:
+    linear-gradient(var(--rule2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule2) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* ── NAVIGATION ── */
+.topnav {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--ink);
+  display: flex; align-items: center;
+  padding: 0 48px;
+  gap: 0;
+  border-bottom: 2px solid var(--copper);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.topnav::-webkit-scrollbar { display: none; }
+
+.nav-brand {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--copper);
+  letter-spacing: 0.05em;
+  padding: 14px 24px 14px 0;
+  border-right: 1px solid #3a3028;
+  margin-right: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.topnav a {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6a5a48;
+  text-decoration: none;
+  padding: 18px 16px;
+  transition: color 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.topnav a:hover { color: var(--copper); }
+
+/* ── HERO ── */
+.hero {
+  position: relative; z-index: 1;
+  padding: 80px 80px 60px;
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 80px;
+  align-items: end;
+}
+
+.hero-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 16px;
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(60px, 8vw, 112px);
+  font-weight: 700;
+  line-height: 0.88;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+
+.hero h1 em { color: var(--copper); font-style: italic; }
+
+.hero-desc {
+  font-size: 16px;
+  color: var(--ink3);
+  line-height: 1.8;
+  max-width: 560px;
+}
+
+.hero-index {
+  border: 1px solid var(--rule);
+  background: var(--bg2);
+  padding: 28px;
+}
+
+.hero-index-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.hero-index ol {
+  list-style: none;
+  counter-reset: idx;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.hero-index ol li {
+  counter-increment: idx;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule2);
+}
+
+.hero-index ol li::before {
+  content: counter(idx, decimal-leading-zero);
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--copper);
+  flex-shrink: 0;
+}
+
+.hero-index ol li a {
+  font-size: 13px;
+  color: var(--ink2);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.hero-index ol li a:hover { color: var(--copper); }
+
+.hero-index ol li .dots {
+  flex: 1;
+  border-bottom: 1px dotted var(--rule);
+  margin-bottom: 3px;
+}
+
+/* ── CHAPTER SYSTEM ── */
+.chapter {
+  position: relative; z-index: 1;
+  border-bottom: 1px solid var(--rule);
+}
+
+.chapter-header {
+  padding: 60px 80px 40px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.chapter-num {
+  font-family: var(--serif);
+  font-size: 80px;
+  font-weight: 700;
+  line-height: 0.85;
+  color: var(--rule);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.chapter-meta { flex: 1; }
+
+.chapter-eyebrow {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 10px;
+}
+
+.chapter-title {
+  font-family: var(--serif);
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.0;
+  margin-bottom: 12px;
+}
+
+.chapter-title em { color: var(--copper); font-style: italic; }
+
+.chapter-intro {
+  font-size: 15px;
+  color: var(--ink3);
+  max-width: 680px;
+  line-height: 1.8;
+  font-style: italic;
+}
+
+.chapter-body {
+  padding: 48px 80px;
+}
+
+/* ── PATTERN CARDS ── */
+.pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin-bottom: 40px;
+}
+
+.pattern-card {
+  background: var(--bg);
+  padding: 28px 32px;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.pattern-card:hover { background: var(--bg2); }
+
+.pattern-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.pattern-card.arch::before  { background: var(--copper); }
+.pattern-card.ddd::before   { background: var(--verd); }
+.pattern-card.ai::before    { background: #7B68EE; }
+.pattern-card.obs::before   { background: var(--slate); }
+.pattern-card.sec::before   { background: var(--red); }
+.pattern-card.data::before  { background: #d4900a; }
+.pattern-card.api::before   { background: #2980b9; }
+.pattern-card.ft::before    { background: #8e44ad; }
+
+.pattern-name {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+  line-height: 1.1;
+}
+
+.pattern-alias {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--ink4);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.pattern-desc {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+/* ── DIAGRAM BOXES (ASCII-art style) ── */
+.diagram {
+  background: var(--bg3);
+  border: 1px solid var(--rule);
+  padding: 16px 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ink3);
+  overflow-x: auto;
+  white-space: pre;
+  margin: 12px 0;
+}
+
+.diagram .hl { color: var(--copper); font-weight: 600; }
+.diagram .hl2 { color: var(--verd); }
+.diagram .hl3 { color: var(--red); }
+.diagram .dim { color: var(--ink4); }
+
+/* ── CODE ── */
+pre.code {
+  background: var(--ink);
+  border: none;
+  padding: 18px 22px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.75;
+  overflow-x: auto;
+  color: #8aabb0;
+  margin: 14px 0;
+}
+
+pre.code .kw  { color: #d4956a; }
+pre.code .tp  { color: #7fc4c8; }
+pre.code .str { color: #a0c878; }
+pre.code .cm  { color: #4a5a60; }
+pre.code .fn  { color: #c8dae0; }
+pre.code .ann { color: #b8a060; }
+pre.code .num { color: #e8a060; }
+pre.code .op  { color: #5a8090; }
+
+/* ── TABLES ── */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 16px 0;
+}
+
+.ref-table thead tr {
+  border-bottom: 2px solid var(--copper);
+}
+
+.ref-table th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--copper);
+  padding: 10px 14px;
+  text-align: left;
+  background: var(--bg2);
+}
+
+.ref-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule2);
+  color: var(--ink2);
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.ref-table tr:hover td { background: var(--bg2); }
+
+.ref-table td:first-child {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--bg3);
+  border: 1px solid var(--rule);
+  padding: 1px 5px;
+  color: var(--copper2);
+}
+
+/* ── CALLOUTS ── */
+.callout {
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  border-left: 3px solid;
+}
+
+.callout-copper { border-color: var(--copper); background: var(--copper-tint); color: var(--ink2); }
+.callout-verd   { border-color: var(--verd);   background: var(--verd-tint);   color: var(--ink2); }
+.callout-red    { border-color: var(--red);     background: var(--red-tint);    color: var(--ink2); }
+
+.callout b {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.callout-copper b { color: var(--copper); }
+.callout-verd   b { color: var(--verd); }
+.callout-red    b { color: var(--red); }
+
+/* ── SECTION DIVIDER ── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 40px 0 28px;
+}
+
+.section-divider .label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--copper);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* ── TWO COLUMNS ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin: 24px 0;
+}
+
+.three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  margin: 24px 0;
+}
+
+/* ── KEY-VALUE DEFINITION BLOCKS ── */
+.def-block {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  padding: 20px 24px;
+}
+
+.def-block h4 {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.def-block .def-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 10px;
+}
+
+.def-block p {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+/* ── FORMULA / LAW BOX ── */
+.law-box {
+  background: var(--ink);
+  color: #e8dfd0;
+  padding: 24px 28px;
+  margin: 20px 0;
+  position: relative;
+}
+
+.law-box::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -1px; right: 20px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  background: var(--copper);
+  color: var(--ink);
+  padding: 3px 10px;
+  font-weight: 600;
+}
+
+.law-box .law-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: #e8c88a;
+  margin-bottom: 10px;
+}
+
+.law-box .law-body {
+  font-size: 13px;
+  line-height: 1.75;
+  color: #b0a898;
+}
+
+.law-box .law-body strong { color: #e8c88a; }
+
+/* ── BADGES / TAGS ── */
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid;
+  margin: 2px;
+}
+
+.badge-copper { color: var(--copper); border-color: var(--copper2); background: var(--copper-tint); }
+.badge-verd   { color: var(--verd);   border-color: var(--verd2);   background: var(--verd-tint); }
+.badge-red    { color: var(--red);    border-color: #7a2020;        background: var(--red-tint); }
+.badge-slate  { color: var(--slate);  border-color: #1a2530;        background: rgba(44,62,80,0.07); }
+.badge-gold   { color: var(--gold);   border-color: #5a4a35;        background: rgba(139,115,85,0.08); }
+
+/* ── FINTECH STATE MACHINE ── */
+.state-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.state-box {
+  border: 1px solid var(--rule);
+  background: var(--bg2);
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink2);
+  white-space: nowrap;
+}
+
+.state-box.terminal { background: var(--verd-tint); border-color: var(--verd2); color: var(--verd); }
+.state-box.error    { background: var(--red-tint); border-color: #7a2020; color: var(--red); }
+.state-box.start    { background: var(--copper-tint); border-color: var(--copper2); color: var(--copper); }
+
+.state-arrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink4);
+  padding: 0 6px;
+}
+
+/* ── MATH / FORMULA ── */
+.math {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--rule);
+  padding: 10px 16px;
+  color: var(--ink2);
+  display: block;
+  margin: 8px 0;
+}
+
+.math .var { color: var(--copper); font-style: italic; }
+
+/* ── FOOTER ── */
+.footer {
+  position: relative; z-index: 1;
+  border-top: 2px solid var(--ink);
+  padding: 60px 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 48px;
+}
+
+.footer-col h4 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.footer-col p, .footer-col li {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.7;
+}
+
+.footer-col ul { list-style: none; }
+.footer-col ul li { padding: 3px 0; border-bottom: 1px solid var(--rule2); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; padding: 48px 24px; gap: 32px; }
+  .chapter-header { padding: 40px 24px 28px; flex-direction: column; gap: 16px; }
+  .chapter-num { font-size: 48px; }
+  .chapter-body { padding: 32px 24px; }
+  .topnav { padding: 0 24px; }
+  .two-col, .three-col { grid-template-columns: 1fr; }
+  .footer { padding: 40px 24px; grid-template-columns: 1fr; }
+}
+
+/* ── ANIMATIONS ── */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div class="blueprint-grid"></div>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="nav-brand">The Engineer's Codex</div>
+  <a href="#arch">Architecture</a>
+  <a href="#ddd">DDD</a>
+  <a href="#distributed">Distributed</a>
+  <a href="#ai-patterns">AI Patterns</a>
+  <a href="#observability">Observability</a>
+  <a href="#api">API Design</a>
+  <a href="#security">Security</a>
+  <a href="#data">Data Patterns</a>
+  <a href="#fintech">Fintech</a>
+  <a href="#sysdesign">Sys Design</a>
+  <a href="#mental">Mental Models</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-label">Volume III · Architecture · Patterns · Systems · AI</div>
+    <h1>The<br>Engineer's<br><em>Codex</em></h1>
+    <p class="hero-desc">
+      The final layer. Everything that surrounds the code: how systems are structured, how distributed failures behave, how AI applications are architected, how fintech operations actually work, and the mental models that separate engineers from senior engineers.
+    </p>
+  </div>
+  <div>
+    <div class="hero-index">
+      <div class="hero-index-title">Contents</div>
+      <ol>
+        <li><a href="#arch">Architecture Patterns</a><span class="dots"></span></li>
+        <li><a href="#ddd">Domain-Driven Design</a><span class="dots"></span></li>
+        <li><a href="#distributed">Distributed Systems</a><span class="dots"></span></li>
+        <li><a href="#ai-patterns">AI Engineering Patterns</a><span class="dots"></span></li>
+        <li><a href="#observability">Observability & SRE</a><span class="dots"></span></li>
+        <li><a href="#api">API Design Patterns</a><span class="dots"></span></li>
+        <li><a href="#security">Security Patterns</a><span class="dots"></span></li>
+        <li><a href="#data">Data Architecture</a><span class="dots"></span></li>
+        <li><a href="#fintech">Fintech Specifics</a><span class="dots"></span></li>
+        <li><a href="#sysdesign">System Design</a><span class="dots"></span></li>
+        <li><a href="#mental">Mental Models</a><span class="dots"></span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 1: ARCHITECTURE ═══ -->
+<section class="chapter reveal" id="arch">
+  <div class="chapter-header">
+    <div class="chapter-num">01</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">System Structure</div>
+      <h2 class="chapter-title">Architecture <em>Patterns</em></h2>
+      <p class="chapter-intro">The vocabulary of how to arrange code, services, and responsibilities. These are the patterns interviewers ask about and that production systems live or die by.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">Structural Architectures</span></div>
+
+    <div class="pattern-grid">
+      <div class="pattern-card arch">
+        <div class="pattern-name">Hexagonal Architecture</div>
+        <div class="pattern-alias">Ports &amp; Adapters · Alistair Cockburn 2005</div>
+        <div class="pattern-desc">The application core is surrounded by ports (interfaces) and adapters (implementations). Business logic has zero dependency on frameworks, databases, or UI. The most production-proven architecture for testable, maintainable services.</div>
+        <div class="diagram"><span class="hl">     [ HTTP Adapter ]  [ Kafka Adapter ]
+           ↓                    ↓
+     ┌─────────────────────────────┐
+     │  PORT: PaymentInputPort     │
+     │  ┌───────────────────────┐  │
+     │  │   DOMAIN / USE CASES  │  │
+     │  └───────────────────────┘  │
+     │  PORT: PaymentRepoPort      │
+     └─────────────────────────────┘
+           ↓                    ↓
+     [ JPA Adapter ]  [ InMemory Adapter ]</span></div>
+        <div><span class="badge badge-copper">Primary Ports</span><span class="badge badge-copper">Secondary Ports</span><span class="badge badge-verd">Testable Core</span></div>
+      </div>
+
+      <div class="pattern-card arch">
+        <div class="pattern-name">Clean Architecture</div>
+        <div class="pattern-alias">Uncle Bob · Onion Variant</div>
+        <div class="pattern-desc">Concentric dependency rings: Entities → Use Cases → Interface Adapters → Frameworks. Dependency Rule: source code dependencies must point inward only. The domain never imports Spring, JPA, or anything external.</div>
+        <div class="diagram"><span class="hl">  ┌────────────────────────────────┐
+  │  Frameworks &amp; Drivers  (outer) │
+  │  ┌──────────────────────────┐  │
+  │  │  Interface Adapters      │  │
+  │  │  ┌────────────────────┐  │  │
+  │  │  │   Use Cases        │  │  │
+  │  │  │  ┌──────────────┐  │  │  │
+  │  │  │  │  Entities    │  │  │  │
+  │  │  │  └──────────────┘  │  │  │
+  │  │  └────────────────────┘  │  │
+  │  └──────────────────────────┘  │
+  └────────────────────────────────┘</span></div>
+        <div><span class="badge badge-copper">Dependency Rule</span><span class="badge badge-verd">Framework-Free Core</span></div>
+      </div>
+
+      <div class="pattern-card arch">
+        <div class="pattern-name">CQRS</div>
+        <div class="pattern-alias">Command Query Responsibility Segregation</div>
+        <div class="pattern-desc">Separate the write model (commands that change state) from the read model (queries that return data). Enables independent scaling of reads/writes, optimized read models (denormalized projections), and eliminates impedance mismatch between domain objects and query DTOs.</div>
+        <div class="diagram"><span class="hl">  Command Side         Query Side
+  ─────────────        ──────────────
+  CreatePayment  ─┐    PaymentSummary
+  UpdateStatus   ─┤─→  PaymentDetail
+  RefundPayment  ─┘    DashboardView
+       │                    ↑
+  Write Store     →   Read Store (projection)</span></div>
+        <div><span class="badge badge-copper">Commands</span><span class="badge badge-copper">Queries</span><span class="badge badge-verd">Read Scaling</span></div>
+      </div>
+
+      <div class="pattern-card arch">
+        <div class="pattern-name">Event Sourcing</div>
+        <div class="pattern-alias">Store Events, Not State · Greg Young</div>
+        <div class="pattern-desc">The database stores the sequence of events that led to current state, not the current state itself. Current state is derived by replaying events. Natural audit log, time travel debugging, event replay to rebuild projections. Pairs naturally with CQRS. Complex; don't use without genuine need.</div>
+        <div class="diagram"><span class="hl">  Event Store (append-only):
+  ┌────────────────────────────────────┐
+  │ 1. PaymentCreated  {id, amount}    │
+  │ 2. PaymentValidated {riskScore}    │
+  │ 3. PaymentCharged  {txRef}         │
+  │ 4. PaymentSettled  {timestamp}     │
+  └────────────────────────────────────┘
+         ↓ replay ↓
+  Current State = fold(events, initialState)</span></div>
+        <div><span class="badge badge-copper">Append-Only</span><span class="badge badge-copper">Replay</span><span class="badge badge-verd">Audit Trail</span><span class="badge badge-red">Complexity Cost</span></div>
+      </div>
+
+      <div class="pattern-card arch">
+        <div class="pattern-name">Saga Pattern</div>
+        <div class="pattern-alias">Distributed Transactions Without 2PC</div>
+        <div class="pattern-desc">A sequence of local transactions, each publishing events that trigger the next. If a step fails, compensating transactions undo completed steps. Two flavors: Choreography (services react to events) and Orchestration (a saga orchestrator directs steps). Fintech critical — payment spans multiple services.</div>
+        <div class="diagram"><span class="hl">  ORCHESTRATION SAGA (explicit controller):
+  SagaOrchestrator
+    → PaymentService.reserve()     ✓
+    → RiskService.check()          ✓
+    → LedgerService.debit()        ✗ ← FAILS
+    ← LedgerService (compensate)
+    ← PaymentService.release()     ← rollback
+
+  CHOREOGRAPHY SAGA (event-driven):
+  PaymentCreated →→ RiskChecked →→ LedgerDebited
+                                  ↓ if fails
+                        LedgerFailedEvt →→ PaymentReleased</span></div>
+        <div><span class="badge badge-copper">Compensating Txn</span><span class="badge badge-verd">Eventual Consistency</span></div>
+      </div>
+
+      <div class="pattern-card arch">
+        <div class="pattern-name">Strangler Fig</div>
+        <div class="pattern-alias">Legacy Migration · Martin Fowler</div>
+        <div class="pattern-desc">Gradually replace a legacy monolith by wrapping it with new services. Route specific endpoints to new microservices while the monolith handles the rest. The new system "strangles" the old one over time until nothing routes to the monolith. The only responsible way to containerize legacy fintech apps.</div>
+        <div class="diagram"><span class="hl">  Phase 1:  All → [Monolith]
+  Phase 2:  /payments/* → [New PaymentSvc]
+             /users/*    → [Monolith]
+  Phase 3:  /payments/* → [New PaymentSvc]
+             /accounts/* → [New AccountSvc]
+             /reports/*  → [Monolith] (shrinking)
+  Phase N:  Monolith = empty → decommission</span></div>
+        <div><span class="badge badge-copper">Incremental</span><span class="badge badge-verd">Risk-Mitigated</span><span class="badge badge-gold">Job Relevant</span></div>
+      </div>
+
+      <div class="pattern-card arch">
+        <div class="pattern-name">Sidecar Pattern</div>
+        <div class="pattern-alias">Service Mesh · Envoy · Istio</div>
+        <div class="pattern-desc">Deploy a helper container alongside the main service container in the same pod. The sidecar handles cross-cutting concerns: mTLS, observability, rate limiting, circuit breaking. Your app code stays simple; the mesh handles reliability. Envoy proxy is the canonical sidecar. Critical for zero-trust fintech networking.</div>
+        <div class="diagram"><span class="hl">  ┌─── Pod ─────────────────────────────┐
+  │  ┌──────────────┐  ┌─────────────┐ │
+  │  │  Your App    │  │   Envoy     │ │
+  │  │  (Spring     │←→│  Sidecar    │ │
+  │  │   Boot)      │  │  mTLS       │ │
+  │  │              │  │  Metrics    │ │
+  │  │              │  │  Tracing    │ │
+  │  └──────────────┘  └─────────────┘ │
+  └─────────────────────────────────────┘</span></div>
+        <div><span class="badge badge-copper">Cross-Cutting</span><span class="badge badge-verd">mTLS</span><span class="badge badge-slate">Kubernetes Native</span></div>
+      </div>
+
+      <div class="pattern-card arch">
+        <div class="pattern-name">BFF Pattern</div>
+        <div class="pattern-alias">Backend For Frontend</div>
+        <div class="pattern-desc">Create a dedicated backend API for each frontend type (mobile app, web SPA, partner API). Each BFF aggregates and transforms data specifically for its client, avoiding the "too much / too little" problem of a generic API. Common in fintech: different data needs for mobile banking vs web dashboard vs partner integrations.</div>
+        <div class="diagram"><span class="hl">  [Mobile App] → [Mobile BFF]  ─┐
+  [Web SPA]    → [Web BFF]     ─┤→ [Microservices]
+  [Partner API]→ [Partner BFF] ─┘
+  
+  Each BFF: tailored aggregation, auth, rate limits</span></div>
+        <div><span class="badge badge-copper">Client-Specific</span><span class="badge badge-verd">API Tailoring</span></div>
+      </div>
+    </div>
+
+    <div class="callout callout-copper">
+      <b>💡 Architecture Interview Move</b>
+      When asked "how would you design a payment system?", the correct answer layers these: Hexagonal architecture for each service (testable domain), CQRS to separate payment write commands from reporting queries, Saga for multi-service payment flows, Strangler Fig if modernizing legacy, and Sidecar for the service mesh. Name-dropping one pattern shows reading; composing all five shows experience.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 2: DDD ═══ -->
+<section class="chapter reveal" id="ddd">
+  <div class="chapter-header">
+    <div class="chapter-num">02</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">Eric Evans · Vaughn Vernon</div>
+      <h2 class="chapter-title">Domain-Driven <em>Design</em></h2>
+      <p class="chapter-intro">DDD is not a framework — it's a language for having precise conversations about complex business domains. In fintech, the domain IS the competitive advantage.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">Strategic Design — The Big Picture</span></div>
+
+    <div class="three-col">
+      <div class="def-block">
+        <div class="def-sub">Strategic Pattern</div>
+        <h4>Bounded Context</h4>
+        <p>A semantic boundary within which a domain model is consistent and unambiguous. "Account" means different things in Banking (balance, transactions) vs Identity (user credentials). Each bounded context owns its model — no cross-context JPA join. Maps 1:1 to microservices in well-designed systems.</p>
+      </div>
+      <div class="def-block">
+        <div class="def-sub">Strategic Pattern</div>
+        <h4>Context Map</h4>
+        <p>A diagram showing how bounded contexts relate: Upstream/Downstream, Customer/Supplier, Partnership, Shared Kernel, Conformist, Anti-Corruption Layer (ACL). The ACL is critical when integrating legacy systems — translate their model into yours at the boundary, don't let their concepts pollute your domain.</p>
+      </div>
+      <div class="def-block">
+        <div class="def-sub">Strategic Pattern</div>
+        <h4>Ubiquitous Language</h4>
+        <p>A shared vocabulary between developers and domain experts, reflected exactly in code. If the business says "authorization" and "capture" for card payments, your code has <code>authorize()</code> and <code>capture()</code> — not <code>processStep1()</code> and <code>processStep2()</code>. The language evolves the model.</p>
+      </div>
+    </div>
+
+    <div class="section-divider"><span class="label">Tactical Design — The Building Blocks</span></div>
+
+    <div class="ref-table-wrap">
+      <table class="ref-table">
+        <thead>
+          <tr><th>Building Block</th><th>Identity?</th><th>Mutable?</th><th>Definition</th><th>Java Implementation</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Entity</td>
+            <td>✓ Yes</td>
+            <td>✓ Yes</td>
+            <td>An object defined by its identity, not its attributes. Two Payments with same amount but different IDs are different entities. Identity persists through state changes.</td>
+            <td><code>@Entity class Payment { private PaymentId id; ... }</code> — identity via equals/hashCode on ID only</td>
+          </tr>
+          <tr>
+            <td>Value Object</td>
+            <td>✗ No</td>
+            <td>✗ No</td>
+            <td>Defined entirely by its attributes. Two <code>Money(100, USD)</code> objects are equal and interchangeable. Immutable. No identity. Replaces primitives: use <code>Money</code>, not <code>double</code>.</td>
+            <td>Java <code>record Money(BigDecimal amount, Currency currency) {}</code> — records are perfect VOs</td>
+          </tr>
+          <tr>
+            <td>Aggregate</td>
+            <td>✓ (root)</td>
+            <td>✓ (via root)</td>
+            <td>A cluster of entities and VOs with a single root entity. All access to the cluster goes through the Aggregate Root. Enforces invariants at the boundary. Transactional consistency unit.</td>
+            <td><code>Order</code> aggregate root owns <code>OrderLine</code> entities — never access OrderLine directly from outside Order</td>
+          </tr>
+          <tr>
+            <td>Repository</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Abstracts the persistence of aggregates. Returns aggregate roots only. The interface lives in the domain layer; the JPA implementation lives in the infrastructure layer. This is the Hexagonal port/adapter boundary.</td>
+            <td><code>interface PaymentRepo { Payment findById(PaymentId); void save(Payment); }</code></td>
+          </tr>
+          <tr>
+            <td>Domain Service</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Domain logic that doesn't naturally fit one entity or VO. Cross-aggregate coordination. Stateless. If you find yourself putting logic in a utility class, it's probably a Domain Service.</td>
+            <td><code>class TransferService { void transfer(Account from, Account to, Money amount) }</code></td>
+          </tr>
+          <tr>
+            <td>Domain Event</td>
+            <td>✓ (implicit)</td>
+            <td>✗ No</td>
+            <td>Something that happened in the domain that other parts of the system care about. Immutable facts. Drives sagas, projections, notifications. Named in past tense: <code>PaymentAuthorized</code>, not <code>AuthorizePayment</code>.</td>
+            <td><code>record PaymentAuthorized(PaymentId id, Instant at, Money amount) implements DomainEvent {}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+<pre class="code"><span class="cm">// DDD Aggregate in Java 21 — the full idiom</span>
+<span class="kw">public class</span> <span class="tp">Payment</span> {  <span class="cm">// Aggregate Root</span>
+    <span class="kw">private final</span> <span class="tp">PaymentId</span>   id;          <span class="cm">// typed identity, not String</span>
+    <span class="kw">private final</span> <span class="tp">Money</span>       amount;      <span class="cm">// Value Object, not BigDecimal</span>
+    <span class="kw">private</span>       <span class="tp">PaymentStatus</span> status;
+    <span class="kw">private final</span> List&lt;<span class="tp">DomainEvent</span>&gt; events = <span class="kw">new</span> ArrayList&lt;&gt;();
+
+    <span class="cm">// Business methods express domain language, not CRUD</span>
+    <span class="kw">public void</span> <span class="fn">authorize</span>(<span class="tp">RiskAssessment</span> risk) {
+        <span class="kw">if</span> (status != <span class="tp">PaymentStatus</span>.PENDING)
+            <span class="kw">throw new</span> <span class="tp">InvalidPaymentStateException</span>(id, status, <span class="str">"authorize"</span>);
+        <span class="kw">if</span> (risk.isHighRisk() && amount.exceeds(<span class="tp">Money</span>.of(<span class="num">10000</span>, <span class="tp">USD</span>)))
+            <span class="kw">throw new</span> <span class="tp">RiskLimitExceededException</span>(id, risk);
+        
+        <span class="kw">this</span>.status = <span class="tp">PaymentStatus</span>.AUTHORIZED;
+        events.add(<span class="kw">new</span> <span class="tp">PaymentAuthorized</span>(id, <span class="tp">Instant</span>.now(), amount));
+    }
+
+    <span class="cm">// Invariant: amount must be positive — enforced in constructor/factory</span>
+    <span class="kw">public static</span> <span class="tp">Payment</span> <span class="fn">create</span>(<span class="tp">Money</span> amount, <span class="tp">Merchant</span> merchant) {
+        <span class="kw">if</span> (!amount.isPositive()) <span class="kw">throw new</span> <span class="tp">IllegalArgumentException</span>(<span class="str">"Amount must be positive"</span>);
+        <span class="kw">var</span> p = <span class="kw">new</span> <span class="tp">Payment</span>(<span class="tp">PaymentId</span>.generate(), amount, merchant);
+        p.events.add(<span class="kw">new</span> <span class="tp">PaymentCreated</span>(p.id, amount, merchant.id()));
+        <span class="kw">return</span> p;
+    }
+}</pre>
+
+    <div class="callout callout-verd">
+      <b>💡 DDD in Fintech — The Killer Application</b>
+      Fintech has the most DDD-amenable domain on earth. "Authorization," "capture," "settlement," "chargeback," "reconciliation" — these are precise, legally-defined terms that every business stakeholder uses exactly. If your code uses those same words, bugs become immediately visible to non-engineers. That's DDD's core promise.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 3: DISTRIBUTED SYSTEMS ═══ -->
+<section class="chapter reveal" id="distributed">
+  <div class="chapter-header">
+    <div class="chapter-num">03</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">Fallacies · Laws · Theorems</div>
+      <h2 class="chapter-title">Distributed <em>Systems</em></h2>
+      <p class="chapter-intro">The 8 fallacies of distributed computing are all lies you've believed at some point. These are the theorems and patterns that let you build honest, reliable systems anyway.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">The Fundamental Laws</span></div>
+
+    <div class="two-col">
+      <div class="law-box" data-label="THEOREM">
+        <div class="law-title">CAP Theorem — Brewer 2000</div>
+        <div class="law-body">
+          A distributed system can guarantee at most <strong>two</strong> of:<br>
+          <strong>Consistency</strong> — every read receives the most recent write<br>
+          <strong>Availability</strong> — every request receives a response<br>
+          <strong>Partition Tolerance</strong> — system continues despite network splits<br><br>
+          Since network partitions are <em>unavoidable</em> in production, you're really choosing between <strong>CP</strong> (consistent, possibly unavailable during partition) or <strong>AP</strong> (always available, possibly stale).<br><br>
+          Postgres = CP. Cassandra (default) = AP. DynamoDB = AP. ZooKeeper = CP.
+        </div>
+      </div>
+      <div class="law-box" data-label="REFINEMENT">
+        <div class="law-title">PACELC — Abadi 2012</div>
+        <div class="law-body">
+          CAP only addresses partition scenarios. PACELC extends it:<br><br>
+          <strong>If Partition:</strong> choose between Availability or Consistency<br>
+          <strong>Else (no partition):</strong> choose between Latency or Consistency<br><br>
+          The latency-consistency tradeoff is the everyday reality that CAP misses. Synchronous replication = consistent but slower. Async replication = faster but eventual.<br><br>
+          DynamoDB: PA/EL (high availability, low latency, eventual)<br>
+          Spanner: PC/EC (consistent, higher latency, consistent)
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span class="label">Consistency Models (Weakest → Strongest)</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Model</th><th>Guarantee</th><th>Examples</th><th>Latency Cost</th></tr></thead>
+      <tbody>
+        <tr><td>Eventual</td><td>All replicas converge to same value eventually — no time bound</td><td>DNS, Cassandra (default), S3</td><td>Lowest</td></tr>
+        <tr><td>Monotonic Read</td><td>You never see older values than you've already read (within session)</td><td>DynamoDB sessions, Cosmos DB</td><td>Low</td></tr>
+        <tr><td>Read Your Writes</td><td>After a write, you always see it in subsequent reads</td><td>Most sticky-session databases</td><td>Low-Medium</td></tr>
+        <tr><td>Causal</td><td>Operations that are causally related appear in causal order</td><td>MongoDB causal sessions, CockroachDB</td><td>Medium</td></tr>
+        <tr><td>Sequential</td><td>Operations appear in some total order consistent with program order</td><td>Kafka partition ordering</td><td>Medium-High</td></tr>
+        <tr><td>Linearizable</td><td>Every operation appears to take effect atomically at some instant — real-time ordering guaranteed</td><td>Zookeeper, etcd, Google Spanner, CockroachDB strong reads</td><td>High</td></tr>
+        <tr><td>Strict Serializable</td><td>Transactions appear to execute serially in real-time order — the gold standard</td><td>Google Spanner, CockroachDB transactions</td><td>Highest</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-divider"><span class="label">Key Distributed Patterns</span></div>
+
+    <div class="pattern-grid">
+      <div class="pattern-card arch">
+        <div class="pattern-name">Outbox Pattern</div>
+        <div class="pattern-alias">Transactional Outbox · At-Least-Once Delivery</div>
+        <div class="pattern-desc">Write to your database AND an outbox table in the same transaction. A separate process reads the outbox and publishes to Kafka/SQS. Guarantees events are published if-and-only-if the DB write commits. Solves the dual-write problem. Essential in fintech event-driven systems.</div>
+        <div class="diagram"><span class="hl">  BEGIN TRANSACTION
+    INSERT payments (...)        ← domain write
+    INSERT outbox (event, status=PENDING)  ← same txn
+  COMMIT
+
+  Poller reads outbox → publishes to Kafka
+  → marks outbox row PUBLISHED</span></div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">Idempotency Keys</div>
+        <div class="pattern-alias">Safe Retries in Payment Systems</div>
+        <div class="pattern-desc">Every mutating API request carries a client-generated idempotency key. Server stores (key → result). If the same key arrives again (retry/timeout), return the stored result without re-executing. Stripe's entire API works this way. In fintech, idempotency is not optional — double charges are lawsuit-level bugs.</div>
+        <div class="diagram"><span class="hl">  POST /payments
+  Idempotency-Key: a4f7-3b2c-9d01   ← client generates UUID
+
+  Server: key exists? return cached result
+  Server: key new? execute → store result → return</span></div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">Circuit Breaker</div>
+        <div class="pattern-alias">Resilience4j · Cascading Failure Prevention</div>
+        <div class="pattern-desc">Three states: CLOSED (normal), OPEN (failing fast), HALF-OPEN (testing recovery). When failures exceed threshold, open the circuit — stop calling the failing service and return fallback immediately. Prevents one slow service from taking down all callers. Resilience4j is the Java standard.</div>
+        <div class="diagram"><span class="hl">  CLOSED → (failure rate > 50%) → OPEN
+  OPEN   → (wait 60s)           → HALF-OPEN
+  HALF-OPEN → (test call ok)    → CLOSED
+  HALF-OPEN → (test call fails) → OPEN</span></div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">Two-Phase Commit</div>
+        <div class="pattern-alias">2PC · Why We Use Sagas Instead</div>
+        <div class="pattern-desc">Distributed atomic transaction across multiple services: Phase 1 (Prepare — all participants vote commit/abort), Phase 2 (Commit — coordinator sends final decision). Works but: coordinator SPOF, blocking during failure, poor scalability. In modern microservices, Sagas with compensations are preferred. Know 2PC to explain why you're not using it.</div>
+        <div class="diagram"><span class="hl">  Coordinator → all: PREPARE?
+  All → Coordinator: READY ✓ / ABORT ✗
+  Coordinator → all: COMMIT (if all READY)
+  
+  Problem: coordinator crashes after PREPARE
+  → all participants blocked waiting forever</span></div>
+      </div>
+    </div>
+
+    <div class="law-box" data-label="THE 8 FALLACIES">
+      <div class="law-title">Fallacies of Distributed Computing — Peter Deutsch 1994</div>
+      <div class="law-body">
+        <strong>1.</strong> The network is reliable &nbsp;|&nbsp; <strong>2.</strong> Latency is zero &nbsp;|&nbsp; <strong>3.</strong> Bandwidth is infinite &nbsp;|&nbsp; <strong>4.</strong> The network is secure<br>
+        <strong>5.</strong> Topology doesn't change &nbsp;|&nbsp; <strong>6.</strong> There is one administrator &nbsp;|&nbsp; <strong>7.</strong> Transport cost is zero &nbsp;|&nbsp; <strong>8.</strong> The network is homogeneous<br><br>
+        Every junior engineer assumes at least three of these. Every production incident traces back to at least one. Design systems assuming the opposite of all eight.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 4: AI ENGINEERING PATTERNS ═══ -->
+<section class="chapter reveal" id="ai-patterns">
+  <div class="chapter-header">
+    <div class="chapter-num">04</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">The New Discipline</div>
+      <h2 class="chapter-title">AI Engineering <em>Patterns</em></h2>
+      <p class="chapter-intro">Building systems with LLMs is a new engineering discipline with its own failure modes, patterns, and architecture primitives. This is the core of your new role.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">Retrieval Augmented Generation (RAG)</span></div>
+
+    <div class="diagram" style="font-size:12px; margin-bottom:24px"><span class="hl">  NAIVE RAG PIPELINE:
+  </span>
+<span class="hl">  User Query</span>
+     <span class="dim">↓ embed(query)</span>
+  <span class="hl">Query Vector</span>  →→→  <span class="hl">Vector DB</span> (pgvector, Pinecone, Qdrant)
+                         <span class="dim">↓ similarity search (cosine/dot)</span>
+                    <span class="hl">Top-K Chunks</span>  (relevant document fragments)
+                         <span class="dim">↓ inject into prompt</span>
+  <span class="hl">LLM Prompt:</span>  <span class="dim">"Context: {chunks}  Question: {query}  Answer:"</span>
+                         <span class="dim">↓ generate</span>
+                    <span class="hl">Grounded Response</span>  ← cites retrieved context, not hallucination
+
+<span class="hl">  ADVANCED RAG:</span>
+  <span class="dim">Query Rewriting → HyDE → Hybrid Search (BM25 + vector) → Re-ranking → Filtered retrieval</span></div>
+
+    <div class="section-divider"><span class="label">Agent Architectures</span></div>
+
+    <div class="pattern-grid">
+      <div class="pattern-card ai">
+        <div class="pattern-name">ReAct Pattern</div>
+        <div class="pattern-alias">Reason + Act · Yao et al. 2022</div>
+        <div class="pattern-desc">The LLM alternates between Thought (reasoning about what to do), Action (calling a tool), and Observation (processing the tool result). Continues until it can answer the original question. The foundation of most production agents.</div>
+        <div class="diagram"><span class="hl">  Thought: I need to check the payment status
+  Action:  get_payment_status("PAY-123")
+  Observation: {status: "pending", created: "2h ago"}
+  Thought: It's been pending 2h, I should escalate
+  Action:  escalate_payment("PAY-123", "timeout")
+  Observation: {escalated: true, ticket: "ESC-456"}
+  Answer:  Payment escalated, ticket ESC-456 created.</span></div>
+      </div>
+      <div class="pattern-card ai">
+        <div class="pattern-name">Tool Use / Function Calling</div>
+        <div class="pattern-alias">LLM → Structured API Calls</div>
+        <div class="pattern-desc">Provide the LLM with a schema of available tools (function names, parameter types, descriptions). The model decides when to call which tool and with what arguments. Your Spring Boot service becomes an LLM tool — the AI calls your APIs. This is how AI-enhanced CI/CD pipelines work.</div>
+<pre class="code" style="margin:8px 0"><span class="cm">// Tool definition (LangChain4j)</span>
+<span class="ann">@Tool</span>(<span class="str">"Get payment status by ID"</span>)
+<span class="tp">PaymentStatus</span> <span class="fn">getPaymentStatus</span>(
+    <span class="ann">@P</span>(<span class="str">"The payment ID"</span>) <span class="tp">String</span> paymentId) {
+  <span class="kw">return</span> paymentService.<span class="fn">findById</span>(paymentId).status();
+}</pre>
+      </div>
+      <div class="pattern-card ai">
+        <div class="pattern-name">Chain-of-Thought Prompting</div>
+        <div class="pattern-alias">CoT · Intermediate Reasoning Steps</div>
+        <div class="pattern-desc">Instruct the model to show its reasoning before answering. "Think step by step" dramatically improves accuracy on multi-step problems. Zero-shot CoT: just add "Let's think step by step." Few-shot CoT: provide examples of reasoning chains. Critical for complex code generation and security analysis.</div>
+        <div class="callout callout-copper" style="margin:8px 0">
+          <b>Prompt Template</b>
+          "You are a Java security expert. Analyze this code for OWASP Top 10 vulnerabilities. Think through each category step by step, then provide your findings."
+        </div>
+      </div>
+      <div class="pattern-card ai">
+        <div class="pattern-name">Guardrails Pattern</div>
+        <div class="pattern-alias">Input/Output Validation for LLMs</div>
+        <div class="pattern-desc">In regulated fintech environments, LLM inputs and outputs must be validated. Input guardrails: check for PII, inject system context, rate limit. Output guardrails: validate JSON schema, check for harmful content, strip sensitive data before logging. Never log raw prompts containing customer financial data.</div>
+        <div class="diagram"><span class="hl">  User Input → [PII Scrubber] → [Input Guard] → LLM
+                                                    ↓
+  Response  ← [PII Re-inject] ← [Output Guard] ← Raw Output
+  
+  Audit log: sanitized_prompt, model, latency
+  NEVER log: raw_prompt with customer PII</span></div>
+      </div>
+      <div class="pattern-card ai">
+        <div class="pattern-name">Structured Output</div>
+        <div class="pattern-alias">JSON Mode · Constrained Generation</div>
+        <div class="pattern-desc">Force the LLM to output valid JSON conforming to a schema. Pydantic (Python) or Jackson annotations (Java) define the expected structure; the framework enforces it. Essential when LLM output drives code execution — freeform text cannot drive state machine transitions.</div>
+<pre class="code" style="margin:8px 0"><span class="cm">// LangChain4j structured output</span>
+<span class="kw">record</span> <span class="tp">RiskAssessment</span>(
+    <span class="tp">RiskLevel</span> level,
+    <span class="tp">String</span> reason,
+    <span class="kw">boolean</span> requiresManualReview) {}
+
+<span class="tp">RiskAssessment</span> assessment = aiService
+    .<span class="fn">assessRisk</span>(transaction);  <span class="cm">// returns typed record</span></pre>
+      </div>
+      <div class="pattern-card ai">
+        <div class="pattern-name">Prompt Caching</div>
+        <div class="pattern-alias">Cost &amp; Latency Optimization</div>
+        <div class="pattern-desc">Long system prompts (compliance rules, code context, documentation) can be cached by the model provider. Subsequent requests reuse the cached prefix — dramatically reducing tokens processed and therefore latency and cost. Anthropic, OpenAI, Google Gemini all support prompt caching. In fintech, your compliance ruleset can be a cached system prompt.</div>
+        <div class="diagram"><span class="hl">  Request 1:  [Long System Prompt 8k tokens] + [Query]
+              → Full processing: $0.024 + $0.001
+
+  Request 2:  [cache_control: ephemeral] + [New Query]
+              → Cache hit:      $0.003 + $0.001  (87% cheaper)</span></div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span class="label">AI Evaluation — The Missing Discipline</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Eval Method</th><th>What It Measures</th><th>When to Use</th></tr></thead>
+      <tbody>
+        <tr><td>Unit Evals</td><td>Does a single prompt produce expected output on known examples? Pass/fail per case.</td><td>Regression testing after prompt changes</td></tr>
+        <tr><td>LLM-as-Judge</td><td>Use a stronger model to grade outputs: faithfulness, relevance, coherence, groundedness</td><td>RAG pipeline quality, continuous monitoring</td></tr>
+        <tr><td>Human Eval</td><td>Domain experts rate a sample of outputs. Gold standard but expensive.</td><td>Pre-production sign-off, periodic audits</td></tr>
+        <tr><td>A/B Testing</td><td>Route % of traffic to new prompt/model, compare downstream metrics</td><td>Prompt optimization, model upgrades</td></tr>
+        <tr><td>Hallucination Detection</td><td>Check if claims in output are supported by retrieved context (for RAG)</td><td>Always, for RAG over compliance documents</td></tr>
+        <tr><td>Latency P99</td><td>99th percentile response time under load — LLM APIs have high variance</td><td>Production readiness, SLA definition</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-copper">
+      <b>💡 The One AI Pattern Nobody Teaches</b>
+      Treat your AI pipelines exactly like distributed services: circuit break on API timeout (LLMs drop connections), retry with exponential backoff (provider rate limits), cache aggressively (same query twice = waste), stream responses (don't block on 3-second generations), and have a deterministic fallback when the LLM is degraded. Every production AI system eventually needs all five.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 5: OBSERVABILITY ═══ -->
+<section class="chapter reveal" id="observability">
+  <div class="chapter-header">
+    <div class="chapter-num">05</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">The Three Pillars + SRE</div>
+      <h2 class="chapter-title">Observability &amp; <em>SRE</em></h2>
+      <p class="chapter-intro">If you can't measure it, you can't improve it. In fintech, if you can't prove it in logs, it didn't happen legally. Observability is compliance infrastructure.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="three-col">
+      <div class="def-block">
+        <div class="def-sub">Pillar 1</div>
+        <h4>Metrics</h4>
+        <p><strong>What:</strong> Numeric time-series data aggregated over windows. <strong>Tools:</strong> Micrometer (Spring Boot) → Prometheus → Grafana. <strong>Types:</strong> Counter (requests_total), Gauge (queue_depth), Histogram (request_duration_p99), Summary. <strong>Java:</strong> <code>@Timed</code>, <code>@Counted</code> annotations on service methods.</p>
+      </div>
+      <div class="def-block">
+        <div class="def-sub">Pillar 2</div>
+        <h4>Logs</h4>
+        <p><strong>What:</strong> Structured, timestamped event records. <strong>Tools:</strong> SLF4J + Logback → JSON format → ELK or CloudWatch Logs. <strong>Critical:</strong> structured JSON (not plain text), correlation IDs on every log line, PII masking before persistence. Logs are audit evidence in fintech — retention policy is a compliance requirement.</p>
+      </div>
+      <div class="def-block">
+        <div class="def-sub">Pillar 3</div>
+        <h4>Traces</h4>
+        <p><strong>What:</strong> The path of a single request through distributed services. <strong>Tools:</strong> OpenTelemetry (OTEL) → Jaeger or Zipkin or Tempo. <strong>Java:</strong> Spring Boot 3 + Micrometer Tracing auto-instruments. Each trace = spans with parent-child relationships. Mandatory for debugging microservice latency.</p>
+      </div>
+    </div>
+
+    <div class="section-divider"><span class="label">SRE Reliability Mathematics</span></div>
+
+    <div class="two-col">
+      <div>
+        <div class="law-box" data-label="SRE FUNDAMENTALS">
+          <div class="law-title">SLI → SLO → SLA</div>
+          <div class="law-body">
+            <strong>SLI</strong> (Service Level Indicator): the actual measurement<br>
+            e.g., <em>% of payment API requests completing in &lt;200ms</em><br><br>
+            <strong>SLO</strong> (Service Level Objective): the internal target<br>
+            e.g., <em>99.9% of requests complete in &lt;200ms, measured monthly</em><br><br>
+            <strong>SLA</strong> (Service Level Agreement): external contractual commitment<br>
+            e.g., <em>99.5% availability or service credits apply</em><br><br>
+            SLO is stricter than SLA — the buffer is your error budget. Always set SLO tighter than SLA.
+          </div>
+        </div>
+        <div class="law-box" data-label="RELIABILITY MATH" style="margin-top:2px">
+          <div class="law-title">Error Budget</div>
+          <div class="law-body">
+            <strong>Error Budget</strong> = 1 - SLO<br>
+            At 99.9% SLO: budget = 0.1% = <strong>43.8 minutes/month</strong> downtime allowed<br>
+            At 99.99% SLO: budget = 0.01% = <strong>4.38 minutes/month</strong><br><br>
+            Error budget creates <em>alignment</em>: if you're within budget, deploy freely. If you've burned it, freeze deployments and focus on reliability. Engineering velocity is a function of reliability.
+          </div>
+        </div>
+      </div>
+      <div>
+        <table class="ref-table">
+          <thead><tr><th>Availability</th><th>Downtime/Month</th><th>Downtime/Year</th></tr></thead>
+          <tbody>
+            <tr><td>99%</td><td>7.2 hours</td><td>3.65 days</td></tr>
+            <tr><td>99.5%</td><td>3.6 hours</td><td>1.83 days</td></tr>
+            <tr><td>99.9%</td><td>43.8 min</td><td>8.77 hours</td></tr>
+            <tr><td>99.95%</td><td>21.9 min</td><td>4.38 hours</td></tr>
+            <tr><td>99.99%</td><td>4.38 min</td><td>52.6 min</td></tr>
+            <tr><td>99.999%</td><td>26.3 sec</td><td>5.26 min</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout-copper" style="margin-top:16px">
+          <b>Fintech Baseline</b>
+          Payment processing APIs typically target 99.99% (4 min/month). Settlement and reporting can tolerate 99.9%. Real-time fraud scoring must be 99.999% — it blocks transactions.
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span class="label">Key Metrics Every Backend Engineer Must Know</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Metric</th><th>Measures</th><th>Tool (Spring Boot)</th><th>Alert Threshold Example</th></tr></thead>
+      <tbody>
+        <tr><td>http_server_requests_seconds_p99</td><td>99th percentile API latency</td><td>Micrometer auto</td><td>Alert if P99 &gt; 500ms for 5min</td></tr>
+        <tr><td>http_server_requests_total{status=5xx}</td><td>Server error rate</td><td>Micrometer auto</td><td>Alert if error rate &gt; 0.1%</td></tr>
+        <tr><td>jvm_memory_used_bytes</td><td>Heap/non-heap usage</td><td>Micrometer JVM metrics</td><td>Alert if heap &gt; 85% for 10min</td></tr>
+        <tr><td>jvm_gc_pause_seconds</td><td>GC pause duration</td><td>Micrometer JVM metrics</td><td>Alert if GC pause &gt; 200ms</td></tr>
+        <tr><td>hikaricp_connections_pending</td><td>DB connection pool saturation</td><td>Micrometer HikariCP</td><td>Alert if pending &gt; 5 for 2min</td></tr>
+        <tr><td>kafka_consumer_lag</td><td>Message processing backlog</td><td>Kafka exporter</td><td>Alert if lag growing for 15min</td></tr>
+        <tr><td>resilience4j_cb_state</td><td>Circuit breaker state</td><td>Resilience4j metrics</td><td>Alert on OPEN state immediately</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 6: API DESIGN ═══ -->
+<section class="chapter reveal" id="api">
+  <div class="chapter-header">
+    <div class="chapter-num">06</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">REST · gRPC · GraphQL · AsyncAPI</div>
+      <h2 class="chapter-title">API Design <em>Patterns</em></h2>
+      <p class="chapter-intro">The contract between services is the most expensive thing to change. Get it right the first time. Or at least version it.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">REST Richardson Maturity Model</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Level</th><th>Name</th><th>What It Means</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Level 0</td><td>The Swamp of POX</td><td>Single URI, HTTP as transport only, no semantics</td><td><code>POST /api  {"action":"getPayment","id":"123"}</code></td></tr>
+        <tr><td>Level 1</td><td>Resources</td><td>Multiple URIs representing resources</td><td><code>POST /payments/123</code> (but all POST)</td></tr>
+        <tr><td>Level 2</td><td>HTTP Verbs</td><td>Use GET/POST/PUT/PATCH/DELETE semantically</td><td><code>GET /payments/123</code> — this is "REST" in most orgs</td></tr>
+        <tr><td>Level 3</td><td>Hypermedia (HATEOAS)</td><td>Responses include links to valid next actions</td><td>Response includes <code>_links: {capture: {href:...}, refund: {href:...}}</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-divider"><span class="label">gRPC vs REST vs GraphQL — Decision Matrix</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Dimension</th><th>REST/JSON</th><th>gRPC/Protobuf</th><th>GraphQL</th></tr></thead>
+      <tbody>
+        <tr><td>Transport</td><td>HTTP/1.1 or 2</td><td>HTTP/2 only, bidirectional streaming</td><td>HTTP/1.1 or 2</td></tr>
+        <tr><td>Schema</td><td>OpenAPI (optional)</td><td>Protobuf IDL (required, strict)</td><td>SDL type system (required)</td></tr>
+        <tr><td>Performance</td><td>Baseline</td><td>2–10x faster (binary, no serialization overhead)</td><td>Similar to REST, query complexity risk</td></tr>
+        <tr><td>Browser Support</td><td>✓ Native</td><td>✗ Needs grpc-web proxy</td><td>✓ Native</td></tr>
+        <tr><td>Best For</td><td>External APIs, CRUD services, public APIs</td><td>Internal microservice communication, streaming, mobile</td><td>Complex, flexible client data requirements (dashboards)</td></tr>
+        <tr><td>Versioning</td><td>URL /v1/, /v2/ or headers</td><td>Protobuf field numbers (backward compatible)</td><td>Field deprecation, additive-only</td></tr>
+        <tr><td>Fintech</td><td>External partner APIs, webhooks</td><td>Internal payment processing pipelines</td><td>Finance dashboards, reporting queries</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-divider"><span class="label">API Versioning Strategies</span></div>
+
+    <div class="two-col">
+<pre class="code"><span class="cm">// URL versioning — simple, cache-friendly</span>
+GET /v1/payments/123
+GET /v2/payments/123
+
+<span class="cm">// Header versioning — clean URLs</span>
+GET /payments/123
+Accept: application/vnd.myapi.v2+json
+
+<span class="cm">// Consumer-Driven Contract Testing (Pact)
+// The consumer defines the contract;
+// the provider verifies it on every build</span>
+<span class="ann">@Pact</span>(consumer = <span class="str">"payment-service"</span>)
+<span class="kw">public</span> <span class="tp">RequestResponsePact</span> <span class="fn">createPact</span>(<span class="tp">PactDslWithProvider</span> builder) {
+    <span class="kw">return</span> builder
+        .given(<span class="str">"payment 123 exists"</span>)
+        .uponReceiving(<span class="str">"a request for payment 123"</span>)
+        .path(<span class="str">"/v1/payments/123"</span>)
+        .method(<span class="str">"GET"</span>)
+        .willRespondWith()
+        .status(<span class="num">200</span>)
+        .body(<span class="str">"{\"id\":\"123\",\"amount\":100.00}"</span>)
+        .toPact();
+}</pre>
+      <div>
+        <div class="callout callout-copper">
+          <b>🏦 Fintech API Non-Negotiables</b>
+          1. Idempotency-Key header on all POST mutations<br>
+          2. Correlation-ID header on all requests (for audit trails)<br>
+          3. ISO 4217 currency codes (never "dollars")<br>
+          4. ISO 8601 timestamps in UTC (never local time)<br>
+          5. Decimal amounts as strings (never float — IEEE 754 is not your friend with money)<br>
+          6. Error responses with machine-readable error codes (not just HTTP status)
+        </div>
+        <div class="callout callout-verd" style="margin-top:12px">
+          <b>REST API Design Rule</b>
+          Nouns, not verbs. <code>POST /payments</code> not <code>POST /createPayment</code>. State transitions via sub-resources: <code>POST /payments/123/captures</code> to capture, <code>POST /payments/123/refunds</code> to refund. HTTP verb encodes the action; the resource noun encodes the target.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 7: SECURITY ═══ -->
+<section class="chapter reveal" id="security">
+  <div class="chapter-header">
+    <div class="chapter-num">07</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">Zero Trust · OAuth2 · STRIDE · PCI</div>
+      <h2 class="chapter-title">Security <em>Patterns</em></h2>
+      <p class="chapter-intro">In fintech, security is not a feature. It is the product. Every engineering decision is also a security decision.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">OAuth2 / OIDC — The Full Flow</span></div>
+
+    <div class="diagram" style="font-size:11.5px"><span class="hl">  AUTHORIZATION CODE FLOW WITH PKCE (the secure one for web/mobile):
+
+  1. User clicks Login
+  2. Client generates code_verifier (random), code_challenge = SHA256(verifier)
+  3. Client redirects: GET /authorize?response_type=code&client_id=X&
+                        code_challenge=Y&code_challenge_method=S256
+  4. Auth Server: user authenticates → issues authorization_code
+  5. Auth Server redirects back: ?code=ABC
+  6. Client: POST /token  {code=ABC, code_verifier=original}
+  7. Auth Server: validates code + verifier match → returns access_token, refresh_token, id_token
+  8. Client: GET /api/payments  Authorization: Bearer {access_token}
+  9. Resource Server: validates JWT signature, expiry, scopes → serves request
+
+  </span><span class="hl2">PKCE prevents authorization code interception attacks — mandatory for SPAs and mobile</span></div>
+
+    <div class="section-divider"><span class="label">JWT Deep Dive</span></div>
+
+<pre class="code"><span class="cm">// JWT = Header.Payload.Signature (base64url encoded, dot-separated)</span>
+<span class="cm">// Spring Security 6 JWT Resource Server</span>
+<span class="ann">@Configuration</span>
+<span class="ann">@EnableWebSecurity</span>
+<span class="kw">class</span> <span class="tp">SecurityConfig</span> {
+    <span class="ann">@Bean</span>
+    <span class="tp">SecurityFilterChain</span> <span class="fn">chain</span>(<span class="tp">HttpSecurity</span> http) <span class="kw">throws</span> <span class="tp">Exception</span> {
+        <span class="kw">return</span> http
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(<span class="str">"/actuator/health"</span>).permitAll()
+                .requestMatchers(<span class="tp">HttpMethod</span>.POST, <span class="str">"/payments"</span>)
+                    .hasAuthority(<span class="str">"SCOPE_payments:write"</span>)   <span class="cm">// scope-based</span>
+                .requestMatchers(<span class="tp">HttpMethod</span>.GET, <span class="str">"/payments/**"</span>)
+                    .hasAuthority(<span class="str">"SCOPE_payments:read"</span>)
+                .anyRequest().authenticated())
+            .oauth2ResourceServer(o -> o
+                .jwt(j -> j.<span class="fn">jwtAuthenticationConverter</span>(jwtConverter())))
+            .sessionManagement(s -> s
+                .sessionCreationPolicy(<span class="tp">STATELESS</span>))   <span class="cm">// no session cookies</span>
+            .build();
+    }
+}</pre>
+
+    <div class="section-divider"><span class="label">STRIDE Threat Model</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Threat</th><th>What It Is</th><th>Java/Spring Mitigation</th><th>OWASP Category</th></tr></thead>
+      <tbody>
+        <tr><td>S — Spoofing</td><td>Claiming to be someone else (identity)</td><td>JWT validation, mTLS between services, Spring Security</td><td>Broken Authentication</td></tr>
+        <tr><td>T — Tampering</td><td>Modifying data in transit or at rest</td><td>TLS 1.3, HMAC request signing, field-level encryption for PII</td><td>Cryptographic Failures</td></tr>
+        <tr><td>R — Repudiation</td><td>Denying an action occurred</td><td>Immutable audit logs, digital signatures, event sourcing</td><td>Insufficient Logging</td></tr>
+        <tr><td>I — Information Disclosure</td><td>Exposing private data</td><td>PII masking in logs, response filtering, no stack traces in prod responses</td><td>Sensitive Data Exposure</td></tr>
+        <tr><td>D — Denial of Service</td><td>Making the system unavailable</td><td>Rate limiting (Resilience4j), circuit breakers, CDN, WAF</td><td>Security Misconfiguration</td></tr>
+        <tr><td>E — Elevation of Privilege</td><td>Gaining unauthorized permissions</td><td>Least privilege IAM roles, RBAC with Spring Security, scoped JWT</td><td>Broken Access Control</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-red">
+      <b>⚠ PCI-DSS Scope — The Fintech Engineer's Burden</b>
+      PCI-DSS applies to any system that stores, processes, or transmits cardholder data (CHD). Scope reduction is the key strategy: tokenize card numbers at the edge (Stripe, Braintree, Spreedly), process only tokens internally — your services never see raw PANs. This shrinks your PCI scope from "entire infrastructure" to "the tokenization boundary." Know this. It will come up in your first sprint.
+    </div>
+
+    <div class="section-divider"><span class="label">Zero Trust Architecture</span></div>
+
+    <div class="pattern-card sec" style="max-width:none; background:var(--bg)">
+      <div class="pattern-name">Zero Trust Model</div>
+      <div class="pattern-alias">Never Trust, Always Verify · BeyondCorp · NIST 800-207</div>
+      <div class="pattern-desc">Traditional perimeter security: "inside the network = trusted." Zero Trust: every request must be authenticated and authorized regardless of source. No implicit trust from network location. Applies to: service-to-service calls (mTLS), user access (MFA + device posture), data access (attribute-based authorization).</div>
+      <div class="diagram"><span class="hl">  OLD MODEL:  [Firewall] → [Internal Network = TRUSTED]
+                                        ↓
+              Any internal service can call any other service
+  
+  ZERO TRUST: Every call authenticated (mTLS certificates)
+              Every call authorized (JWT scopes checked)
+              Every call logged (audit trail)
+              Minimal blast radius: service A can only call service B
+              if B explicitly permits A's service account</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 8: DATA PATTERNS ═══ -->
+<section class="chapter reveal" id="data">
+  <div class="chapter-header">
+    <div class="chapter-num">08</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">Kafka · CDC · Polyglot · Data Mesh</div>
+      <h2 class="chapter-title">Data <em>Architecture</em></h2>
+      <p class="chapter-intro">Data is the liability that never goes away. How you store, stream, and govern it determines what you can and can't build later.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">Kafka — The Fintech Backbone</span></div>
+
+    <div class="diagram" style="font-size:12px"><span class="hl">  KAFKA ARCHITECTURE:
+
+  Producer (Payment Service)
+     ↓ publish to topic "payment.events"
+  ┌────────────────────────────────────────────────────────┐
+  │  Topic: payment.events   (partitioned, replicated)     │
+  │  Partition 0: [P1][P2][P5][P8]...                      │
+  │  Partition 1: [P3][P4][P6]...                          │  ← ordered within partition
+  │  Partition 2: [P7][P9]...                              │
+  └────────────────────────────────────────────────────────┘
+     ↓ consume (independent consumer groups, no data loss)
+  [Ledger Service (group=ledger)] [Risk Service (group=risk)] [Audit Service (group=audit)]
+
+  </span><span class="hl2">Key invariant: messages with same key always go to same partition → ordering guarantee per entity</span>
+<span class="dim">  e.g., key=paymentId → all events for payment 123 always on same partition, always in order</span></div>
+
+    <div class="section-divider"><span class="label">Change Data Capture (CDC)</span></div>
+
+    <div class="pattern-card data" style="max-width:none; background:var(--bg)">
+      <div class="pattern-name">CDC with Debezium</div>
+      <div class="pattern-alias">Database → Kafka → Everything Else</div>
+      <div class="pattern-desc">Debezium reads Postgres/MySQL binary logs (WAL) and streams every INSERT/UPDATE/DELETE as a Kafka event. Your application writes only to Postgres; all downstream consumers (search index, analytics, cache invalidation, audit) receive the changes via Kafka. No dual-write. No polling. The outbox pattern's industrial-strength brother.</div>
+      <div class="diagram"><span class="hl">  Postgres (payments table)
+     ↓ WAL (Write-Ahead Log) reader
+  Debezium Connector
+     ↓ streams to
+  Kafka topic: "dbserver.public.payments"
+     ↓
+  [Elasticsearch Consumer] → search index updated
+  [Analytics Consumer]     → data warehouse updated
+  [Cache Consumer]         → Redis invalidated
+  [Notification Consumer]  → customer email sent</span></div>
+    </div>
+
+    <div class="section-divider"><span class="label">Polyglot Persistence — The Right Database for Each Job</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Data Store</th><th>Model</th><th>Best For in Fintech</th><th>Java Integration</th></tr></thead>
+      <tbody>
+        <tr><td>PostgreSQL</td><td>Relational + ACID</td><td>Accounts, transactions, ledger entries — anything requiring ACID guarantees and complex queries. The default choice.</td><td>Spring Data JPA, JDBC, jOOQ</td></tr>
+        <tr><td>Redis</td><td>Key-Value / Cache</td><td>Session tokens, rate limiting counters, idempotency key cache, frequently-read balances. Sub-millisecond reads.</td><td>Spring Data Redis, Lettuce, Redisson</td></tr>
+        <tr><td>Kafka</td><td>Log / Event Stream</td><td>Event streaming, audit log, CDC, async communication between services. Not a database — retention is finite.</td><td>Spring Kafka, Kafka Streams, Schema Registry</td></tr>
+        <tr><td>Elasticsearch</td><td>Document / Search</td><td>Transaction search, compliance reporting, log aggregation. NOT for primary data — use as a derived read model fed by CDC.</td><td>Spring Data Elasticsearch, High-Level REST Client</td></tr>
+        <tr><td>DynamoDB / Cassandra</td><td>Wide-Column / NoSQL</td><td>High-write-throughput time-series: fraud signals, click events, pricing feeds. When you know the access patterns ahead of time.</td><td>AWS SDK, Spring Data Cassandra</td></tr>
+        <tr><td>S3 / GCS</td><td>Object Storage</td><td>Audit log archives, compliance exports, ML training data, batch reports. Not queryable (use Athena/BigQuery on top).</td><td>AWS SDK v2, Spring Cloud AWS</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-verd">
+      <b>💡 The Golden Rule of Fintech Data</b>
+      Double-entry bookkeeping is the 700-year-old constraint that still governs all financial systems. Every debit has a corresponding credit. The sum of all ledger entries must always equal zero. Any system that touches money must maintain this invariant — no exceptions, no "we'll reconcile later." If your service moves money, it must implement a ledger, not just a balance field.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 9: FINTECH SPECIFICS ═══ -->
+<section class="chapter reveal" id="fintech">
+  <div class="chapter-header">
+    <div class="chapter-num">09</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">Domain Knowledge · Payment Flows · Compliance</div>
+      <h2 class="chapter-title">Fintech <em>Specifics</em></h2>
+      <p class="chapter-intro">The knowledge that separates engineers who happen to work at a fintech from engineers who understand the domain. This is your moat.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">Card Payment Lifecycle — State Machine</span></div>
+
+    <div style="margin:20px 0">
+      <div class="state-row">
+        <div class="state-box start">INITIATED</div>
+        <div class="state-arrow">→ validate →</div>
+        <div class="state-box">AUTHORIZED</div>
+        <div class="state-arrow">→ capture →</div>
+        <div class="state-box">CAPTURED</div>
+        <div class="state-arrow">→ settle →</div>
+        <div class="state-box terminal">SETTLED</div>
+      </div>
+      <div class="state-row" style="margin-top:8px">
+        <div class="state-box">AUTHORIZED</div>
+        <div class="state-arrow">→ void →</div>
+        <div class="state-box error">VOIDED</div>
+        <span style="margin-left:32px;font-family:var(--mono);font-size:11px;color:var(--ink4)">// pre-capture cancellation</span>
+      </div>
+      <div class="state-row" style="margin-top:8px">
+        <div class="state-box terminal">SETTLED</div>
+        <div class="state-arrow">→ refund →</div>
+        <div class="state-box">REFUNDING</div>
+        <div class="state-arrow">→ complete →</div>
+        <div class="state-box terminal">REFUNDED</div>
+      </div>
+      <div class="state-row" style="margin-top:8px">
+        <div class="state-box terminal">SETTLED</div>
+        <div class="state-arrow">→ customer disputes →</div>
+        <div class="state-box error">CHARGEBACK</div>
+        <div class="state-arrow">→ evidence submitted →</div>
+        <div class="state-box">CHARGEBACK_REVIEW</div>
+      </div>
+      <div class="state-row" style="margin-top:8px">
+        <div class="state-box">INITIATED</div>
+        <div class="state-arrow">→ any failure →</div>
+        <div class="state-box error">DECLINED</div>
+        <span style="margin-left:32px;font-family:var(--mono);font-size:11px;color:var(--ink4)">// risk, insufficient funds, expired card, etc.</span>
+      </div>
+    </div>
+
+    <div class="callout callout-copper">
+      <b>🏦 Key Distinction: Authorization vs Capture</b>
+      Authorization = reserving funds on the cardholder's account (instant). Capture = actually taking the funds (usually next business day). Hotels authorize on check-in, capture on checkout. E-commerce authorizes on order, captures on shipment. Your code must handle the gap between the two — a customer's card can be canceled between auth and capture.
+    </div>
+
+    <div class="section-divider"><span class="label">Double-Entry Bookkeeping in Code</span></div>
+
+<pre class="code"><span class="cm">// Every financial movement = two ledger entries that sum to zero</span>
+<span class="kw">record</span> <span class="tp">LedgerEntry</span>(
+    <span class="tp">UUID</span>       id,
+    <span class="tp">UUID</span>       transactionId,
+    <span class="tp">AccountId</span> accountId,
+    <span class="tp">Money</span>      amount,       <span class="cm">// positive = debit, negative = credit</span>
+    <span class="tp">EntryType</span> type,         <span class="cm">// DEBIT or CREDIT</span>
+    <span class="tp">Instant</span>   postedAt
+) {}
+
+<span class="cm">// Transfer $100 from Customer A to Customer B:</span>
+<span class="kw">var</span> entries = List.of(
+    <span class="kw">new</span> <span class="tp">LedgerEntry</span>(uuid(), txId, customerA, <span class="tp">Money</span>.of(<span class="num">100</span>), DEBIT,  now()),
+    <span class="kw">new</span> <span class="tp">LedgerEntry</span>(uuid(), txId, customerB, <span class="tp">Money</span>.of(<span class="num">100</span>), CREDIT, now())
+);
+
+<span class="cm">// INVARIANT: sum of all entries for a transaction = 0
+// DEBIT 100 + CREDIT -100 = 0  ✓</span>
+<span class="kw">assert</span> entries.stream()
+    .map(e -> e.type() == DEBIT ? e.amount() : e.amount().negate())
+    .reduce(<span class="tp">Money</span>.ZERO, <span class="tp">Money</span>::add)
+    .equals(<span class="tp">Money</span>.ZERO);  <span class="cm">// Must always pass</span></pre>
+
+    <div class="section-divider"><span class="label">Compliance Landscape Cheat Sheet</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Standard/Regulation</th><th>Applies To</th><th>Key Requirement for Developers</th></tr></thead>
+      <tbody>
+        <tr><td>PCI-DSS v4</td><td>Any system touching payment card data</td><td>Tokenize PANs, encrypt CHD at rest/transit, vulnerability scanning, penetration testing, strict access control, detailed audit logs</td></tr>
+        <tr><td>GDPR / CCPA</td><td>Any system with EU/CA personal data</td><td>Right to erasure (pseudonymize don't delete for audit), data minimization, purpose limitation, breach notification &lt;72hrs, data subject request APIs</td></tr>
+        <tr><td>SOC 2 Type II</td><td>SaaS fintech platforms (trust)</td><td>Evidenced security controls: access reviews, change management logs, incident response records, availability monitoring — your observability IS the evidence</td></tr>
+        <tr><td>AML / BSA</td><td>Banks, money transmitters</td><td>Transaction monitoring, suspicious activity reports (SARs), customer due diligence data retention, OFAC sanctions screening API</td></tr>
+        <tr><td>FFIEC</td><td>US banks and fintech partners</td><td>IT risk management, authentication standards, vendor risk management. Affects architecture decisions — multi-cloud, disaster recovery, BCP.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 10: SYSTEM DESIGN ═══ -->
+<section class="chapter reveal" id="sysdesign">
+  <div class="chapter-header">
+    <div class="chapter-num">10</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">Interview Preparation · Back of Envelope · Common Patterns</div>
+      <h2 class="chapter-title">System Design <em>Reference</em></h2>
+      <p class="chapter-intro">The interview format where your 30 years shows most clearly. Know the numbers, know the patterns, know when to ask questions.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="section-divider"><span class="label">Back-of-Envelope Numbers Every Engineer Must Know</span></div>
+
+    <div class="two-col">
+      <table class="ref-table">
+        <thead><tr><th>Operation</th><th>Latency</th></tr></thead>
+        <tbody>
+          <tr><td>L1 cache reference</td><td>0.5 ns</td></tr>
+          <tr><td>L2 cache reference</td><td>7 ns</td></tr>
+          <tr><td>Main memory (RAM) reference</td><td>100 ns</td></tr>
+          <tr><td>SSD read (NVMe)</td><td>100 µs</td></tr>
+          <tr><td>HDD seek</td><td>10 ms</td></tr>
+          <tr><td>Same datacenter round trip</td><td>0.5 ms</td></tr>
+          <tr><td>US cross-country round trip</td><td>40 ms</td></tr>
+          <tr><td>US to Europe round trip</td><td>150 ms</td></tr>
+          <tr><td>Postgres query (indexed)</td><td>1–5 ms</td></tr>
+          <tr><td>Redis GET</td><td>0.1–0.5 ms</td></tr>
+          <tr><td>LLM API call (Claude Sonnet)</td><td>500ms–3s</td></tr>
+        </tbody>
+      </table>
+      <table class="ref-table">
+        <thead><tr><th>Scale Number</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Requests/sec, single server</td><td>1,000–10,000 RPS</td></tr>
+          <tr><td>Postgres transactions/sec</td><td>1,000–10,000 TPS</td></tr>
+          <tr><td>Kafka throughput/partition</td><td>100 MB/s</td></tr>
+          <tr><td>S3 PUT throughput</td><td>3,500 req/s per prefix</td></tr>
+          <tr><td>Redis ops/sec</td><td>100,000+</td></tr>
+          <tr><td>Twitter: peak tweets/sec</td><td>~150,000</td></tr>
+          <tr><td>Visa: transactions/sec</td><td>~24,000</td></tr>
+          <tr><td>Bytes per day: 1B users, 10 actions</td><td>~1 TB/day</td></tr>
+          <tr><td>Encoding 1 minute video (720p)</td><td>~60 MB</td></tr>
+          <tr><td>Characters per token (LLM)</td><td>~4 chars</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-divider"><span class="label">System Design Framework — The Interview Structure</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>Step</th><th>Duration</th><th>What to Do</th><th>Key Questions</th></tr></thead>
+      <tbody>
+        <tr><td>1. Clarify Requirements</td><td>5 min</td><td>Ask before designing. Scope aggressively. Don't assume.</td><td>Read vs write heavy? DAU? Latency SLA? Consistency required? Global or single region?</td></tr>
+        <tr><td>2. Capacity Estimation</td><td>3 min</td><td>Back-of-envelope: storage, bandwidth, QPS. Show your math.</td><td>100M users × 10 payments/month = 1B payments/month = ~400 TPS avg, ~4000 TPS peak</td></tr>
+        <tr><td>3. High-Level Design</td><td>10 min</td><td>Draw the boxes: API gateway, services, databases, caches, queues.</td><td>Show data flow end-to-end. Name the components. Don't skip the client.</td></tr>
+        <tr><td>4. Deep Dive</td><td>15 min</td><td>Pick the hardest parts (consistency, scale, fault tolerance). Show tradeoffs.</td><td>How do you handle duplicate payments? What happens when DB goes down? How do you scale reads?</td></tr>
+        <tr><td>5. Identify Bottlenecks</td><td>5 min</td><td>Proactively surface weak points. Show you know the limits of your design.</td><td>Single DB is a bottleneck → read replicas → sharding → when each applies</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-copper">
+      <b>💡 Design a Payment System — The Complete Answer</b>
+      API Gateway (auth, rate limit, idempotency check) → Payment Service (Spring Boot, Hexagonal) → Outbox write (Postgres, same transaction) → Kafka event → downstream consumers: Risk Service (sync, pre-authorization), Ledger Service (async), Notification Service (async). State machine enforces valid transitions. Circuit breakers on all external calls (card networks). Idempotency keys prevent double-charge. Stripe-style tokenization keeps CHD out of scope. That's a complete answer.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHAPTER 11: MENTAL MODELS ═══ -->
+<section class="chapter reveal" id="mental">
+  <div class="chapter-header">
+    <div class="chapter-num">11</div>
+    <div class="chapter-meta">
+      <div class="chapter-eyebrow">The Frameworks Behind the Frameworks</div>
+      <h2 class="chapter-title">Mental <em>Models</em></h2>
+      <p class="chapter-intro">The patterns that don't belong to any language or framework but that senior engineers apply to every problem. These are the invisible curriculum.</p>
+    </div>
+  </div>
+  <div class="chapter-body">
+
+    <div class="pattern-grid">
+      <div class="pattern-card arch">
+        <div class="pattern-name">Leaky Abstractions</div>
+        <div class="pattern-alias">Joel Spolsky's Law · "All abstractions leak"</div>
+        <div class="pattern-desc">Every abstraction eventually exposes the details it was meant to hide. TCP hides network unreliability — until packet loss forces retransmit and you see the latency spike. JPA hides SQL — until N+1 queries destroy your performance. The better you understand what's underneath, the better you use what's on top. A greybeard's advantage: you've seen more leaks.</div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">Mechanical Sympathy</div>
+        <div class="pattern-alias">Martin Thompson · Hardware-Aware Software</div>
+        <div class="pattern-desc">Code that understands the hardware it runs on outperforms code that ignores it. CPU cache lines (64 bytes), memory access patterns (spatial/temporal locality), NUMA topology, false sharing on atomic variables. Your JVM profiling instincts should include: "is this cache-miss heavy?" before "is the algorithm wrong?"</div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">The Two Hard Problems</div>
+        <div class="pattern-alias">Cache Invalidation · Naming · Off-By-One</div>
+        <div class="pattern-desc">Caching makes reads fast but creates consistency problems. The hard question is never "should we cache?" but "when does this cache entry become invalid and how do we propagate that?" Cache-aside, write-through, write-behind, TTL, event-driven invalidation — each a different consistency tradeoff. Know them all before you cache anything in fintech.</div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">Conway's Law</div>
+        <div class="pattern-alias">Melvin Conway 1967 · Org Structure = System Structure</div>
+        <div class="pattern-desc">Organizations design systems that mirror their communication structures. If three teams build a compiler, you get a three-stage compiler. The Inverse Conway Maneuver: design the team structure you want, and the architecture will follow. Microservices work when team ownership matches service boundaries. When it doesn't, you get distributed monoliths.</div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">Hyrum's Law</div>
+        <div class="pattern-alias">"All observable behaviors become contracts"</div>
+        <div class="pattern-desc">With enough users of an API, it doesn't matter what you specify in the contract — all observable behaviors will be depended on by someone. The order of items in a JSON array. The exact text of an error message. The response time. Someone depends on it. Fintech implication: API changes that seem harmless break clients in ways you never anticipated. Version everything.</div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">Simple vs Easy</div>
+        <div class="pattern-alias">Rich Hickey · "Simple Made Easy" 2011</div>
+        <div class="pattern-desc">"Easy" means close to you — familiar, low ceremony. "Simple" means not complex — not entangled with other things. Spring Boot is easy (familiar, quick to start) but not necessarily simple (the magic intertwines many concerns). Plain JDBC is harder (more ceremony) but simpler (explicit). Choose simple over easy for things that matter long-term. Easy for throwaway scripts.</div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">You Ain't Gonna Need It</div>
+        <div class="pattern-alias">YAGNI · XP Principle · Resist Premature Generalization</div>
+        <div class="pattern-desc">Don't build features or abstractions before they're needed. The cost of wrong abstraction is much higher than the cost of refactoring simple code. In AI-assisted development this is critical: AI generates generic, over-engineered code by default. Your job is to prune it back to what's actually required. Less code = fewer bugs = less to containerize = less to secure.</div>
+      </div>
+      <div class="pattern-card arch">
+        <div class="pattern-name">The Pit of Success</div>
+        <div class="pattern-alias">Rico Mariani · API Design Philosophy</div>
+        <div class="pattern-desc">Design your APIs, frameworks, and systems so that the easiest path leads to the correct, safe, well-performing outcome. The opposite of a "pit of failure" (where easy = wrong). Spring Security's new lambda DSL is a pit of success — the most natural way to write it is the secure way. Your custom APIs should do the same: make the safe path the natural path.</div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span class="label">The Senior Engineer's Decision Framework</span></div>
+
+    <table class="ref-table">
+      <thead><tr><th>When You Hear...</th><th>First Question to Ask</th><th>The Trap to Avoid</th></tr></thead>
+      <tbody>
+        <tr><td>"We need microservices"</td><td>What coordination problem are you solving? What's the team ownership model?</td><td>Distributed monolith — services that need to deploy together and share a DB</td></tr>
+        <tr><td>"We need event sourcing"</td><td>Do you genuinely need audit history, time travel, or multiple projections? Or do you want an audit log?</td><td>Event sourcing for simple CRUD — the complexity cost is enormous</td></tr>
+        <tr><td>"We need to use AI for this"</td><td>What's the deterministic solution? Is it inadequate? Why?</td><td>Using LLMs where regex, a lookup table, or a trained classifier is 10x better</td></tr>
+        <tr><td>"We should cache this"</td><td>What's the invalidation strategy? What's the consistency SLA?</td><td>Stale cache in fintech = customer sees wrong balance = support tickets = regulatory risk</td></tr>
+        <tr><td>"This needs to be async"</td><td>What's the consumer? What's the failure model? Who owns the retry?</td><td>Fire-and-forget messaging where the consumer can silently fail</td></tr>
+        <tr><td>"Let's rewrite this legacy service"</td><td>What specific problem does a rewrite solve that incremental improvement doesn't?</td><td>Second-system syndrome — the rewrite accumulates all the complexity the original had, plus new ones</td></tr>
+        <tr><td>"The AI can handle that"</td><td>What are the failure modes? What's the fallback? How do we eval quality?</td><td>Deploying LLM-driven logic without evaluation framework = non-deterministic production bug</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-verd">
+      <b>💡 The Final Insight — What Greybeards Actually Have</b>
+      Junior engineers learn patterns. Mid-level engineers apply them. Senior engineers know when NOT to apply them. After 30 years, you've seen every pattern implemented wrong, every abstraction leak, every "we'll fix it later" that never got fixed. That's not nostalgia — that's a production incident database in your head. The art is translating that database into precise, actionable insight at the right moment in a design discussion. That's what "senior" means.
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-col">
+    <h4>Three Volumes</h4>
+    <ul>
+      <li>I. The 10-Week Curriculum</li>
+      <li>II. Java vs The World (Languages)</li>
+      <li>III. The Engineer's Codex (This)</li>
+    </ul>
+    <p style="margin-top:16px;font-style:italic;color:var(--ink4)">Together: a complete map from Java veteran to AI-first fintech engineer.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Chapters in This Volume</h4>
+    <ul>
+      <li>Architecture Patterns (Hex, CQRS, Saga...)</li>
+      <li>Domain-Driven Design</li>
+      <li>Distributed Systems Laws</li>
+      <li>AI Engineering Patterns</li>
+      <li>Observability &amp; SRE</li>
+      <li>API Design</li>
+      <li>Security &amp; Zero Trust</li>
+      <li>Data Architecture &amp; Kafka</li>
+      <li>Fintech Specifics &amp; PCI</li>
+      <li>System Design Reference</li>
+      <li>Mental Models</li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4 style="font-family:var(--serif);font-style:italic">Thirty years of Java. The patterns were always the same. The tools just got smarter.</h4>
+    <p style="margin-top:16px;font-size:12px;color:var(--ink4)">Entry Level AI Software Engineer · Silicon Valley Fintech · $110k+<br><br>You are not entry level. You are entry price.</p>
+  </div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.05 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

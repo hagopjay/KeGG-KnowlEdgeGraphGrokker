@@ -1,0 +1,294 @@
+
+<style>
+*{box-sizing:border-box}
+.sq{font-family:var(--font-sans);padding:4px 0 20px}
+.sq-nav{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;padding-bottom:12px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sq-tab{font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.sq-tab:hover{background:var(--color-background-secondary)}
+.sq-tab.on{border-color:transparent;color:#fff}
+.sq-tab.t0.on{background:#1D9E75}
+.sq-tab.t1.on{background:#378ADD}
+.sq-tab.t2.on{background:#BA7517}
+.sq-tab.t3.on{background:#D85A30}
+.sq-tab.t4.on{background:#7F77DD}
+.sq-tab.t5.on{background:#D4537E}
+.sq-pane{display:none}
+.sq-pane.on{display:block}
+.sq-hint{font-size:11px;color:var(--color-text-tertiary);margin-bottom:11px}
+.sq-grid{display:grid;gap:5px}
+.sq-row{display:grid;gap:5px;cursor:pointer}
+.sq-row.g2{grid-template-columns:1fr 1fr}
+.sq-row.g3{grid-template-columns:1fr 1fr 1fr}
+.sq-row.g4{grid-template-columns:repeat(4,1fr)}
+.sq-row:hover .sq-chip{opacity:.82}
+.sq-chip{border-radius:6px;padding:8px 10px;font-family:var(--font-mono);font-size:11.5px;font-weight:500;display:flex;flex-direction:column;gap:2px}
+.sq-chip .kw{font-size:12px}
+.sq-chip .sub{font-size:10px;font-weight:400;opacity:.72;margin-top:1px}
+.c0{background:#E1F5EE;color:#0F6E56}.dark .c0,.c0-d{background:#085041;color:#9FE1CB}
+.c1{background:#E6F1FB;color:#185FA5}.dark .c1,.c1-d{background:#0C447C;color:#B5D4F4}
+.c2{background:#FAEEDA;color:#854F0B}.dark .c2,.c2-d{background:#633806;color:#FAC775}
+.c3{background:#FAECE7;color:#993C1D}.dark .c3,.c3-d{background:#712B13;color:#F5C4B3}
+.c4{background:#EEEDFE;color:#534AB7}.dark .c4,.c4-d{background:#3C3489;color:#CECBF6}
+.c5{background:#FBEAF0;color:#993556}.dark .c5,.c5-d{background:#72243E;color:#F4C0D1}
+.sq-dp{display:none;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:14px 15px;margin:3px 0 8px}
+.sq-dp.on{display:block}
+.sq-dp-h{font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--color-text-primary);margin:0 0 6px}
+.sq-dp-d{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin:0 0 10px}
+.sq-dp-ex{font-family:var(--font-mono);font-size:11.5px;line-height:1.75;padding:11px 13px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);white-space:pre;overflow-x:auto;margin:0 0 8px;tab-size:2}
+.sq-dp-tip{font-size:12px;padding:6px 10px;border-radius:4px;background:var(--color-background-info);color:var(--color-text-info)}
+.kw-k{color:#7F77DD;font-weight:500}
+.kw-f{color:#1D9E75;font-weight:500}
+.kw-s{color:#BA7517}
+.kw-c{color:var(--color-text-tertiary);font-style:italic}
+.venn-wrap{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.venn-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:6px;border-radius:var(--border-radius-md);border:0.5px solid transparent;transition:border-color .15s}
+.venn-item:hover{border-color:var(--color-border-secondary)}
+.venn-item.sel{border-color:var(--color-border-primary);background:var(--color-background-secondary)}
+.venn-lbl{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-align:center}
+.join-detail{margin-top:10px;padding:10px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)}
+.wf-vis{margin:10px 0;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
+.wf-row{display:grid;grid-template-columns:70px 70px 80px 80px 80px 80px;font-size:11px;font-family:var(--font-mono)}
+.wf-cell{padding:5px 7px;border-right:0.5px solid var(--color-border-tertiary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.wf-cell:last-child{border-right:none}
+.wf-hd{font-weight:500;background:var(--color-background-secondary);color:var(--color-text-secondary);font-size:10px}
+.wf-hl{background:#FAEEDA;color:#854F0B}
+@media(prefers-color-scheme:dark){
+.c0{background:#085041;color:#9FE1CB}
+.c1{background:#0C447C;color:#B5D4F4}
+.c2{background:#633806;color:#FAC775}
+.c3{background:#712B13;color:#F5C4B3}
+.c4{background:#3C3489;color:#CECBF6}
+.c5{background:#72243E;color:#F4C0D1}
+.wf-hl{background:#633806;color:#FAC775}
+}
+</style>
+<div class="sq">
+<div class="sq-nav" id="nav"></div>
+<div id="panes"></div>
+</div>
+<script>
+const h=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const k=s=>s.replace(/\b(SELECT|FROM|WHERE|GROUP BY|ORDER BY|HAVING|LIMIT|OFFSET|AS|ON|SET|INTO|VALUES|UPDATE|DELETE|INSERT|WITH|UNION|INTERSECT|EXCEPT|ALL|DISTINCT|CASE|WHEN|THEN|ELSE|END|AND|OR|NOT|IN|LIKE|BETWEEN|IS NULL|IS NOT NULL|PARTITION BY|OVER|ROWS|RANGE|UNBOUNDED|PRECEDING|FOLLOWING|CURRENT ROW|JOIN|LEFT|RIGHT|INNER|OUTER|CROSS|FULL|SELF)\b/g,'<span class="kw-k">$1</span>').replace(/\b(COUNT|SUM|AVG|MIN|MAX|RANK|DENSE_RANK|ROW_NUMBER|NTILE|LAG|LEAD|FIRST_VALUE|LAST_VALUE|COALESCE|NULLIF|IFNULL|ISNULL|CONCAT|SUBSTRING|UPPER|LOWER|TRIM|LENGTH|REPLACE|ROUND|CAST|CONVERT|DATE_FORMAT|DATEDIFF|NOW|CURDATE|DATE_ADD|EXTRACT|FLOOR|CEIL|ABS|MOD|COALESCE)\b/g,'<span class="kw-f">$1</span>').replace(/'[^']*'/g,'<span class="kw-s">$&</span>').replace(/--[^\n]*/g,'<span class="kw-c">$&</span>');
+
+const tabs=[
+{id:'t0',label:'Foundation',color:'#1D9E75'},
+{id:'t1',label:'Filtering',color:'#378ADD'},
+{id:'t2',label:'Aggregation',color:'#BA7517'},
+{id:'t3',label:'Joins & Sets',color:'#D85A30'},
+{id:'t4',label:'Subqueries & CTEs',color:'#7F77DD'},
+{id:'t5',label:'Window Functions',color:'#D4537E'},
+];
+
+const PANES=[
+// 0 FOUNDATION
+{rows:[
+{layout:'g2',items:[
+{kw:'SELECT',sub:'choose columns',c:'c0',desc:'The entry point to every SQL query. Specifies which columns (or expressions) to return. Use * to return all columns, or list specific names, aliases, and computed expressions.',ex:`SELECT *\nFROM employees;\n\nSELECT\n  first_name,\n  last_name,\n  salary * 1.1  AS adjusted_salary, -- 10% raise\n  UPPER(department) AS dept\nFROM employees;`,tip:'Avoid SELECT * in production — name columns explicitly for clarity and performance.'},
+{kw:'FROM',sub:'source table',c:'c0',desc:'Defines the primary table (or subquery, or joined set) to query. The entire SQL execution pipeline starts here — the optimizer reads FROM before SELECT.',ex:`SELECT e.name, d.dept_name\nFROM employees e           -- "e" is a table alias\nJOIN departments d\n  ON e.dept_id = d.id;`,tip:'Table aliases (e, d) keep long queries readable. Always alias when joining multiple tables.'},
+]},
+{layout:'g2',items:[
+{kw:'ORDER BY',sub:'sort results',c:'c0',desc:'Sorts the result set by one or more columns. ASC (default) = A→Z / low→high. DESC = Z→A / high→low. You can sort by column number, alias, or expression.',ex:`SELECT name, salary\nFROM employees\nORDER BY salary DESC;   -- highest earners first\n\nSELECT name, dept, hire_date\nFROM employees\nORDER BY dept ASC, hire_date DESC; -- multi-column sort`,tip:'ORDER BY runs last in the logical query order — after SELECT, so you can reference aliases defined there.'},
+{kw:'LIMIT / OFFSET',sub:'paginate rows',c:'c0',desc:'LIMIT caps the number of rows returned. OFFSET skips N rows before starting. Together they power pagination. MySQL/PostgreSQL syntax shown; use TOP in SQL Server, FETCH NEXT in Oracle.',ex:`SELECT name, salary\nFROM employees\nORDER BY salary DESC\nLIMIT 10;              -- top 10 earners\n\n-- Page 3 of 10 results per page:\nSELECT name FROM products\nORDER BY id\nLIMIT 10 OFFSET 20;   -- rows 21-30`,tip:'Always pair LIMIT/OFFSET with ORDER BY — without it, the "page" order is undefined.'},
+]},
+{layout:'g3',items:[
+{kw:'DISTINCT',sub:'remove duplicates',c:'c0',desc:'Returns only unique rows across the selected columns. Applied after all filtering. Can be surprisingly expensive on large tables — use COUNT(DISTINCT col) in aggregations.',ex:`SELECT DISTINCT department\nFROM employees;\n\nSELECT DISTINCT country, city\nFROM customers\nORDER BY country;`,tip:'DISTINCT applies to the entire row, not just the first column listed.'},
+{kw:'ALIASES (AS)',sub:'rename cols/tables',c:'c0',desc:'AS renames a column or table in the output. The keyword AS is optional in most databases. Column aliases can be referenced in ORDER BY but NOT in WHERE (use subquery if needed).',ex:`SELECT\n  salary * 12  AS annual_salary,\n  CONCAT(first_name,' ',last_name) AS full_name\nFROM employees e     -- table alias, AS optional\nORDER BY annual_salary DESC;`,tip:'Alias long expressions to keep SELECT readable. Great for self-documenting queries.'},
+{kw:'CASE WHEN',sub:'inline if/else',c:'c0',desc:'A conditional expression that returns different values based on conditions — SQL\'s inline if/else. Can be used anywhere an expression is valid: SELECT, ORDER BY, WHERE, GROUP BY.',ex:`SELECT name, salary,\n  CASE\n    WHEN salary > 100000 THEN 'senior'\n    WHEN salary > 60000  THEN 'mid'\n    ELSE                      'junior'\n  END AS pay_band\nFROM employees;`,tip:'Use CASE WHEN for custom categorization, pivoting, and conditional aggregation.'},
+]},
+]},
+
+// 1 FILTERING
+{rows:[
+{layout:'g3',items:[
+{kw:'WHERE',sub:'filter rows',c:'c1',desc:'Filters rows BEFORE any grouping or aggregation. WHERE evaluates each row against a condition and keeps only those where the condition is TRUE. Cannot reference GROUP BY aggregates — use HAVING for that.',ex:`SELECT name, salary\nFROM employees\nWHERE department = 'Engineering'\n  AND salary > 80000;\n\nSELECT * FROM orders\nWHERE order_date >= '2024-01-01'\n  AND status != 'cancelled';`,tip:'WHERE runs before GROUP BY. For filtering aggregated results, use HAVING instead.'},
+{kw:'AND / OR / NOT',sub:'logical operators',c:'c1',desc:'Combine multiple conditions. AND requires both to be true. OR requires at least one. NOT negates. Operator precedence: NOT > AND > OR — use parentheses to be explicit.',ex:`WHERE (age > 18 AND country = 'US')\n   OR (age > 16 AND country = 'UK')\n\nWHERE NOT status = 'inactive'\n  AND role IN ('admin','editor')`,tip:'Always use parentheses when mixing AND and OR — precedence rules are easy to misremember.'},
+{kw:'IN / NOT IN',sub:'match a list',c:'c1',desc:'Tests whether a value matches any value in a provided list. Much cleaner than chaining multiple OR conditions. Also accepts a subquery as the list.',ex:`SELECT * FROM employees\nWHERE department IN ('Eng','Design','Product');\n\n-- IN with subquery:\nSELECT name FROM customers\nWHERE id IN (\n  SELECT customer_id FROM orders\n  WHERE total > 1000\n);`,tip:'NOT IN behaves unexpectedly with NULLs — if the list contains a NULL, NOT IN returns no rows. Use NOT EXISTS instead.'},
+]},
+{layout:'g3',items:[
+{kw:'BETWEEN',sub:'range filter',c:'c1',desc:'Tests if a value falls within an inclusive range (both endpoints included). Works with numbers, dates, and strings. BETWEEN a AND b is equivalent to col >= a AND col <= b.',ex:`SELECT * FROM orders\nWHERE order_date BETWEEN '2024-01-01' AND '2024-03-31';\n\nSELECT * FROM products\nWHERE price BETWEEN 10.00 AND 49.99;\n\nSELECT * FROM employees\nWHERE last_name BETWEEN 'A' AND 'M'; -- alphabetic`,tip:'Both endpoints are INCLUSIVE. For dates, note that BETWEEN \'2024-01-01\' AND \'2024-01-31\' excludes times after midnight on Jan 31.'},
+{kw:'LIKE',sub:'pattern match',c:'c1',desc:'String pattern matching using wildcards. % matches any sequence of characters (including empty). _ matches exactly one character. Case sensitivity depends on your database and collation.',ex:`-- Names starting with 'A'\nSELECT * FROM employees\nWHERE name LIKE 'A%';\n\n-- 5-character codes with 'X' in position 3:\nWHERE code LIKE '__X__';\n\n-- Contains 'sql' anywhere:\nWHERE description LIKE '%sql%';`,tip:'LIKE with a leading % (e.g. %word) cannot use an index and will do a full table scan. ILIKE = case-insensitive in PostgreSQL.'},
+{kw:'IS NULL / IS NOT NULL',sub:'null checks',c:'c1',desc:'NULL means missing or unknown — it is not the same as 0 or empty string. You CANNOT use = NULL; always use IS NULL or IS NOT NULL. NULLs propagate: any arithmetic with NULL produces NULL.',ex:`SELECT * FROM employees\nWHERE manager_id IS NULL;     -- top-level employees\n\nSELECT * FROM contacts\nWHERE email IS NOT NULL\n  AND phone IS NOT NULL;\n\n-- Replace NULLs:\nSELECT COALESCE(phone, email, 'no contact') AS contact\nFROM users;`,tip:'COALESCE(a, b, c) returns the first non-NULL value. Use it to provide fallback values.'},
+]},
+{layout:'g2',items:[
+{kw:'REGEXP / RLIKE',sub:'regex pattern',c:'c1',desc:'Tests against a full regular expression pattern. More powerful than LIKE — supports character classes, anchors, quantifiers. Syntax varies by DB (REGEXP in MySQL, ~ in PostgreSQL, REGEXP_LIKE in Oracle).',ex:`-- Emails matching a domain:\nSELECT email FROM users\nWHERE email REGEXP '^[a-z]+@company\\.com$';\n\n-- PostgreSQL syntax:\nWHERE phone ~ '^\\+1[0-9]{10}$';\n\n-- MySQL: case-insensitive with REGEXP:\nWHERE name REGEXP 'smith|jones|brown';`,tip:'REGEXP is powerful but slow — it cannot use standard indexes. Use LIKE where possible; resort to REGEXP only when LIKE is insufficient.'},
+{kw:'EXISTS / NOT EXISTS',sub:'subquery test',c:'c1',desc:'Returns TRUE if the subquery produces at least one row. Stops scanning as soon as one match is found — often faster than IN with large subqueries, especially when the inner query involves JOINs.',ex:`-- Customers who have placed at least one order:\nSELECT c.name FROM customers c\nWHERE EXISTS (\n  SELECT 1 FROM orders o\n  WHERE o.customer_id = c.id\n);\n\n-- Products never ordered:\nWHERE NOT EXISTS (\n  SELECT 1 FROM order_items i\n  WHERE i.product_id = p.id\n);`,tip:'EXISTS is often faster than IN for correlated subqueries. Use NOT EXISTS instead of NOT IN when NULLs may be present.'},
+]},
+]},
+
+// 2 AGGREGATION
+{rows:[
+{layout:'g3',items:[
+{kw:'GROUP BY',sub:'collapse to groups',c:'c2',desc:'Collapses multiple rows sharing the same value(s) into a single summary row per group. Every column in SELECT must either be in GROUP BY or wrapped in an aggregate function.',ex:`SELECT department, COUNT(*) AS headcount\nFROM employees\nGROUP BY department;\n\nSELECT dept, year, SUM(revenue) AS total\nFROM sales\nGROUP BY dept, year\nORDER BY dept, year;`,tip:'GROUP BY runs BEFORE SELECT in logical execution order. You can GROUP BY columns not in your SELECT list.'},
+{kw:'HAVING',sub:'filter groups',c:'c2',desc:'Filters groups AFTER aggregation — it\'s WHERE for aggregate results. Can reference aggregate functions directly. Runs after GROUP BY but before ORDER BY.',ex:`SELECT department, COUNT(*) AS headcount\nFROM employees\nGROUP BY department\nHAVING COUNT(*) > 5;      -- only large teams\n\nSELECT customer_id, SUM(amount) AS total\nFROM orders\nGROUP BY customer_id\nHAVING SUM(amount) > 10000; -- high-value customers`,tip:'WHERE filters rows BEFORE grouping; HAVING filters groups AFTER. Use WHERE to reduce rows first for better performance.'},
+{kw:'ROLLUP / CUBE',sub:'subtotals & grand totals',c:'c2',desc:'ROLLUP generates subtotals and a grand total along a hierarchy. CUBE generates all possible subtotal combinations. Both are extensions of GROUP BY. Use GROUPING() to detect NULL-from-rollup vs real NULL.',ex:`SELECT dept, job_title, SUM(salary)\nFROM employees\nGROUP BY ROLLUP(dept, job_title);\n-- Gives: dept subtotals + grand total\n\nGROUP BY CUBE(dept, region)\n-- Gives: every combination of subtotals`,tip:'ROLLUP(a,b,c) creates N+1 grouping sets along the hierarchy. CUBE(a,b) creates 2^N combinations. Use GROUPING(col) to distinguish NULLs inserted by ROLLUP from actual NULLs in the data.'},
+]},
+{layout:'g3',items:[
+{kw:'COUNT()',sub:'count rows',c:'c2',desc:'COUNT(*) counts all rows including NULLs. COUNT(col) counts non-NULL values only. COUNT(DISTINCT col) counts unique non-NULL values. Always the most-used aggregate.',ex:`SELECT\n  COUNT(*)                    AS total_rows,\n  COUNT(phone)                AS have_phone,\n  COUNT(DISTINCT department)  AS unique_depts\nFROM employees;\n\n-- conditional count:\nSELECT COUNT(CASE WHEN salary > 100000 THEN 1 END)\n  AS senior_count\nFROM employees;`,tip:'COUNT(DISTINCT col) can be expensive. On large tables, consider approximate methods like HyperLogLog (pg extension).'},
+{kw:'SUM / AVG',sub:'numeric aggregates',c:'c2',desc:'SUM adds all non-NULL values in a group. AVG calculates the arithmetic mean (SUM/COUNT excluding NULLs). Both ignore NULLs by default. Combine with CASE WHEN for conditional aggregation.',ex:`SELECT department,\n  SUM(salary)           AS total_payroll,\n  AVG(salary)           AS avg_salary,\n  -- conditional aggregate:\n  AVG(CASE WHEN gender='F' THEN salary END)\n    AS avg_female_salary\nFROM employees\nGROUP BY department;`,tip:'AVG ignores NULLs — if you need NULLs to count as zero, use AVG(COALESCE(col,0)).'},
+{kw:'MIN / MAX',sub:'extreme values',c:'c2',desc:'MIN returns the smallest value; MAX returns the largest. Work on numbers, dates, and strings (alphabetically). Both ignore NULLs. Use to find earliest/latest dates, cheapest/most expensive items.',ex:`SELECT\n  MIN(hire_date)  AS earliest_hire,\n  MAX(hire_date)  AS latest_hire,\n  MAX(salary) - MIN(salary) AS salary_range\nFROM employees;\n\n-- Per department:\nSELECT dept, MIN(salary), MAX(salary)\nFROM employees GROUP BY dept;`,tip:'MIN/MAX on indexed columns are very fast — the optimizer can often answer them without scanning the whole table.'},
+]},
+{layout:'g2',items:[
+{kw:'STRING FUNCTIONS',sub:'manipulate text',c:'c2',desc:'SQL provides rich string manipulation functions. Naming varies slightly between databases (MySQL vs PostgreSQL vs SQL Server). Most common ones are shown.',ex:`SELECT\n  CONCAT(first_name,' ',last_name)  AS full_name,\n  UPPER(email)                      AS email_up,\n  LOWER(TRIM(description))          AS clean_desc,\n  SUBSTRING(phone, 1, 3)            AS area_code,\n  LENGTH(bio)                       AS bio_len,\n  REPLACE(url, 'http:', 'https:')   AS secure_url\nFROM users;`,tip:'TRIM() removes leading and trailing whitespace — essential for cleaning dirty imported data.'},
+{kw:'DATE FUNCTIONS',sub:'work with dates',c:'c2',desc:'Date manipulation is essential for analytics. Functions vary significantly by database. Key concepts: current timestamp, date arithmetic, extracting parts, formatting.',ex:`SELECT\n  NOW()                           AS current_ts,\n  CURDATE()                       AS today,\n  DATEDIFF(NOW(), hire_date) / 365 AS years_employed,\n  DATE_ADD(hire_date, INTERVAL 90 DAY) AS probation_end,\n  DATE_FORMAT(order_date, '%Y-%m') AS month,\n  EXTRACT(YEAR FROM order_date)   AS yr\nFROM employees;`,tip:'Store all datetimes in UTC, convert to local timezone only for display. Use DATE() to strip time from a DATETIME for day-level comparisons.'},
+]},
+]},
+
+// 3 JOINS
+{rows:[
+{layout:null,items:[],joinVis:true},
+{layout:'g2',items:[
+{kw:'UNION / UNION ALL',sub:'stack result sets',c:'c3',desc:'UNION stacks two result sets vertically, removing duplicates (like DISTINCT). UNION ALL stacks them and keeps all rows including duplicates — much faster. Both require the same number of columns and compatible data types.',ex:`-- Active and archived customers in one list:\nSELECT id, name, 'active'   AS status FROM customers\nUNION ALL\nSELECT id, name, 'archived' AS status FROM customers_archive\nORDER BY name;\n\n-- UNION removes duplicates (slower):\nSELECT city FROM billing\nUNION\nSELECT city FROM shipping;`,tip:'Prefer UNION ALL unless you specifically need duplicate removal — UNION does an implicit DISTINCT which requires sorting.'},
+{kw:'INTERSECT / EXCEPT',sub:'set algebra',c:'c3',desc:'INTERSECT returns only rows present in BOTH queries (like a Venn diagram overlap). EXCEPT (MINUS in Oracle) returns rows in the first query that don\'t exist in the second. Both perform implicit DISTINCT.',ex:`-- Customers who bought in both 2023 AND 2024:\nSELECT customer_id FROM orders WHERE year = 2023\nINTERSECT\nSELECT customer_id FROM orders WHERE year = 2024;\n\n-- Items in stock but never ordered:\nSELECT product_id FROM inventory\nEXCEPT\nSELECT DISTINCT product_id FROM order_items;`,tip:'INTERSECT/EXCEPT perform implicit DISTINCT. Not available in all MySQL versions — use JOINs or subqueries as fallback.'},
+]},
+]},
+
+// 4 CTEs
+{rows:[
+{layout:'g2',items:[
+{kw:'Subquery (inline)',sub:'nested SELECT',c:'c4',desc:'A SELECT statement nested inside another query. Can appear in FROM (derived table), WHERE (scalar or correlated), or SELECT. Subqueries are evaluated fresh for each outer row if correlated — can be slow on large tables.',ex:`-- Scalar subquery in SELECT:\nSELECT name,\n  (SELECT AVG(salary) FROM employees) AS company_avg\nFROM employees;\n\n-- Derived table in FROM:\nSELECT dept, avg_sal\nFROM (\n  SELECT department AS dept, AVG(salary) AS avg_sal\n  FROM employees\n  GROUP BY department\n) dept_avgs\nWHERE avg_sal > 70000;`,tip:'Correlated subqueries (referencing the outer query) run once per row — can be catastrophically slow. Rewrite as a JOIN or CTE.'},
+{kw:'CTE (WITH)',sub:'named temp query',c:'c4',desc:'A Common Table Expression gives a subquery a name, making complex queries dramatically more readable. CTEs are evaluated once (or inlined — DB decides) and can be referenced multiple times. Use for step-by-step logic.',ex:`WITH high_earners AS (\n  SELECT dept, AVG(salary) AS avg_sal\n  FROM employees\n  GROUP BY dept\n  HAVING AVG(salary) > 80000\n),\ntop_dept AS (\n  SELECT dept FROM high_earners\n  ORDER BY avg_sal DESC\n  LIMIT 3\n)\nSELECT e.*\nFROM employees e\nJOIN top_dept t ON e.dept = t.dept;`,tip:'CTEs are primarily a readability tool — they don\'t guarantee a performance difference vs subqueries. Use multiple CTEs to decompose complex logic step by step.'},
+]},
+{layout:'g2',items:[
+{kw:'Recursive CTE',sub:'hierarchical data',c:'c4',desc:'A CTE that references itself to traverse hierarchical or graph-like data. Uses WITH RECURSIVE (PostgreSQL/MySQL 8) or just WITH (SQL Server). Has an anchor member (base case) and a recursive member.',ex:`-- Org chart: all reports under manager id=1\nWITH RECURSIVE org AS (\n  -- anchor: start at the root\n  SELECT id, name, manager_id, 0 AS depth\n  FROM employees WHERE id = 1\n\n  UNION ALL\n\n  -- recursive: add direct reports\n  SELECT e.id, e.name, e.manager_id, o.depth+1\n  FROM employees e\n  JOIN org o ON e.manager_id = o.id\n)\nSELECT * FROM org ORDER BY depth;`,tip:'Always include a termination condition (depth limit or WHERE clause) to prevent infinite recursion. Most DBs have a default max recursion depth.'},
+{kw:'INSERT / UPDATE / DELETE',sub:'data manipulation',c:'c4',desc:'DML statements modify data. INSERT adds rows, UPDATE changes existing values, DELETE removes rows. All can use subqueries and CTEs. Always test with a SELECT first before running UPDATE/DELETE.',ex:`-- INSERT with subquery:\nINSERT INTO archive_orders\nSELECT * FROM orders WHERE order_date < '2020-01-01';\n\n-- UPDATE with JOIN (MySQL/SQL Server):\nUPDATE employees e\nJOIN departments d ON e.dept_id = d.id\nSET e.dept_name = d.name;\n\n-- DELETE with EXISTS:\nDELETE FROM cart_items\nWHERE NOT EXISTS (\n  SELECT 1 FROM products p\n  WHERE p.id = cart_items.product_id\n);`,tip:'Wrap UPDATE/DELETE in a transaction (BEGIN; ... COMMIT/ROLLBACK;) so you can verify results before committing.'},
+]},
+]},
+
+// 5 WINDOW FUNCTIONS
+{rows:[
+{layout:null,items:[],windowVis:true},
+{layout:'g3',items:[
+{kw:'RANK() / DENSE_RANK()',sub:'ranking with gaps vs. no gaps',c:'c5',desc:'RANK() assigns rank with gaps when there are ties (1,2,2,4). DENSE_RANK() assigns rank without gaps (1,2,2,3). ROW_NUMBER() always unique (1,2,3,4). Choose based on your desired tie-handling.',ex:`SELECT name, salary, dept,\n  RANK()       OVER (PARTITION BY dept ORDER BY salary DESC)\n    AS rank_with_gaps,\n  DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary DESC)\n    AS rank_no_gaps,\n  ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC)\n    AS unique_row_num\nFROM employees;`,tip:'Use DENSE_RANK for percentile categories, ROW_NUMBER for deduplication (keep only the latest row per entity).'},
+{kw:'LAG() / LEAD()',sub:'access adjacent rows',c:'c5',desc:'LAG() accesses a value from a previous row in the window; LEAD() from a future row. Perfect for period-over-period comparisons without self-joins. Both accept an offset (default 1) and a default for missing rows.',ex:`SELECT date, revenue,\n  LAG(revenue, 1, 0) OVER (ORDER BY date)\n    AS prev_day_revenue,\n  revenue - LAG(revenue, 1, 0) OVER (ORDER BY date)\n    AS daily_change,\n  LEAD(revenue) OVER (ORDER BY date)\n    AS next_day_revenue\nFROM daily_sales\nORDER BY date;`,tip:'LAG/LEAD eliminate the need for self-joins when comparing a row to its neighbors. The third argument is a default value when there\'s no preceding/following row.'},
+{kw:'NTILE()',sub:'split into N buckets',c:'c5',desc:'Divides rows in the window into N equally-sized buckets and returns the bucket number. Use for percentiles (NTILE(100)), quartiles (NTILE(4)), or deciles (NTILE(10)).',ex:`SELECT name, salary,\n  NTILE(4) OVER (ORDER BY salary)\n    AS salary_quartile,  -- 1=bottom 25%, 4=top 25%\n  NTILE(100) OVER (ORDER BY salary)\n    AS salary_percentile\nFROM employees;\n\n-- Who is in the top 10th percentile?\nSELECT * FROM (\n  SELECT *, NTILE(10) OVER (ORDER BY salary) AS decile\n  FROM employees\n) t WHERE decile = 10;`,tip:'NTILE distributes rows as evenly as possible — if N doesn\'t divide evenly, earlier buckets get one extra row.'},
+]},
+{layout:'g2',items:[
+{kw:'FIRST_VALUE / LAST_VALUE',sub:'frame boundary values',c:'c5',desc:'FIRST_VALUE returns the value from the first row of the window frame; LAST_VALUE from the last. Watch out: the default frame for LAST_VALUE only goes to the current row — use ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING to get the true last value.',ex:`SELECT name, dept, salary,\n  FIRST_VALUE(name) OVER (\n    PARTITION BY dept ORDER BY salary DESC\n    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n  ) AS top_earner_in_dept,\n  LAST_VALUE(salary) OVER (\n    PARTITION BY dept ORDER BY salary\n    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n  ) AS max_salary_in_dept\nFROM employees;`,tip:'LAST_VALUE requires an explicit frame of UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING — the default frame stops at the current row, making LAST_VALUE equal to the current row\'s value.'},
+{kw:'SUM / AVG OVER()',sub:'running & moving totals',c:'c5',desc:'Any aggregate function (SUM, AVG, COUNT, MIN, MAX) can become a window function by adding OVER(). Use ROWS BETWEEN to define running totals, moving averages, or cumulative distributions.',ex:`SELECT date, amount,\n  SUM(amount) OVER (\n    ORDER BY date\n    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS running_total,\n  AVG(amount) OVER (\n    ORDER BY date\n    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ) AS moving_avg_7day,\n  SUM(amount) OVER () AS grand_total, -- entire partition\n  amount / SUM(amount) OVER () AS pct_of_total\nFROM daily_sales;`,tip:'SUM() OVER () with no ORDER BY or frame computes the grand total — dividing each row\'s value by it gives you the percentage contribution.'},
+]},
+]},
+];
+
+const JOIN_DATA=[
+{id:'inner',label:'INNER JOIN',fill:'#1D9E75',desc:'Returns only rows where the join condition is satisfied in BOTH tables. Non-matching rows from either side are excluded.',ex:`SELECT e.name, d.dept_name\nFROM employees e\nINNER JOIN departments d\n  ON e.dept_id = d.id;\n-- Only employees WITH a valid department`},
+{id:'left',label:'LEFT JOIN',fill:'#378ADD',desc:'Returns ALL rows from the left table, and matching rows from the right. Where no match exists, right-side columns are NULL. Most common join type in analytics.',ex:`SELECT e.name, d.dept_name\nFROM employees e\nLEFT JOIN departments d\n  ON e.dept_id = d.id;\n-- All employees, even those without a department`},
+{id:'right',label:'RIGHT JOIN',fill:'#BA7517',desc:'Returns ALL rows from the right table, and matching rows from the left. Rare in practice — usually rewrite as a LEFT JOIN with tables swapped for clarity.',ex:`SELECT e.name, d.dept_name\nFROM employees e\nRIGHT JOIN departments d\n  ON e.dept_id = d.id;\n-- All departments, even those with no employees`},
+{id:'full',label:'FULL OUTER JOIN',fill:'#D85A30',desc:'Returns ALL rows from both tables. Where no match exists on either side, the missing side shows NULLs. Not available in MySQL — simulate with LEFT JOIN UNION RIGHT JOIN.',ex:`SELECT e.name, d.dept_name\nFROM employees e\nFULL OUTER JOIN departments d\n  ON e.dept_id = d.id;\n-- All employees and all departments, matched where possible`},
+{id:'cross',label:'CROSS JOIN',fill:'#7F77DD',desc:'Produces the Cartesian product — every row from the left table matched with every row from the right. M rows × N rows = M×N result rows. Rarely used intentionally; can generate enormous result sets.',ex:`SELECT p.name AS product, c.name AS color\nFROM products p\nCROSS JOIN colors c;\n-- Every product in every available color`},
+{id:'self',label:'SELF JOIN',fill:'#D4537E',desc:'Joins a table to itself using two different aliases. Essential for hierarchical data (manager → employee), sequential comparisons (find consecutive records), or pair-finding queries.',ex:`SELECT\n  e.name  AS employee,\n  m.name  AS manager\nFROM employees e\nLEFT JOIN employees m  -- same table, alias "m"\n  ON e.manager_id = m.id;`},
+];
+
+function venn(type){
+const c='#e5e3e0',a='rgba(255,255,255,0.6)';
+const svgs={
+inner:`<svg width="80" height="50" viewBox="0 0 80 50"><circle cx="28" cy="25" r="20" fill="${c}"/><circle cx="52" cy="25" r="20" fill="${c}"/><ellipse cx="40" cy="25" rx="11" ry="18" fill="#1D9E75" opacity=".85"/></svg>`,
+left:`<svg width="80" height="50" viewBox="0 0 80 50"><circle cx="28" cy="25" r="20" fill="#378ADD" opacity=".8"/><circle cx="52" cy="25" r="20" fill="${c}"/><ellipse cx="40" cy="25" rx="11" ry="18" fill="#378ADD" opacity=".8"/></svg>`,
+right:`<svg width="80" height="50" viewBox="0 0 80 50"><circle cx="28" cy="25" r="20" fill="${c}"/><circle cx="52" cy="25" r="20" fill="#BA7517" opacity=".8"/><ellipse cx="40" cy="25" rx="11" ry="18" fill="#BA7517" opacity=".8"/></svg>`,
+full:`<svg width="80" height="50" viewBox="0 0 80 50"><circle cx="28" cy="25" r="20" fill="#D85A30" opacity=".8"/><circle cx="52" cy="25" r="20" fill="#D85A30" opacity=".8"/></svg>`,
+cross:`<svg width="80" height="50" viewBox="0 0 80 50"><rect x="10" y="10" width="60" height="30" rx="4" fill="#7F77DD" opacity=".25"/><rect x="10" y="10" width="28" height="30" rx="4" fill="#7F77DD" opacity=".5"/><line x1="38" y1="10" x2="38" y2="40" stroke="#7F77DD" stroke-width="0.5"/><text y="30" x="40" font-size="8" fill="#534AB7" text-anchor="middle">×N</text></svg>`,
+self:`<svg width="80" height="50" viewBox="0 0 80 50"><circle cx="40" cy="22" r="17" fill="${c}"/><path d="M50 32 Q65 42 55 22" fill="none" stroke="#D4537E" stroke-width="2" marker-end="url(#sa)"/><defs><marker id="sa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#D4537E" stroke-width="1.5"/></marker></defs></svg>`,
+};
+return svgs[type]||'';
+}
+
+let selJoin='inner';
+function joinHTML(){
+const j=JOIN_DATA.find(x=>x.id===selJoin);
+return`<div class="join-detail"><div style="font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px">${j.label}</div><div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:10px">${j.desc}</div><pre class="sq-dp-ex">${k(h(j.ex))}</pre></div>`;
+}
+function renderJoinVis(){
+return`<div><div class="venn-wrap" id="venn-btns">${JOIN_DATA.map(j=>`<div class="venn-item${j.id===selJoin?' sel':''}" onclick="pickJoin('${j.id}')">${venn(j.id)}<div class="venn-lbl">${j.label}</div></div>`).join('')}</div><div id="join-det">${joinHTML()}</div></div>`;
+}
+window.pickJoin=function(id){selJoin=id;document.getElementById('venn-btns').innerHTML=JOIN_DATA.map(j=>`<div class="venn-item${j.id===id?' sel':''}" onclick="pickJoin('${j.id}')">${venn(j.id)}<div class="venn-lbl">${j.label}</div></div>`).join('');document.getElementById('join-det').innerHTML=joinHTML();};
+
+function windowVisHTML(){
+const rows=[
+['Alice','Eng',95000,1,1,1,4],
+['Bob','Eng',80000,2,2,2,3],
+['Carol','Eng',80000,2,2,3,3],
+['Dave','Eng',70000,4,3,4,2],
+['Eve','Mktg',90000,1,1,1,4],
+['Frank','Mktg',75000,2,2,2,3],
+];
+const hds=['Name','Dept','Salary','RANK()','DENSE_RANK()','ROW_NUMBER()','NTILE(4)'];
+return`<div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Live window function results — each partitioned by <code style="font-family:var(--font-mono);font-size:11px">Dept</code>, ordered by <code style="font-family:var(--font-mono);font-size:11px">Salary DESC</code></div><div class="wf-vis"><div class="wf-row">${hds.map(h=>`<div class="wf-cell wf-hd">${h}</div>`).join('')}</div>${rows.map((r,i)=>{const prev=rows[i-1];const newDept=!prev||prev[1]!==r[1];return`<div class="wf-row"${newDept&&i>0?' style="border-top:1.5px solid var(--color-border-secondary)"':''}>${r.map((v,ci)=>`<div class="wf-cell${ci>=3?' wf-hl':''}">${v}</div>`).join('')}</div>`}).join('')}</div></div>`;
+}
+
+let openId=null;
+function tog(id){
+if(openId&&openId!==id){document.getElementById(openId).classList.remove('on');document.getElementById('row-'+openId).classList.remove('op')}
+const el=document.getElementById(id);const row=document.getElementById('row-'+id);
+el.classList.toggle('on');if(row)row.classList.toggle('op',el.classList.contains('on'));
+openId=el.classList.contains('on')?id:null;
+}
+
+let rowIdx=0;
+function renderRows(rows){
+return rows.map(row=>{
+if(row.joinVis)return`<div style="margin:6px 0">${renderJoinVis()}</div>`;
+if(row.windowVis)return`<div style="margin:6px 0">${windowVisHTML()}</div>`;
+return`<div class="sq-row ${row.layout||'g2'}" id="row-${rowIdx}" onclick="tog(${rowIdx})">${row.items.map(item=>{
+const id=rowIdx++;
+return`<div class="sq-chip ${item.c}"><span class="kw">${h(item.kw)}</span><span class="sub">${h(item.sub)}</span></div>`;
+}).join('')}</div>${row.items.map(item=>{
+const id=rowIdx-row.items.length+(row.items.indexOf(item));
+return`<div class="sq-dp" id="${id}"><div class="sq-dp-h">${h(item.kw)}</div><div class="sq-dp-d">${h(item.desc)}</div><pre class="sq-dp-ex">${k(h(item.ex))}</pre>${item.tip?`<div class="sq-dp-tip">Tip: ${h(item.tip)}</div>`:''}</div>`;
+}).join('')}`;
+}).join('');
+}
+
+// Re-wire toggling to know which items belong to which row
+let allItems=[];
+rowIdx=0;
+function renderRows2(rows){
+return rows.map(row=>{
+if(row.joinVis)return`<div style="margin:6px 0" id="jv-${rowIdx++}">${renderJoinVis()}</div>`;
+if(row.windowVis)return`<div style="margin:6px 0" id="wv-${rowIdx++}">${windowVisHTML()}</div>`;
+const startIdx=rowIdx;
+const rowId='gr-'+startIdx;
+const html=`<div class="sq-row ${row.layout||'g2'}" id="row-${rowId}" onclick="togRow('${rowId}',${JSON.stringify(row.items.map((_,i)=>startIdx+i))})">${row.items.map((item,i)=>{
+rowIdx++;
+return`<div class="sq-chip ${item.c}"><span class="kw">${h(item.kw)}</span><span class="sub">${h(item.sub)}</span></div>`;
+}).join('')}</div>${row.items.map((item,i)=>{
+const id=startIdx+i;
+allItems[id]=item;
+return`<div class="sq-dp" id="dp-${id}"><div class="sq-dp-h">${h(item.kw)}</div><div class="sq-dp-d">${h(item.desc)}</div><pre class="sq-dp-ex">${k(h(item.ex))}</pre>${item.tip?`<div class="sq-dp-tip">Tip: ${h(item.tip)}</div>`:''}</div>`;
+}).join('')}`;
+return html;
+}).join('');
+}
+
+let openRow=null;
+window.togRow=function(rowId,ids){
+const rowEl=document.getElementById('row-'+rowId);
+const dps=ids.map(id=>document.getElementById('dp-'+id)).filter(Boolean);
+const isOpen=dps[0]&&dps[0].classList.contains('on');
+if(openRow&&openRow!==rowId){
+const prev=document.getElementById('row-'+openRow);
+if(prev)prev.classList.remove('op');
+document.querySelectorAll('.sq-dp.on').forEach(d=>d.classList.remove('on'));
+openRow=null;
+}
+if(!isOpen){dps.forEach(d=>d.classList.add('on'));if(rowEl)rowEl.classList.add('op');openRow=rowId;}
+else{dps.forEach(d=>d.classList.remove('on'));if(rowEl)rowEl.classList.remove('op');openRow=null;}
+};
+
+const nav=document.getElementById('nav');
+const panesCont=document.getElementById('panes');
+tabs.forEach((t,i)=>{
+const btn=document.createElement('button');
+btn.className=`sq-tab ${t.id}${i===0?' on':''}`;
+btn.textContent=t.label;btn.onclick=()=>{
+document.querySelectorAll('.sq-tab').forEach(b=>b.classList.remove('on'));
+document.querySelectorAll('.sq-pane').forEach(p=>p.classList.remove('on'));
+btn.classList.add('on');document.getElementById('pane-'+i).classList.add('on');
+};
+nav.appendChild(btn);
+const pane=document.createElement('div');
+pane.className=`sq-pane${i===0?' on':''}`;
+pane.id='pane-'+i;
+pane.innerHTML=`<div class="sq-hint">Click any command chip to expand — description, all key flags, and a real example.</div>`+renderRows2(PANES[i].rows);
+panesCont.appendChild(pane);
+rowIdx=Math.ceil(rowIdx/10)*10+10;
+});
+</script>

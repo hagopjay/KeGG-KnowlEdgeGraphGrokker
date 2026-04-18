@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java vs The World</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07080a;
+  --bg2: #0d0f13;
+  --surface: #12151a;
+  --surface2: #191d24;
+  --border: #1e2430;
+  --border2: #262d3a;
+
+  /* Java = gold */
+  --java: #f0a500;
+  --java-dim: #8a5e00;
+  --java-glow: rgba(240,165,0,0.10);
+
+  /* Languages */
+  --csharp:   #9b59f5;
+  --cpp:      #1e8cff;
+  --pascal:   #a0c840;
+  --golang:   #00b8d4;
+  --rust:     #f06030;
+  --python:   #ffd040;
+  --elixir:   #d060f0;
+  --swift:    #ff6060;
+  --haskell:  #58b8e0;
+  --ts:       #3080e8;
+
+  --text:     #b8c0cc;
+  --text-dim: #556070;
+  --white:    #e8edf5;
+
+  --mono: 'IBM Plex Mono', monospace;
+  --serif: 'DM Serif Display', serif;
+  --sans: 'DM Sans', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── NOISE ── */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:0;
+}
+
+/* ── HERO ── */
+.hero {
+  position:relative; z-index:1;
+  padding: 100px 64px 80px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.hero-glow {
+  position:absolute; top:-300px; left:-200px;
+  width:800px; height:800px;
+  background: radial-gradient(circle, rgba(240,165,0,0.06) 0%, transparent 65%);
+  pointer-events:none;
+}
+
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--java);
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(56px, 8vw, 110px);
+  line-height: 0.92;
+  color: var(--white);
+  margin-bottom: 24px;
+}
+
+.hero h1 span { color: var(--java); }
+.hero h1 em { font-style: italic; color: var(--text-dim); }
+
+.hero-desc {
+  max-width: 640px;
+  font-size: 16px;
+  color: var(--text-dim);
+  line-height: 1.8;
+  margin-bottom: 48px;
+}
+
+/* language pills row */
+.lang-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.pill:hover { filter: brightness(1.3); transform: translateY(-1px); }
+.pill-java    { color:var(--java);    border-color:var(--java-dim);  background:var(--java-glow); }
+.pill-csharp  { color:var(--csharp);  border-color:#4a2a90; background:rgba(155,89,245,0.08); }
+.pill-cpp     { color:var(--cpp);     border-color:#0a4080; background:rgba(30,140,255,0.08); }
+.pill-pascal  { color:var(--pascal);  border-color:#506020; background:rgba(160,200,64,0.08); }
+.pill-golang  { color:var(--golang);  border-color:#006880; background:rgba(0,184,212,0.08); }
+.pill-rust    { color:var(--rust);    border-color:#803020; background:rgba(240,96,48,0.08); }
+.pill-python  { color:var(--python);  border-color:#807020; background:rgba(255,208,64,0.08); }
+.pill-elixir  { color:var(--elixir);  border-color:#702080; background:rgba(208,96,240,0.08); }
+.pill-swift   { color:var(--swift);   border-color:#802020; background:rgba(255,96,96,0.08); }
+.pill-haskell { color:var(--haskell); border-color:#206080; background:rgba(88,184,224,0.08); }
+.pill-ts      { color:var(--ts);      border-color:#103880; background:rgba(48,128,232,0.08); }
+
+/* ── STICKY NAV ── */
+.sidenav {
+  position: fixed;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 100;
+}
+
+.sidenav-dot {
+  width: 28px; height: 28px;
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: all 0.2s;
+  writing-mode: horizontal-tb;
+}
+
+.sidenav-dot:hover { transform: scale(1.2); }
+
+/* ── MAIN LAYOUT ── */
+.main { position:relative; z-index:1; }
+
+/* ── LANG SECTION ── */
+.lang-section {
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+
+.lang-header {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+
+.lang-identity {
+  padding: 48px 48px 48px 64px;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+  align-self: start;
+}
+
+/* not actually sticky on mobile — handled via JS */
+
+.lang-badge-large {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.lang-name {
+  font-family: var(--serif);
+  font-size: 52px;
+  line-height: 0.95;
+  color: var(--white);
+  margin-bottom: 12px;
+}
+
+.lang-year {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  letter-spacing: 0.1em;
+}
+
+.lang-tagline {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+/* Radar / score bars */
+.scores {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.score-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.score-track {
+  flex: 1;
+  height: 3px;
+  background: var(--border2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+
+.score-val {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  width: 20px;
+  text-align: right;
+}
+
+/* Content panels */
+.lang-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.content-panel {
+  padding: 32px 40px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.content-panel:nth-child(even) { border-right: none; }
+.content-panel:nth-child(n+3) { border-top: none; }
+
+.panel-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-title span { margin-right: 8px; }
+
+/* code block */
+pre.code {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-x: auto;
+  border-radius: 0;
+  color: #8099bb;
+  margin-bottom: 10px;
+}
+
+pre.code .kw  { color: #7aa0e0; }
+pre.code .str { color: #7ec890; }
+pre.code .cm  { color: #3e5060; }
+pre.code .tp  { color: #d8a060; }
+pre.code .fn  { color: #c0d0e8; }
+pre.code .num { color: #e08060; }
+pre.code .op  { color: #6090a0; }
+pre.code .lit { color: #a0c870; }
+
+/* comparison table inside panel */
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.mini-table tr { border-bottom: 1px solid var(--border); }
+.mini-table tr:last-child { border-bottom: none; }
+.mini-table td { padding: 7px 0; vertical-align: top; }
+.mini-table td:first-child {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 110px;
+  padding-right: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* verdict */
+.verdict {
+  grid-column: 1 / -1;
+  padding: 28px 40px;
+  border-bottom: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+}
+
+.verdict-block h4 {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.verdict-block.wins h4  { color: #4ec88a; }
+.verdict-block.loses h4 { color: #e85555; }
+.verdict-block.learns h4 { color: var(--java); }
+
+.verdict-block ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.verdict-block ul li {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.verdict-block.wins  ul li::before { content:'↑'; color:#4ec88a; flex-shrink:0; }
+.verdict-block.loses ul li::before { content:'↓'; color:#e85555; flex-shrink:0; }
+.verdict-block.learns ul li::before { content:'→'; color:var(--java); flex-shrink:0; }
+
+/* insight callout */
+.insight {
+  background: rgba(240,165,0,0.05);
+  border-left: 2px solid var(--java);
+  padding: 12px 16px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.65;
+  margin-top: 12px;
+}
+
+.insight b {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--java);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* tag chips */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+}
+
+/* ── MASTER MATRIX ── */
+.matrix-section {
+  padding: 80px 64px;
+  border-bottom: 1px solid var(--border);
+}
+
+.matrix-title {
+  font-family: var(--serif);
+  font-size: 48px;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.matrix-title em { color: var(--java); }
+
+.matrix-subtitle {
+  font-size: 14px;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-bottom: 48px;
+}
+
+.matrix-wrap { overflow-x: auto; }
+
+table.matrix {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11px;
+  min-width: 900px;
+}
+
+table.matrix th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--border2);
+  white-space: nowrap;
+}
+
+table.matrix th:first-child { color: var(--java); }
+
+table.matrix td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+table.matrix tr:hover td { background: var(--surface); }
+
+table.matrix td:first-child {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dot-5 { color: #4ec88a; }
+.dot-4 { color: #a0d870; }
+.dot-3 { color: var(--java); }
+.dot-2 { color: #e89040; }
+.dot-1 { color: #e85555; }
+
+.mx-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+/* section label */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--java);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.eyebrow::after {
+  content:'';
+  width:40px; height:1px;
+  background: var(--java-dim);
+}
+
+/* ── FRAMEWORK MAP ── */
+.fw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-top: 40px;
+}
+
+.fw-card {
+  background: var(--bg);
+  padding: 28px 32px;
+  transition: background 0.2s;
+}
+
+.fw-card:hover { background: var(--surface); }
+
+.fw-lang-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.fw-lang-name {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.fw-name {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.fw-equiv {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.fw-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+/* ── TIMELINE ── */
+.timeline-section {
+  padding: 80px 64px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tl-row {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+  margin-top: 40px;
+}
+
+.tl-item {
+  flex-shrink: 0;
+  width: 140px;
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+}
+
+.tl-year {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--java);
+  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+}
+
+.tl-lang {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--white);
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.tl-note {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* ── MEMORY MODEL ── */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  margin-top: 32px;
+}
+
+.mem-card {
+  background: var(--bg);
+  padding: 24px;
+}
+
+.mem-lang {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.mem-model {
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.mem-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* ── FOOTER ── */
+.footer {
+  padding: 60px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.footer-quote {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-style: italic;
+  color: var(--text-dim);
+  max-width: 500px;
+  line-height: 1.3;
+}
+
+.footer-quote strong { color: var(--java); font-style: normal; }
+
+.footer-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  text-align: right;
+  letter-spacing: 0.1em;
+  line-height: 2;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
+.lang-section { opacity:0; animation: fadeIn 0.6s ease forwards; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .hero { padding: 60px 24px; }
+  .lang-header { grid-template-columns: 1fr; }
+  .lang-identity { position:relative; top:0; padding: 32px 24px; border-right:none; }
+  .lang-content { grid-template-columns: 1fr; }
+  .content-panel { border-right: none; padding: 24px; }
+  .verdict { grid-template-columns: 1fr; padding: 24px; }
+  .matrix-section, .timeline-section, .footer { padding: 48px 24px; }
+  .sidenav { display: none; }
+}
+
+/* active filter */
+.lang-section.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- SIDE NAV DOTS -->
+<nav class="sidenav">
+  <a class="sidenav-dot pill-java"    href="#lang-java"    title="Java">JV</a>
+  <a class="sidenav-dot pill-csharp"  href="#lang-csharp"  title="C#">C#</a>
+  <a class="sidenav-dot pill-cpp"     href="#lang-cpp"     title="C++">C++</a>
+  <a class="sidenav-dot pill-pascal"  href="#lang-pascal"  title="Pascal">PAS</a>
+  <a class="sidenav-dot pill-golang"  href="#lang-golang"  title="Go">GO</a>
+  <a class="sidenav-dot pill-rust"    href="#lang-rust"    title="Rust">RS</a>
+  <a class="sidenav-dot pill-python"  href="#lang-python"  title="Python">PY</a>
+  <a class="sidenav-dot pill-elixir"  href="#lang-elixir"  title="Elixir">EX</a>
+  <a class="sidenav-dot pill-haskell" href="#lang-haskell" title="Haskell">HS</a>
+  <a class="sidenav-dot pill-ts"      href="#lang-ts"      title="TypeScript">TS</a>
+</nav>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow">Language Comparative Analysis · A Java Veteran's Reference</div>
+  <h1><span>Java</span><br><em>vs</em><br>The World</h1>
+  <p class="hero-desc">
+    An information-dense technical comparison of Java against nine major languages and their principal frameworks — covering type systems, memory models, concurrency, performance, ecosystem depth, and what each language uniquely taught the industry.
+  </p>
+  <div class="lang-pills">
+    <span class="pill pill-java">Java</span>
+    <span class="pill pill-csharp">C# / .NET</span>
+    <span class="pill pill-cpp">C++</span>
+    <span class="pill pill-pascal">Pascal / Delphi</span>
+    <span class="pill pill-golang">Go</span>
+    <span class="pill pill-rust">Rust</span>
+    <span class="pill pill-python">Python</span>
+    <span class="pill pill-elixir">Elixir / Erlang</span>
+    <span class="pill pill-haskell">Haskell</span>
+    <span class="pill pill-ts">TypeScript</span>
+  </div>
+</section>
+
+<main class="main">
+
+<!-- ═══════════════ C# ═══════════════ -->
+<section class="lang-section" id="lang-csharp" style="animation-delay:0.1s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--csharp);border-color:#4a2a90;background:rgba(155,89,245,0.08)">C# / .NET</span>
+      <div class="lang-name" style="color:var(--white)">C Sharp</div>
+      <div class="lang-year">Born 2000 · Microsoft · Anders Hejlsberg</div>
+      <div class="lang-tagline">"The language that started as Java's competitor and became arguably its superior in expressiveness."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:88%;background:var(--csharp)"></div></div><span class="score-val">88</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:95%;background:var(--csharp)"></div></div><span class="score-val">95</span></div>
+        <div class="score-row"><span class="score-label">Ecosystem</span><div class="score-track"><div class="score-fill" style="width:90%;background:var(--csharp)"></div></div><span class="score-val">90</span></div>
+        <div class="score-row"><span class="score-label">Type Safety</span><div class="score-track"><div class="score-fill" style="width:92%;background:var(--csharp)"></div></div><span class="score-val">92</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:72%;background:var(--csharp)"></div></div><span class="score-val">72</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:85%;background:var(--csharp)"></div></div><span class="score-val">85</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <!-- Code comparison -->
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--csharp)"><span>⟨/⟩</span>C# vs Java — Same Concept, Different Elegance</div>
+<pre class="code"><span class="cm">// Java 21</span>
+<span class="kw">record</span> <span class="tp">Payment</span>(<span class="tp">String</span> id, <span class="tp">BigDecimal</span> amount) {}
+
+<span class="kw">sealed interface</span> <span class="tp">Status</span> <span class="kw">permits</span> <span class="tp">Ok</span>, <span class="tp">Fail</span> {}
+<span class="kw">record</span> <span class="tp">Ok</span>() <span class="kw">implements</span> <span class="tp">Status</span> {}
+<span class="kw">record</span> <span class="tp">Fail</span>(<span class="tp">String</span> why) <span class="kw">implements</span> <span class="tp">Status</span> {}
+
+<span class="cm">// C# equivalent — cleaner property syntax</span>
+<span class="kw">record</span> <span class="tp">Payment</span>(<span class="tp">string</span> Id, <span class="tp">decimal</span> Amount);
+
+<span class="kw">abstract record</span> <span class="tp">Status</span>;
+<span class="kw">record</span> <span class="tp">Ok</span> : <span class="tp">Status</span>;
+<span class="kw">record</span> <span class="tp">Fail</span>(<span class="tp">string</span> Why) : <span class="tp">Status</span>;
+
+<span class="cm">// C# LINQ — Java Streams are the answer, but LINQ won first</span>
+<span class="kw">var</span> large = payments
+    .Where(p => p.Amount > <span class="num">1000m</span>)
+    .OrderBy(p => p.Amount)
+    .Select(p => p.Id)
+    .ToList();
+
+<span class="cm">// C# async/await — Java adopted CompletableFuture, then Loom</span>
+<span class="kw">async</span> <span class="tp">Task</span>&lt;<span class="tp">Payment</span>&gt; <span class="fn">GetAsync</span>(<span class="tp">string</span> id) {
+    <span class="kw">var</span> data = <span class="kw">await</span> _db.<span class="fn">FindAsync</span>(id);
+    <span class="kw">return</span> data ?? <span class="kw">throw new</span> <span class="tp">KeyNotFoundException</span>(id);
+}</pre>
+    </div>
+    <!-- Type system -->
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--csharp)"><span>⊕</span>Type System &amp; Language Features</div>
+      <table class="mini-table">
+        <tr><td>Nullability</td><td>Nullable reference types (<code>#nullable enable</code>) — compiler warns on null dereference. Java added <code>@NonNull</code> but it's opt-in annotations, not enforced.</td></tr>
+        <tr><td>Properties</td><td><code>get; set; init;</code> — Java uses getters/setters by convention. Records help but C# properties are cleaner.</td></tr>
+        <tr><td>Value Types</td><td><code>struct</code> — stack-allocated value types. Java has no direct equivalent; primitives are limited. Critical for high-performance fintech math.</td></tr>
+        <tr><td>Generics</td><td>Reified generics via constraints. Java generics are erased at runtime — a longstanding pain point C# avoided entirely.</td></tr>
+        <tr><td>async/await</td><td>Native since C# 5 (2012). Java got Project Loom (2023). Eleven year head start on readable async code.</td></tr>
+        <tr><td>LINQ</td><td>Language-integrated query — inspired Java Streams API (2014), but LINQ arrived 2007 and is more tightly integrated.</td></tr>
+        <tr><td>Extension methods</td><td>Add methods to any type without subclassing. Java has no equivalent — you write utility classes.</td></tr>
+      </table>
+      <div class="insight"><b>Key Insight</b>C# is what Java would look like if Microsoft had designed it. If you know Java deeply, C# takes 2 weeks to be productive in — the pain points are the things Java still hasn't fixed (reified generics, true value types, first-class async).</div>
+    </div>
+    <!-- Frameworks -->
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--csharp)"><span>⬡</span>Frameworks — Spring Boot vs .NET</div>
+      <table class="mini-table">
+        <tr><td>Web API</td><td><strong style="color:var(--white)">ASP.NET Core</strong> vs Spring Boot. Both excellent. .NET Core's minimal API syntax is terser; Spring Boot's ecosystem depth is broader in enterprise Java.</td></tr>
+        <tr><td>ORM</td><td><strong style="color:var(--white)">Entity Framework Core</strong> vs JPA/Hibernate. EF migrations are considered smoother. Both have N+1 trap issues.</td></tr>
+        <tr><td>DI</td><td>Microsoft.Extensions.DI built-in. Spring IoC container is more powerful but heavier.</td></tr>
+        <tr><td>gRPC</td><td>Both first-class. .NET gRPC codegen is arguably cleaner with source generators.</td></tr>
+        <tr><td>Performance</td><td>.NET 8 Kestrel benchmarks often beat Spring Boot on raw throughput. Java with virtual threads closes much of the gap.</td></tr>
+        <tr><td>Cloud</td><td>Azure-native advantage. Both run fine on AWS/GCP. Azure Functions vs AWS Lambda: both trivial to deploy.</td></tr>
+      </table>
+    </div>
+    <!-- Concurrency -->
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--csharp)"><span>⟳</span>Concurrency Model</div>
+      <table class="mini-table">
+        <tr><td>Model</td><td>async/await with TPL (Task Parallel Library). C# had first-class cooperative multitasking built in since 2012 — Java's equivalent (Loom virtual threads) shipped in 2023.</td></tr>
+        <tr><td>Parallelism</td><td><code>Parallel.ForEach</code>, PLINQ for data parallelism. Maps to Java's parallel streams.</td></tr>
+        <tr><td>Channels</td><td><code>System.Threading.Channels</code> — typed, bounded/unbounded async queues. Similar to Go channels but in managed runtime. Java equivalent: <code>LinkedBlockingQueue</code> or reactive streams.</td></tr>
+        <tr><td>Actors</td><td>No native actor model. Akka.NET available if needed.</td></tr>
+        <tr><td>Reactive</td><td>Rx.NET (Reactive Extensions) — preceded RxJava and influenced it directly.</td></tr>
+      </table>
+    </div>
+    <!-- Verdict -->
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Older, deeper enterprise ecosystem — more libraries, more battle-tested</li>
+          <li>JVM tooling: JProfiler, async-profiler, JFR are world-class</li>
+          <li>Spring ecosystem maturity for microservices</li>
+          <li>Better multi-vendor cloud neutrality — less Azure pull</li>
+          <li>Stronger on Android (Kotlin/Java) though C# has MAUI</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>Where C# Wins</h4>
+        <ul>
+          <li>Reified generics — no type erasure pain</li>
+          <li>Struct value types for high-perf numerics</li>
+          <li>async/await 11 years earlier and cleaner</li>
+          <li>Nullable reference types at compiler level</li>
+          <li>LINQ is more integrated than Java Streams</li>
+          <li>Extension methods, pattern matching breadth</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>What Java Borrowed from C#</h4>
+        <ul>
+          <li>Records (C# had them first, then Java 16)</li>
+          <li>Pattern matching in switch (C# 8 → Java 21)</li>
+          <li>Sealed types concept (C# 9 → Java 17)</li>
+          <li>Text blocks (C# verbatim strings → Java 15)</li>
+          <li>Var local inference (C# 3 → Java 10)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ C++ ═══════════════ -->
+<section class="lang-section" id="lang-cpp" style="animation-delay:0.15s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--cpp);border-color:#0a4080;background:rgba(30,140,255,0.08)">C++</span>
+      <div class="lang-name">C Plus Plus</div>
+      <div class="lang-year">Born 1979 (C with Classes) · Bjarne Stroustrup</div>
+      <div class="lang-tagline">"The language that taught Java why garbage collection is worth the cost — and why zero-cost abstractions aren't free either."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:99%;background:var(--cpp)"></div></div><span class="score-val">99</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:75%;background:var(--cpp)"></div></div><span class="score-val">75</span></div>
+        <div class="score-row"><span class="score-label">Ecosystem</span><div class="score-track"><div class="score-fill" style="width:82%;background:var(--cpp)"></div></div><span class="score-val">82</span></div>
+        <div class="score-row"><span class="score-label">Type Safety</span><div class="score-track"><div class="score-fill" style="width:60%;background:var(--cpp)"></div></div><span class="score-val">60</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:30%;background:var(--cpp)"></div></div><span class="score-val">30</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:40%;background:var(--cpp)"></div></div><span class="score-val">40</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--cpp)"><span>⟨/⟩</span>The Same Problem — Radically Different Worlds</div>
+<pre class="code"><span class="cm">// C++20 — modern, but you own every byte</span>
+<span class="kw">struct</span> <span class="tp">Payment</span> {
+    std::<span class="tp">string</span> id;
+    <span class="tp">double</span> amount;
+    
+    <span class="cm">// Rule of Zero — let compiler generate copy/move</span>
+    Payment(<span class="tp">std::string</span> id, <span class="tp">double</span> amt)
+        : id{std::move(id)}, amount{amt} {}
+};
+
+<span class="cm">// Templates — zero-cost compile-time polymorphism</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+<span class="kw">concept</span> <span class="tp">Processable</span> = <span class="kw">requires</span>(T t) {
+    { t.process() } -> std::<span class="tp">same_as</span>&lt;<span class="kw">void</span>&gt;;
+};
+
+<span class="cm">// std::expected (C++23) — error handling without exceptions</span>
+std::<span class="tp">expected</span>&lt;<span class="tp">Payment</span>, <span class="tp">Error</span>&gt; <span class="fn">find</span>(std::<span class="tp">string_view</span> id) {
+    <span class="kw">if</span> (<span class="kw">auto</span> it = db.find(id); it != db.end())
+        <span class="kw">return</span> it->second;
+    <span class="kw">return</span> std::<span class="fn">unexpected</span>(<span class="tp">Error</span>::NotFound);
+}
+
+<span class="cm">// Java: no pointers, no manual memory, no undefined behavior
+// The JVM is the "zero-cost abstraction" Java chose</span></pre>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--cpp)"><span>⊕</span>Core Technical Differences</div>
+      <table class="mini-table">
+        <tr><td>Memory</td><td>Manual management + RAII + smart pointers. No GC. Sub-millisecond deterministic latency. Java GC pauses (even ZGC sub-ms) are fundamentally different guarantee.</td></tr>
+        <tr><td>Compilation</td><td>Compiles to native machine code. JIT vs AOT — JVM JIT often catches up to C++ in throughput, but C++ wins on latency predictability.</td></tr>
+        <tr><td>Templates</td><td>Compile-time generics — zero runtime overhead. Java generics are erased. C++ templates enable expression templates, CRTP, constexpr computation.</td></tr>
+        <tr><td>UB</td><td>Undefined Behavior — the dark forest. Java has no UB; the JVM spec is exhaustive. C++ UB is a footgun but also the source of its performance ceiling.</td></tr>
+        <tr><td>Coroutines</td><td>C++20 stackless coroutines — powerful but complex. Java Loom uses green threads (stackful). Different tradeoffs.</td></tr>
+        <tr><td>Modules</td><td>C++20 modules replacing header files — decades late, but finally here. Java modules (JPMS) since Java 9.</td></tr>
+      </table>
+      <div class="insight"><b>Greybeard Perspective</b>Java was explicitly designed to take C++'s power and remove its danger. The JVM heap, GC, and type safety exist because C++ memory bugs cost billions in the '90s. You've been living in the safety net C++ doesn't have.</div>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--cpp)"><span>⬡</span>Frameworks &amp; Domains</div>
+      <table class="mini-table">
+        <tr><td>Web/Backend</td><td>Crow, Drogon, Beast (Boost.Asio). Not the primary domain — these are niche. Java/C#/Go own web backend.</td></tr>
+        <tr><td>Finance/HFT</td><td>Where C++ dominates Java: ultra-low latency trading. Sub-microsecond order routing, kernel bypass networking (DPDK). If latency is in microseconds, C++ is mandatory.</td></tr>
+        <tr><td>Games</td><td>Unreal Engine, game engines. Java/JVM not used in AAA games — GC pauses are death for frame pacing.</td></tr>
+        <tr><td>Embedded</td><td>Arduino to automotive ECUs. Java has embedded JVMs (GraalVM Native) but C++ is the embedded default.</td></tr>
+        <tr><td>ML Infra</td><td>TensorFlow, PyTorch, ONNX Runtime are C++ under the hood. Python bindings are thin wrappers. If you work on ML infrastructure, C++ matters.</td></tr>
+        <tr><td>Systems</td><td>Operating systems, databases (Postgres, MySQL, MongoDB are C/C++). JVM sits on top of C/C++ runtimes.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--cpp)"><span>⟳</span>Concurrency &amp; Performance Model</div>
+      <table class="mini-table">
+        <tr><td>Threads</td><td>pthreads / std::thread — OS threads. Same model as Java's pre-Loom threads. C++ gives you more rope.</td></tr>
+        <tr><td>Atomics</td><td><code>std::atomic</code> with memory order specification (relaxed, acquire, release, seq_cst). Java's <code>VarHandle</code> added similar fencing models in Java 9.</td></tr>
+        <tr><td>Async</td><td>Futures/promises, Boost.Asio, C++20 coroutines. Less unified than C#/Java but more flexible.</td></tr>
+        <tr><td>SIMD</td><td>Intrinsics for vectorization — Java's Vector API (incubator) is years behind native C++ SIMD.</td></tr>
+        <tr><td>Cache</td><td>Data layout control via struct packing, alignment, cache-line awareness. Java can't easily do false sharing prevention (Contended annotation is a hack).</td></tr>
+      </table>
+    </div>
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Memory safety — no buffer overflows, no use-after-free, no dangling pointers</li>
+          <li>Developer productivity — 3-5x faster to ship typical business logic</li>
+          <li>Ecosystem for enterprise/fintech (Spring, Hibernate, etc.)</li>
+          <li>Tooling: debuggers, profilers, APM integration</li>
+          <li>Cross-platform guaranteed — JVM bytecode is truly portable</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>Where C++ Wins</h4>
+        <ul>
+          <li>Deterministic microsecond latency (no GC)</li>
+          <li>Bare-metal performance ceiling — can beat JVM throughput if tuned</li>
+          <li>Zero-overhead abstractions — templates compile away completely</li>
+          <li>Embedded/real-time systems where JVM doesn't fit</li>
+          <li>HFT, game engines, ML infrastructure</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>What Java Borrowed from C++</h4>
+        <ul>
+          <li>Object-oriented class model (with simplifications)</li>
+          <li>Exception handling syntax try/catch/finally</li>
+          <li>Generic programming concept (though implemented differently)</li>
+          <li>Memory model formalization (Java 5, then Java 9 VarHandle)</li>
+          <li>RAII spirit → try-with-resources (Java 7)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ PASCAL ═══════════════ -->
+<section class="lang-section" id="lang-pascal" style="animation-delay:0.2s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--pascal);border-color:#506020;background:rgba(160,200,64,0.08)">Pascal / Delphi</span>
+      <div class="lang-name">Pascal</div>
+      <div class="lang-year">Born 1970 · Niklaus Wirth · Turbo Pascal 1983 · Delphi 1995</div>
+      <div class="lang-tagline">"The ancestor that proved structured programming works — and that visual RAD could ship enterprise apps before Java existed."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:75%;background:var(--pascal)"></div></div><span class="score-val">75</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:62%;background:var(--pascal)"></div></div><span class="score-val">62</span></div>
+        <div class="score-row"><span class="score-label">Ecosystem</span><div class="score-track"><div class="score-fill" style="width:48%;background:var(--pascal)"></div></div><span class="score-val">48</span></div>
+        <div class="score-row"><span class="score-label">Type Safety</span><div class="score-track"><div class="score-fill" style="width:78%;background:var(--pascal)"></div></div><span class="score-val">78</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:82%;background:var(--pascal)"></div></div><span class="score-val">82</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:45%;background:var(--pascal)"></div></div><span class="score-val">45</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--pascal)"><span>⟨/⟩</span>Syntax DNA — Where Java's Readability Instincts Came From</div>
+<pre class="code"><span class="cm">{ Pascal/Delphi — verbose, unambiguous, pedagogically clear }</span>
+<span class="kw">type</span>
+  TPayment = <span class="kw">record</span>
+    Id: <span class="tp">string</span>;
+    Amount: <span class="tp">Currency</span>;  <span class="cm">{ Pascal had Currency type! Java uses BigDecimal }</span>
+  <span class="kw">end</span>;
+
+  TPaymentStatus = (psOk, psFailed, psPending);  <span class="cm">{ Typed enums 1970! }</span>
+
+<span class="kw">procedure</span> <span class="fn">ProcessPayment</span>(<span class="kw">const</span> P: TPayment);
+<span class="kw">begin</span>
+  <span class="cm">{ Delphi interfaces — inspired COM, which influenced JavaBeans }</span>
+  <span class="kw">if</span> P.Amount > <span class="num">1000</span> <span class="kw">then</span>
+    <span class="fn">LogAudit</span>(P.Id)
+  <span class="kw">else</span>
+    <span class="fn">FastTrack</span>(P.Id);
+<span class="kw">end</span>;
+
+<span class="cm">{ Delphi VCL — visual component library, 1995
+  Spring Framework didn't arrive until 2002
+  Delphi was shipping IoC via components 7 years earlier }</span>
+
+<span class="cm">// Java equivalent muscle memory:</span>
+<span class="kw">public void</span> <span class="fn">processPayment</span>(<span class="kw">final</span> Payment p) {
+    <span class="kw">if</span> (p.amount().compareTo(<span class="tp">BigDecimal</span>.valueOf(<span class="num">1000</span>)) > <span class="num">0</span>)
+        logAudit(p.id());
+    <span class="kw">else</span> fastTrack(p.id());
+}</pre>
+      <div class="insight"><b>Historical Depth</b>If you programmed in the 80s/90s, your instincts about readability, begin/end blocks, and procedure vs function separation were trained by Pascal. Java's verbose-but-clear philosophy is Pascal's direct intellectual descendant.</div>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--pascal)"><span>⊕</span>What Pascal Got Right That Java Inherited</div>
+      <table class="mini-table">
+        <tr><td>Typed Enums</td><td>Pascal had strongly-typed enums in 1970. Java didn't get proper enums until Java 5 (2004). 34-year gap.</td></tr>
+        <tr><td>Range Types</td><td><code>type Age = 0..120;</code> — Pascal's subrange types are what Java's validation annotations try to replace.</td></tr>
+        <tr><td>Units/Interfaces</td><td>Pascal Units were the first practical module system. Delphi interfaces (IInterface) directly preceded Java's interface concept.</td></tr>
+        <tr><td>IDE-First</td><td>Borland Pascal IDE (1983) was the first IDE that compiled-on-save. IntelliJ's DNA traces through Borland's JBuilder. Anders Hejlsberg (Delphi author) went on to design C# and TypeScript.</td></tr>
+        <tr><td>Exception model</td><td>Delphi's exception handling closely maps to Java's — try/except/finally structure. Java uses try/catch but the semantics are nearly identical.</td></tr>
+        <tr><td>VCL Components</td><td>Delphi's visual component IoC predates Spring by years. Drop a component on a form, set properties, wire events — that's dependency injection visually.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--pascal)"><span>⬡</span>Modern Pascal — Free Pascal &amp; Lazarus</div>
+      <table class="mini-table">
+        <tr><td>Free Pascal</td><td>Active compiler, supports modern OOP, generics, interfaces. Used in embedded systems, game dev (Castle Game Engine), and legacy enterprise maintenance.</td></tr>
+        <tr><td>Lazarus</td><td>Delphi-compatible cross-platform RAD IDE using Free Pascal. Still ships enterprise desktop apps in 2025. Niche but not dead.</td></tr>
+        <tr><td>Delphi RAD</td><td>Embarcadero Delphi still active (Delphi 12). Used in medical, industrial, legacy enterprise. If you maintain a 1990s hospital system, you know this.</td></tr>
+        <tr><td>vs Java</td><td>Java won the enterprise web battle decisively. Pascal/Delphi retained desktop RAD and niche industrial niches. Not competing in cloud-native era.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--pascal)"><span>⟳</span>The Anders Hejlsberg Thread</div>
+      <p style="font-size:13px;color:var(--text);line-height:1.8">
+        Understanding Pascal's lineage illuminates modern language design. <strong style="color:var(--white)">Niklaus Wirth</strong> designed Pascal for teaching structured programming, then later designed Modula-2 and Oberon (direct predecessors of Go's simplicity philosophy). <strong style="color:var(--white)">Anders Hejlsberg</strong> led Turbo Pascal, then Delphi, then C# (for Microsoft), then TypeScript. One person's design philosophy spans Pascal → C# → TypeScript — three languages you use or study in this curriculum. The clean type system, excellent IDE integration, and developer ergonomics are a continuous thread.
+      </p>
+      <div class="tags">
+        <span class="tag">Structured Programming</span>
+        <span class="tag">Strong Typing Pioneer</span>
+        <span class="tag">RAD IDE Origin</span>
+        <span class="tag">Anders Hejlsberg DNA</span>
+      </div>
+    </div>
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Web/cloud ecosystem — Spring, microservices, containers — Pascal has none</li>
+          <li>JVM performance, JIT compilation, modern GC</li>
+          <li>Massive library ecosystem (Maven Central = 500k+ artifacts)</li>
+          <li>Lambdas, streams, functional programming support</li>
+          <li>Active language evolution (Java 21/25 are excellent)</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>What Pascal Did Better</h4>
+        <ul>
+          <li>Readability-first design that Java inherited but made verbose</li>
+          <li>Native range/subrange types for domain precision</li>
+          <li>Delphi RAD speed for desktop apps — still unmatched</li>
+          <li>Currency type built-in (Java needs BigDecimal ceremony)</li>
+          <li>Begin/end blocks are arguably less ambiguous than braces</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>What Java Inherited</h4>
+        <ul>
+          <li>Verbose-but-readable philosophy over terse cleverness</li>
+          <li>Interface concept (Delphi IInterface model)</li>
+          <li>Typed enums — Java 5 finally caught up</li>
+          <li>IDE-centric development culture</li>
+          <li>Component/bean model from Delphi VCL</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ GO ═══════════════ -->
+<section class="lang-section" id="lang-golang" style="animation-delay:0.25s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--golang);border-color:#006880;background:rgba(0,184,212,0.08)">Golang</span>
+      <div class="lang-name">Go</div>
+      <div class="lang-year">Born 2009 · Google · Pike, Thompson, Griesemer</div>
+      <div class="lang-tagline">"Designed by C veterans who were tired of waiting for C++ to compile. A language of deliberate omissions."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:90%;background:var(--golang)"></div></div><span class="score-val">90</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:62%;background:var(--golang)"></div></div><span class="score-val">62</span></div>
+        <div class="score-row"><span class="score-label">Ecosystem</span><div class="score-track"><div class="score-fill" style="width:80%;background:var(--golang)"></div></div><span class="score-val">80</span></div>
+        <div class="score-row"><span class="score-label">Type Safety</span><div class="score-track"><div class="score-fill" style="width:72%;background:var(--golang)"></div></div><span class="score-val">72</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:88%;background:var(--golang)"></div></div><span class="score-val">88</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:38%;background:var(--golang)"></div></div><span class="score-val">38</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--golang)"><span>⟨/⟩</span>Go's Philosophy in Code</div>
+<pre class="code"><span class="cm">// Go: explicit, minimal, no magic</span>
+<span class="kw">type</span> <span class="tp">Payment</span> <span class="kw">struct</span> {
+    ID     <span class="tp">string</span>
+    Amount <span class="tp">float64</span>
+}
+
+<span class="cm">// Interfaces satisfied implicitly — no "implements" keyword</span>
+<span class="kw">type</span> <span class="tp">Processor</span> <span class="kw">interface</span> {
+    Process(<span class="tp">Payment</span>) <span class="tp">error</span>
+}
+
+<span class="cm">// Multiple return values — error handling by convention</span>
+<span class="kw">func</span> <span class="fn">FindPayment</span>(id <span class="tp">string</span>) (<span class="tp">Payment</span>, <span class="tp">error</span>) {
+    p, ok := db[id]
+    <span class="kw">if</span> !ok {
+        <span class="kw">return</span> <span class="tp">Payment</span>{}, fmt.<span class="fn">Errorf</span>(<span class="str">"not found: %s"</span>, id)
+    }
+    <span class="kw">return</span> p, <span class="kw">nil</span>
+}
+
+<span class="cm">// Goroutines + channels — CSP model</span>
+<span class="kw">func</span> <span class="fn">ProcessBatch</span>(payments []<span class="tp">Payment</span>) {
+    results := <span class="kw">make</span>(<span class="kw">chan</span> <span class="tp">error</span>, <span class="kw">len</span>(payments))
+    <span class="kw">for</span> _, p := <span class="kw">range</span> payments {
+        <span class="kw">go func</span>(pay <span class="tp">Payment</span>) { results &lt;- <span class="fn">process</span>(pay) }(p)
+    }
+}
+
+<span class="cm">// Java equivalent: virtual threads + StructuredTaskScope (Java 21)
+// Go had this model since 2009 — 14-year head start</span></pre>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--golang)"><span>⊕</span>Key Differences From a Java Perspective</div>
+      <table class="mini-table">
+        <tr><td>No Inheritance</td><td>Go has no class hierarchy. Composition via embedding only. Java's inheritance hierarchies are often considered an anti-pattern anyway — Go made the correct choice opinionated.</td></tr>
+        <tr><td>No Exceptions</td><td>Error values as return values — <code>(T, error)</code>. More explicit but verbose. Java's checked exceptions were an attempt at the same thing that the industry rejected.</td></tr>
+        <tr><td>Goroutines</td><td>Green threads — same as Java virtual threads (Project Loom). Go had them in 2009. Java waited until 2023. The performance model is essentially identical now.</td></tr>
+        <tr><td>Implicit Interfaces</td><td>Structural typing — if it has the methods, it implements the interface. No declaration needed. Java requires explicit <code>implements</code>. Go's approach enables retroactive interface satisfaction.</td></tr>
+        <tr><td>Compilation</td><td>Compiles to native binary in seconds. JVM startup is a perennial complaint. GraalVM Native Image is Java's answer, but Go was there first.</td></tr>
+        <tr><td>No Generics (until 1.18)</td><td>Go shipped without generics in 2009, resisted for 13 years, added them in 2022. The Go team's conservatism is extreme — proof that language design requires patience.</td></tr>
+      </table>
+      <div class="insight"><b>Fintech Angle</b>Go owns cloud infrastructure tooling. Kubernetes, Docker, Terraform, Prometheus, Vault — all written in Go. In your new role touching cloud deployment and CI/CD, you will read Go code. Knowing why Go works the way it does makes you better at the tools built with it.</div>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--golang)"><span>⬡</span>Frameworks — The Deliberate Contrast</div>
+      <table class="mini-table">
+        <tr><td>Web</td><td>net/http stdlib is production-grade — Go doesn't need Spring. Frameworks (Gin, Echo, Fiber, Chi) exist but are thin routers, not IoC containers. No Spring Boot equivalent needed.</td></tr>
+        <tr><td>Philosophy</td><td>Where Java says "use Spring for everything," Go says "use the standard library; add a small library only when necessary." Both approaches have merit at different scales.</td></tr>
+        <tr><td>Database</td><td>database/sql + sqlx or GORM. Much simpler than JPA/Hibernate. No ORM magic — you write SQL. More verbose, fewer surprises.</td></tr>
+        <tr><td>gRPC</td><td>Go and Java are the two primary gRPC languages. Proto definitions compile to Go and Java with equal quality. Your gRPC work will often bridge both languages.</td></tr>
+        <tr><td>Cloud SDKs</td><td>AWS SDK, GCP SDK, Azure SDK — all have excellent Go support. Often added alongside Java as first-class.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--golang)"><span>⟳</span>Concurrency: The Language Go Was Born For</div>
+<pre class="code"><span class="cm">// Go CSP — channels are first-class values</span>
+<span class="kw">func</span> <span class="fn">FanOut</span>(ids []<span class="tp">string</span>) []<span class="tp">Payment</span> {
+    ch := <span class="kw">make</span>(<span class="kw">chan</span> <span class="tp">Payment</span>)
+    <span class="kw">for</span> _, id := <span class="kw">range</span> ids {
+        <span class="kw">go func</span>(id <span class="tp">string</span>) { ch &lt;- <span class="fn">fetch</span>(id) }(id)
+    }
+    results := <span class="kw">make</span>([]<span class="tp">Payment</span>, 0, <span class="kw">len</span>(ids))
+    <span class="kw">for range</span> ids {
+        results = <span class="kw">append</span>(results, &lt;-ch)
+    }
+    <span class="kw">return</span> results
+}
+
+<span class="cm">// Java 21 equivalent — virtual threads make this comparable:
+try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+    var tasks = ids.stream().map(id -> scope.fork(() -> fetch(id)));
+    scope.join().throwIfFailed();
+    return tasks.map(Task::get).toList();
+}</span></pre>
+    </div>
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Generics depth — Java generics (bounded wildcards, type inference) are more powerful</li>
+          <li>OOP expressiveness — interfaces, abstract classes, polymorphism hierarchy</li>
+          <li>Ecosystem breadth — Spring ecosystem dwarfs Go's library space</li>
+          <li>JVM tooling: JFR, async-profiler, GC tuning options</li>
+          <li>Streaming / reactive support (Project Reactor, RxJava)</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>Where Go Wins</h4>
+        <ul>
+          <li>Compile time — seconds vs tens of seconds for large Java projects</li>
+          <li>Binary size — single 10mb binary vs 300mb JRE dependency</li>
+          <li>Goroutines available since 2009 (Java Loom = 2023)</li>
+          <li>Simplicity — Go has far fewer language features (a feature, not a bug)</li>
+          <li>Cloud tooling — Docker, K8s, Terraform are Go. Read them, write them.</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>What Java Borrowed from Go</h4>
+        <ul>
+          <li>Virtual threads (Project Loom) — Go's goroutine model, 14 years later</li>
+          <li>GraalVM native compilation — Go's fast startup inspired this</li>
+          <li>Structured concurrency API design philosophy</li>
+          <li>Pressure to simplify module system (Go modules influenced JPMS debates)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ RUST ═══════════════ -->
+<section class="lang-section" id="lang-rust" style="animation-delay:0.3s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--rust);border-color:#803020;background:rgba(240,96,48,0.08)">Rust</span>
+      <div class="lang-name">Rust</div>
+      <div class="lang-year">Born 2010 · Mozilla Research · Graydon Hoare · Stable 2015</div>
+      <div class="lang-tagline">"The language that proved memory safety and systems-level performance are not a tradeoff — they were a compiler problem all along."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:99%;background:var(--rust)"></div></div><span class="score-val">99</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:88%;background:var(--rust)"></div></div><span class="score-val">88</span></div>
+        <div class="score-row"><span class="score-label">Ecosystem</span><div class="score-track"><div class="score-fill" style="width:75%;background:var(--rust)"></div></div><span class="score-val">75</span></div>
+        <div class="score-row"><span class="score-label">Type Safety</span><div class="score-track"><div class="score-fill" style="width:99%;background:var(--rust)"></div></div><span class="score-val">99</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:20%;background:var(--rust)"></div></div><span class="score-val">20</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:30%;background:var(--rust)"></div></div><span class="score-val">30</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--rust)"><span>⟨/⟩</span>The Ownership Model — Alien But Brilliant</div>
+<pre class="code"><span class="cm">// Rust: the borrow checker enforces memory safety at compile time</span>
+<span class="kw">struct</span> <span class="tp">Payment</span> {
+    id: <span class="tp">String</span>,
+    amount: <span class="tp">f64</span>,
+}
+
+<span class="cm">// Result&lt;T,E&gt; = Java's Optional + checked exception, unified</span>
+<span class="kw">fn</span> <span class="fn">find_payment</span>(id: &amp;<span class="tp">str</span>) -&gt; <span class="tp">Result</span>&lt;<span class="tp">Payment</span>, <span class="tp">AppError</span>&gt; {
+    db.get(id)
+      .ok_or(<span class="tp">AppError</span>::NotFound(id.to_string()))
+      .cloned()
+}
+
+<span class="cm">// Ownership — one owner, explicit borrowing, no GC needed</span>
+<span class="kw">fn</span> <span class="fn">process</span>(payment: <span class="tp">Payment</span>) {         <span class="cm">// takes ownership</span>
+    <span class="fn">audit</span>(&amp;payment.id);              <span class="cm">// borrows immutably</span>
+    <span class="fn">charge</span>(&amp;<span class="kw">mut</span> payment.amount);      <span class="cm">// borrows mutably</span>
+}                                    <span class="cm">// payment dropped here</span>
+
+<span class="cm">// Pattern matching — more powerful than Java's switch</span>
+<span class="kw">let</span> msg = <span class="kw">match</span> status {
+    <span class="tp">Status</span>::Ok           =&gt; <span class="str">"cleared"</span>,
+    <span class="tp">Status</span>::Failed(why)  =&gt; &amp;why,
+    <span class="tp">Status</span>::Pending      =&gt; <span class="str">"awaiting"</span>,
+};
+
+<span class="cm">// Java: GC handles this. Rust: compiler handles this.
+// Different solutions to the same problem: safe memory management.</span></pre>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--rust)"><span>⊕</span>Core Technical Contrast with Java</div>
+      <table class="mini-table">
+        <tr><td>Memory</td><td>Ownership + borrowing enforced at compile time. Zero GC, zero garbage, zero runtime overhead. Java GC (even ZGC) has probabilistic latency; Rust has deterministic.</td></tr>
+        <tr><td>Null</td><td><code>Option&lt;T&gt;</code> — null doesn't exist as a concept. No NullPointerException possible. Java has Optional but null still exists. Tony Hoare's "billion dollar mistake" is legally outlawed in Rust.</td></tr>
+        <tr><td>Error Handling</td><td><code>Result&lt;T, E&gt;</code> — errors are values. The <code>?</code> operator propagates errors ergonomically. Java's checked exceptions are the same philosophy, but Rust's implementation is cleaner.</td></tr>
+        <tr><td>Traits vs Interfaces</td><td>Rust traits ≈ Java interfaces but more powerful: default implementations, associated types, blanket implementations. Java 8 added default methods — Rust traits had them from day one.</td></tr>
+        <tr><td>Lifetimes</td><td>Explicit lifetime annotations tell the compiler how long references live. Java has no equivalent — GC makes it unnecessary. This is Rust's steepest learning curve.</td></tr>
+        <tr><td>Async</td><td>Tokio runtime: async/await with zero-cost future polling. More complex than Java Loom but more efficient — no stack allocation per virtual thread.</td></tr>
+      </table>
+      <div class="insight"><b>The Interview Insight</b>When someone asks "why does Java have a GC?" the real answer is: "Because it's a tradeoff — we gave up deterministic memory management to gain safety without the complexity Rust requires." Understanding Rust makes you articulate about why the JVM is designed the way it is.</div>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--rust)"><span>⬡</span>Where Rust Is Taking Territory From Java</div>
+      <table class="mini-table">
+        <tr><td>WebAssembly</td><td>Rust is the dominant language for WASM. Java has TeaVM and JWebAssembly but Rust WASM is production-grade and widely adopted.</td></tr>
+        <tr><td>CLI Tools</td><td>Ripgrep, fd, bat, exa, cargo — high-performance CLI tools replacing aging Unix tools. Not a Java domain.</td></tr>
+        <tr><td>Embedded</td><td>Embedded Rust growing fast in automotive, aerospace, IoT. C's traditional domain plus memory safety — compelling.</td></tr>
+        <tr><td>Systems Code</td><td>Linux kernel (Rust added 2022), Android OS components, Windows kernel drivers. C's last strongholds under pressure.</td></tr>
+        <tr><td>Web Backend</td><td>Axum, Actix Web — benchmark leaders. Not displacing Spring Boot yet but growing in latency-critical services.</td></tr>
+        <tr><td>AI Infrastructure</td><td>Candle (Hugging Face), Burn (ML framework) — Rust for ML inference. Python trains, Rust serves.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--rust)"><span>⟳</span>Async Rust vs Java Virtual Threads</div>
+<pre class="code"><span class="cm">// Rust async with Tokio</span>
+<span class="kw">async fn</span> <span class="fn">fetch_all</span>(ids: Vec&lt;<span class="tp">String</span>&gt;) -&gt; <span class="tp">Vec</span>&lt;<span class="tp">Payment</span>&gt; {
+    <span class="kw">let</span> futures: Vec&lt;_&gt; = ids.iter()
+        .map(|id| <span class="fn">fetch_payment</span>(id))
+        .collect();
+    futures::future::<span class="fn">join_all</span>(futures).<span class="kw">await</span>
+}
+
+<span class="cm">// Zero stack allocation per task — stackless coroutines
+// Java Virtual Threads: ~1KB stack per thread by default
+// Rust async: 0 bytes until awaited — pure state machine
+// For 1M concurrent tasks: Rust wins on memory.
+// For developer ergonomics: Java virtual threads win.</span></pre>
+      <div class="tags">
+        <span class="tag">Zero-Cost Abstractions</span>
+        <span class="tag">No GC</span>
+        <span class="tag">Ownership Model</span>
+        <span class="tag">Systems Language</span>
+        <span class="tag">WASM Native</span>
+      </div>
+    </div>
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Productivity — Rust has a brutal learning curve; Java is 10x faster to ship business logic</li>
+          <li>Ecosystem maturity for enterprise services</li>
+          <li>Virtual threads match goroutines and are easier than async Rust</li>
+          <li>Reflection / dynamic behavior — Rust is fully static</li>
+          <li>Hiring pool — vastly more Java developers exist</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>Where Rust Wins</h4>
+        <ul>
+          <li>Memory safety without GC — the holy grail, achieved</li>
+          <li>No null, no data races, no memory leaks — compiler-enforced</li>
+          <li>Deterministic latency — critical for real-time systems</li>
+          <li>Binary size and startup — 1ms vs 100ms startup</li>
+          <li>WASM, embedded, systems programming domains</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>What Java Is Learning from Rust</h4>
+        <ul>
+          <li>Valhalla project: value types (inspired by Rust's stack-allocated structs)</li>
+          <li>GraalVM native: zero-startup binaries (Rust's compilation model influence)</li>
+          <li>Pattern matching exhaustiveness — Java's switch is catching up</li>
+          <li>Result-like error types discussion in Java (ongoing JEP proposals)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ PYTHON ═══════════════ -->
+<section class="lang-section" id="lang-python" style="animation-delay:0.35s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--python);border-color:#807020;background:rgba(255,208,64,0.08)">Python</span>
+      <div class="lang-name">Python</div>
+      <div class="lang-year">Born 1991 · Guido van Rossum · Python 3 in 2008</div>
+      <div class="lang-tagline">"The language that sacrificed runtime performance for human clarity — and then accidentally became the backbone of all AI."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:35%;background:var(--python)"></div></div><span class="score-val">35</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:97%;background:var(--python)"></div></div><span class="score-val">97</span></div>
+        <div class="score-row"><span class="score-label">Ecosystem</span><div class="score-track"><div class="score-fill" style="width:99%;background:var(--python)"></div></div><span class="score-val">99</span></div>
+        <div class="score-row"><span class="score-label">Type Safety</span><div class="score-track"><div class="score-fill" style="width:55%;background:var(--python)"></div></div><span class="score-val">55</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:95%;background:var(--python)"></div></div><span class="score-val">95</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:25%;background:var(--python)"></div></div><span class="score-val">25</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--python)"><span>⟨/⟩</span>The Same Service — 3x Fewer Lines</div>
+<pre class="code"><span class="cm"># Python 3.12 — readable like pseudocode</span>
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> decimal <span class="kw">import</span> Decimal
+
+<span class="kw">@dataclass</span>
+<span class="kw">class</span> <span class="tp">Payment</span>:
+    id: <span class="tp">str</span>
+    amount: <span class="tp">Decimal</span>
+
+<span class="cm"># Type hints (optional but increasingly used)</span>
+<span class="kw">def</span> <span class="fn">process_batch</span>(payments: list[<span class="tp">Payment</span>]) -> list[<span class="tp">str</span>]:
+    <span class="kw">return</span> [p.id <span class="kw">for</span> p <span class="kw">in</span> payments <span class="kw">if</span> p.amount > <span class="num">1000</span>]
+
+<span class="cm"># FastAPI — closest to Spring Boot, but 5x less ceremony</span>
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+app = FastAPI()
+
+<span class="kw">@app.get</span>(<span class="str">"/payments/{id}"</span>)
+<span class="kw">async def</span> <span class="fn">get_payment</span>(id: <span class="tp">str</span>) -> <span class="tp">Payment</span>:
+    <span class="kw">return await</span> <span class="fn">db.find</span>(id)  <span class="cm"># auto-serialized to JSON</span>
+
+<span class="cm"># LangChain — this is your Python superpower for the new job</span>
+<span class="kw">from</span> langchain.agents <span class="kw">import</span> AgentExecutor
+<span class="kw">from</span> langchain_anthropic <span class="kw">import</span> ChatAnthropic
+
+agent = AgentExecutor(
+    agent=<span class="fn">create_tool_calling_agent</span>(
+        ChatAnthropic(model=<span class="str">"claude-3-5-sonnet"</span>),
+        tools, prompt
+    ),
+    tools=tools
+)</pre>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--python)"><span>⊕</span>Fundamental Differences from Java</div>
+      <table class="mini-table">
+        <tr><td>Typing</td><td>Dynamic by default, gradual typing via type hints. Mypy/Pyright for static analysis. Java is statically typed — catches errors at compile time Python catches at runtime (in production).</td></tr>
+        <tr><td>GIL</td><td>Global Interpreter Lock — only one thread executes Python at a time. True parallelism requires multiprocessing. Python 3.13 introduced free-threading (experimental GIL removal). Java has true thread parallelism.</td></tr>
+        <tr><td>Speed</td><td>CPython is 10–100x slower than JVM for CPU-bound tasks. But Python's NumPy/PyTorch calls drop into C/CUDA — Python is "fast enough" because the hot loops aren't Python.</td></tr>
+        <tr><td>Packaging</td><td>pip + venv + conda + poetry = dependency hell. Maven/Gradle with Central Repository is notably more reliable. Python packaging is a known pain point.</td></tr>
+        <tr><td>Indentation</td><td>Whitespace is syntax. Controversial but eliminates the entire class of "where's the closing brace" bugs. Java developers are often initially hostile; most come around.</td></tr>
+        <tr><td>Metaprogramming</td><td>Decorators, metaclasses, __dunder__ magic. Python's runtime introspection is dramatically more powerful than Java reflection — and more dangerous.</td></tr>
+      </table>
+      <div class="insight"><b>Your Specific Advantage</b>You are already at Python advanced-intermediate. In this job, your Python fluency means you can build and prototype AI pipelines in LangChain, port the designs to LangChain4j, and be the bridge person nobody else on the team is. That's uniquely valuable.</div>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--python)"><span>⬡</span>Python Framework Equivalents to Java</div>
+      <table class="mini-table">
+        <tr><td>Spring Boot</td><td><strong style="color:var(--white)">FastAPI</strong> (async, modern, auto-docs) or <strong style="color:var(--white)">Django REST Framework</strong> (batteries-included). FastAPI's dependency injection is inspired by Spring's IoC.</td></tr>
+        <tr><td>JPA/Hibernate</td><td><strong style="color:var(--white)">SQLAlchemy</strong> 2.0 (async ORM) or <strong style="color:var(--white)">Django ORM</strong>. SQLAlchemy's expression language is closer to Java's Criteria API.</td></tr>
+        <tr><td>JUnit/Mockito</td><td><strong style="color:var(--white)">pytest</strong> + <strong style="color:var(--white)">unittest.mock</strong>. Pytest's fixture injection is more elegant than JUnit 5 extensions. Hypothesis for property-based testing (Java: jqwik).</td></tr>
+        <tr><td>Project Reactor</td><td><strong style="color:var(--white)">asyncio</strong> + <strong style="color:var(--white)">aiohttp</strong>. Python's async/await directly comparable. Python's async ecosystem is more fragmented than Reactor.</td></tr>
+        <tr><td>LangChain4j</td><td><strong style="color:var(--white)">LangChain Python</strong> — this is the canonical version. 10x more examples, tutorials, and models supported than the Java port. Always prototype in Python first.</td></tr>
+        <tr><td>Docker/K8s SDK</td><td><strong style="color:var(--white)">docker-py</strong>, <strong style="color:var(--white)">kubernetes</strong> client. Equal quality to Java SDKs. Automation scripting favors Python.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--python)"><span>⟳</span>Python + AI = The New Platform</div>
+      <table class="mini-table">
+        <tr><td>PyTorch/TF</td><td>ML framework bindings — Python is the interface layer over C++/CUDA kernels. Java has DJL (Deep Java Library) but the ecosystem is Python-centric by 100:1 ratio.</td></tr>
+        <tr><td>LangChain</td><td>The standard for LLM application development. Python version has every integration; Java version (LangChain4j) lags by 6–12 months on new model support.</td></tr>
+        <tr><td>OpenAI SDK</td><td>Python SDK is always first-party and first-to-ship new features. Java SDK is community-maintained and slower to update. In AI work, Python moves faster.</td></tr>
+        <tr><td>Jupyter</td><td>Notebooks for iterative AI development — no Java equivalent that is widely used. In AI-assisted development, your Python + Jupyter workflow is how you prototype.</td></tr>
+        <tr><td>Pydantic</td><td>Runtime type validation — critical for validating LLM JSON outputs. Java equivalent: Bean Validation + Jackson. Pydantic v2 (Rust-backed) is faster and more ergonomic.</td></tr>
+      </table>
+    </div>
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Performance — 10–100x faster for CPU-bound code</li>
+          <li>True multithreading — no GIL, full CPU utilization</li>
+          <li>Compile-time type safety — catch errors before production</li>
+          <li>Enterprise ecosystem maturity</li>
+          <li>Refactoring safety in large codebases</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>Where Python Wins</h4>
+        <ul>
+          <li>AI/ML ecosystem — Python is the language of AI, full stop</li>
+          <li>Prototyping speed — 3x fewer lines for most tasks</li>
+          <li>Data science tooling (pandas, numpy, scipy)</li>
+          <li>Interactive development (Jupyter notebooks)</li>
+          <li>Scripting and automation — glue language par excellence</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>What Java Borrowed from Python</h4>
+        <ul>
+          <li>Optional (inspired by Python's None handling philosophy)</li>
+          <li>f-string style influence on String Templates (Java 21)</li>
+          <li>List comprehension spirit in Stream API</li>
+          <li>REPL (jshell, Java 9) — Python had ipython for years</li>
+          <li>Duck typing philosophy influenced Java interfaces</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ ELIXIR ═══════════════ -->
+<section class="lang-section" id="lang-elixir" style="animation-delay:0.4s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--elixir);border-color:#702080;background:rgba(208,96,240,0.08)">Elixir / Erlang</span>
+      <div class="lang-name">Elixir</div>
+      <div class="lang-year">Erlang 1986 (Ericsson) · Elixir 2011 · José Valim</div>
+      <div class="lang-tagline">"The language that powered the global phone network before the internet existed — and still runs WhatsApp at scale."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:78%;background:var(--elixir)"></div></div><span class="score-val">78</span></div>
+        <div class="score-row"><span class="score-label">Concurrency</span><div class="score-track"><div class="score-fill" style="width:99%;background:var(--elixir)"></div></div><span class="score-val">99</span></div>
+        <div class="score-row"><span class="score-label">Fault Tolerance</span><div class="score-track"><div class="score-fill" style="width:99%;background:var(--elixir)"></div></div><span class="score-val">99</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:88%;background:var(--elixir)"></div></div><span class="score-val">88</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:60%;background:var(--elixir)"></div></div><span class="score-val">60</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:15%;background:var(--elixir)"></div></div><span class="score-val">15</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--elixir)"><span>⟨/⟩</span>A Completely Different World</div>
+<pre class="code"><span class="cm"># Elixir — everything is a process, nothing shares state</span>
+<span class="kw">defmodule</span> <span class="tp">Payment</span> <span class="kw">do</span>
+  <span class="kw">defstruct</span> [:id, :amount, :status]
+
+  <span class="cm"># Pattern matching is the primary control flow</span>
+  <span class="kw">def</span> <span class="fn">process</span>(%<span class="tp">Payment</span>{amount: amount} = payment)
+      <span class="kw">when</span> amount > <span class="num">1000</span> <span class="kw">do</span>
+    payment |> <span class="fn">audit</span>() |> <span class="fn">high_value_route</span>()
+  <span class="kw">end</span>
+
+  <span class="kw">def</span> <span class="fn">process</span>(payment), <span class="kw">do</span>: <span class="fn">fast_track</span>(payment)
+<span class="kw">end</span>
+
+<span class="cm"># GenServer — stateful process, OTP's workhorse
+# Equivalent to a Spring @Service but with built-in
+# supervision, restart strategies, and message queues</span>
+<span class="kw">defmodule</span> <span class="tp">PaymentServer</span> <span class="kw">do</span>
+  <span class="kw">use</span> GenServer
+
+  <span class="kw">def</span> <span class="fn">init</span>(state), <span class="kw">do</span>: {<span class="lit">:ok</span>, state}
+
+  <span class="kw">def</span> <span class="fn">handle_call</span>({<span class="lit">:process</span>, payment}, _from, state) do
+    result = <span class="tp">Payment</span>.<span class="fn">process</span>(payment)
+    {<span class="lit">:reply</span>, result, state}
+  <span class="kw">end</span>
+<span class="kw">end</span>
+
+<span class="cm"># Supervisor tree — crashes are managed, not avoided
+Supervisor.start_link([PaymentServer], strategy: :one_for_one)
+# "Let it crash" — the opposite of Java's defensive programming</span></pre>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--elixir)"><span>⊕</span>The BEAM VM vs JVM</div>
+      <table class="mini-table">
+        <tr><td>VM</td><td>BEAM (Bogdan/Björn's Erlang Abstract Machine) vs JVM. Both are managed runtimes with GC. BEAM optimized for millions of lightweight processes; JVM optimized for throughput on shared heap.</td></tr>
+        <tr><td>Processes</td><td>BEAM processes are ~300 bytes each. Java virtual threads are ~1KB. Erlang/Elixir regularly runs millions of concurrent processes on a single node — this is the phone network model.</td></tr>
+        <tr><td>Immutability</td><td>Everything is immutable in Elixir — no mutable state exists. Java immutability is opt-in. This eliminates an entire class of concurrency bugs that Java developers fight constantly.</td></tr>
+        <tr><td>"Let it Crash"</td><td>Erlang's philosophy: don't write defensive code; write supervision trees that restart crashed processes. Opposite of Java's try/catch everywhere. In practice, more reliable.</td></tr>
+        <tr><td>Hot Code Reload</td><td>Deploy new code without downtime — BEAM supports true hot code loading. Java has limited support (DCEVM, JRebel) but it's not native.</td></tr>
+        <tr><td>Distribution</td><td>Erlang distribution is built into the VM — nodes discover each other, pass messages transparently. Java has no native equivalent; you add messaging middleware (Kafka, RabbitMQ).</td></tr>
+      </table>
+      <div class="insight"><b>The Jaw-Dropping Fact</b>WhatsApp handled 900 million users with 50 engineers and Erlang. At that ratio, Java shops have 10x the engineers for equivalent scale. The "let it crash" + supervision tree model is genuinely different from Java's exception handling philosophy — and arguably superior for distributed systems.</div>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--elixir)"><span>⬡</span>Phoenix Framework vs Spring Boot</div>
+      <table class="mini-table">
+        <tr><td>Phoenix</td><td>Elixir's web framework. Phoenix LiveView enables real-time web UIs with server-side rendering and websockets — without JavaScript frameworks. No Spring Boot equivalent.</td></tr>
+        <tr><td>Ecto</td><td>Database wrapper and query language. Explicit, composable queries. No magic. Spring Data JPA's "derived query methods" (findByNameAndStatus) don't exist — intentionally.</td></tr>
+        <tr><td>Channels</td><td>Phoenix Channels = WebSocket abstraction. Built for real-time at scale. Spring WebSocket exists but Phoenix's concurrency model makes it more scalable at lower resource cost.</td></tr>
+        <tr><td>OTP</td><td>Open Telecom Platform — GenServer, Supervisor, Application behaviors. This is Elixir's "Spring Framework" — the standard library of concurrency and fault tolerance patterns.</td></tr>
+        <tr><td>Fintech Fit</td><td>Used at Brex, Cabify, Discord (millions of websocket connections). Latency at scale is Elixir's strength; raw throughput is JVM's strength.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--elixir)"><span>⟳</span>The Pipe Operator — A Different Way to Compose</div>
+<pre class="code"><span class="cm"># Elixir's |> pipe operator</span>
+result = payment_id
+  |> <span class="fn">fetch_payment</span>()
+  |> <span class="fn">validate_limits</span>()
+  |> <span class="fn">apply_rules</span>()
+  |> <span class="fn">route_to_processor</span>()
+  |> <span class="fn">record_audit</span>()
+
+<span class="cm"># Java equivalent — method chaining or Stream pipeline:
+String result = Stream.of(paymentId)
+    .map(this::fetchPayment)
+    .map(this::validateLimits)
+    .map(this::applyRules)
+    .map(this::routeToProcessor)
+    .peek(this::recordAudit)
+    .findFirst().orElseThrow();
+
+# The pipe influenced Clojure's threading macros,
+# Java's Stream API, and functional thinking broadly.</span></pre>
+    </div>
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Raw CPU throughput — JIT-compiled JVM beats BEAM on compute</li>
+          <li>Enterprise library ecosystem — nothing in Elixir matches Spring depth</li>
+          <li>Hiring pool — far more Java developers available</li>
+          <li>Tooling maturity — JVM profiling, debugging, APM tools</li>
+          <li>Numeric performance — financial calculations at volume</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>Where Elixir Wins</h4>
+        <ul>
+          <li>Concurrent connection count per node — BEAM wins by orders of magnitude</li>
+          <li>"Let it crash" + supervision trees — more reliable distributed systems</li>
+          <li>Built-in process model — no Kafka needed for many use cases</li>
+          <li>Hot code reloading — true zero-downtime deploys</li>
+          <li>Immutability by default — eliminates concurrency bugs</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>What Java Is Learning from Erlang</h4>
+        <ul>
+          <li>Virtual threads — BEAM's process model was the inspiration</li>
+          <li>Structured concurrency — supervision tree concepts in StructuredTaskScope</li>
+          <li>Immutable data preference — records, unmodifiable collections</li>
+          <li>Message-passing patterns — Akka (Java) is explicitly Erlang-inspired</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ HASKELL ═══════════════ -->
+<section class="lang-section" id="lang-haskell" style="animation-delay:0.45s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--haskell);border-color:#206080;background:rgba(88,184,224,0.08)">Haskell</span>
+      <div class="lang-name">Haskell</div>
+      <div class="lang-year">Born 1990 · Committee Design · Lazy Evaluation · Category Theory in Code</div>
+      <div class="lang-tagline">"The language academics use to prove things work before industry implements them. Java's future features are often Haskell's present."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:80%;background:var(--haskell)"></div></div><span class="score-val">80</span></div>
+        <div class="score-row"><span class="score-label">Type Safety</span><div class="score-track"><div class="score-fill" style="width:99%;background:var(--haskell)"></div></div><span class="score-val">99</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:95%;background:var(--haskell)"></div></div><span class="score-val">95</span></div>
+        <div class="score-row"><span class="score-label">Ecosystem</span><div class="score-track"><div class="score-fill" style="width:52%;background:var(--haskell)"></div></div><span class="score-val">52</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:12%;background:var(--haskell)"></div></div><span class="score-val">12</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:10%;background:var(--haskell)"></div></div><span class="score-val">10</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--haskell)"><span>⟨/⟩</span>Types So Powerful They Prove Correctness</div>
+<pre class="code"><span class="cm">-- Haskell: types encode business rules</span>
+<span class="kw">data</span> <span class="tp">Payment</span> = <span class="tp">Payment</span>
+  { payId     :: <span class="tp">PaymentId</span>   <span class="cm">-- newtype wrapper, not raw String</span>
+  , payAmount :: <span class="tp">Positive Money</span> <span class="cm">-- amount > 0, enforced by type</span>
+  }
+
+<span class="cm">-- Functor/Monad -- Java's Optional and CompletableFuture
+-- are watered-down versions of this concept</span>
+<span class="fn">processPayment</span> :: <span class="tp">PaymentId</span> -> <span class="tp">IO</span> (<span class="tp">Either</span> <span class="tp">Error</span> <span class="tp">Receipt</span>)
+<span class="fn">processPayment</span> pid = <span class="kw">do</span>
+  p   <- <span class="fn">fetchPayment</span> pid     <span class="cm">-- IO action</span>
+  val <- <span class="fn">validate</span> p           <span class="cm">-- pure function</span>
+  <span class="fn">charge</span> val                  <span class="cm">-- effectful, but tracked in type</span>
+
+<span class="cm">-- The type IO (Either Error Receipt) tells you:
+-- this function touches the outside world (IO)
+-- and can fail with Error OR succeed with Receipt
+-- Java's checked exceptions tried this; Haskell perfected it</span>
+
+<span class="cm">-- Typeclasses -- more powerful than Java interfaces</span>
+<span class="kw">class</span> <span class="tp">Auditable</span> a <span class="kw">where</span>
+  <span class="fn">auditTrail</span> :: a -> [<span class="tp">AuditEvent</span>]
+
+<span class="cm">-- Instance derived automatically where possible</span>
+<span class="kw">instance</span> <span class="tp">Auditable</span> <span class="tp">Payment</span> <span class="kw">where</span>
+  <span class="fn">auditTrail</span> p = [<span class="tp">AuditEvent</span> (payId p) <span class="str">"processed"</span>]</pre>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--haskell)"><span>⊕</span>Haskell Concepts That Leaked Into Java</div>
+      <table class="mini-table">
+        <tr><td>Monads</td><td><code>Optional&lt;T&gt;</code> is a Maybe monad. <code>CompletableFuture&lt;T&gt;</code> is an IO monad. <code>Stream&lt;T&gt;</code> is a List monad. Java implemented these concepts without teaching the vocabulary.</td></tr>
+        <tr><td>Functors</td><td><code>Optional.map()</code>, <code>Stream.map()</code>, <code>CompletableFuture.thenApply()</code> — all are <code>fmap</code> from Haskell. You've been using functors for years without the name.</td></tr>
+        <tr><td>Type Classes</td><td>Java's Comparable, Iterable, Callable are weak typeclasses. Haskell's typeclass system is what Scala's implicits and Rust's traits properly implement.</td></tr>
+        <tr><td>Lazy Evaluation</td><td>Java's <code>Stream</code> is lazy by default — terminal operations drive evaluation. Direct inspiration from Haskell's lazy lists. Haskell is lazy everywhere; Java is lazy on demand.</td></tr>
+        <tr><td>Algebraic Types</td><td>Java sealed classes + records = Algebraic Data Types (Sum types + Product types). Haskell has had these since 1990. Java added them in 2021. 31-year gap.</td></tr>
+        <tr><td>Immutability</td><td>Haskell has no mutable state by default — IO monad tracks side effects in the type. Java's immutability is opt-in via final, unmodifiable collections, records.</td></tr>
+      </table>
+      <div class="insight"><b>The Indirect Influence</b>Haskell doesn't need a huge user base to matter. Every functional feature in Java (lambdas, streams, Optional, records, sealed classes) has a direct Haskell ancestor. Haskell is the R&D lab for mainstream language features — studying it reveals what Java 30 will look like.</div>
+    </div>
+    <div class="content-panel" style="grid-column: 1 / -1">
+      <div class="panel-title" style="color:var(--haskell)"><span>⬡</span>The Functor/Monad Rosetta Stone for Java Developers</div>
+      <table class="mini-table">
+        <tr><td>Haskell <code>Maybe a</code></td><td>= Java <code>Optional&lt;T&gt;</code>. <code>Nothing</code> = empty. <code>Just x</code> = <code>Optional.of(x)</code>. <code>fmap</code> = <code>map()</code>. <code>>>=</code> (bind) = <code>flatMap()</code>.</td></tr>
+        <tr><td>Haskell <code>IO a</code></td><td>= Java <code>CompletableFuture&lt;T&gt;</code> conceptually. Tracks that a computation touches the outside world. <code>thenApply</code> = <code>fmap</code>. <code>thenCompose</code> = <code>>>=</code>.</td></tr>
+        <tr><td>Haskell <code>[a]</code> (List monad)</td><td>= Java <code>Stream&lt;T&gt;</code>. <code>map</code> = <code>map</code>. <code>concatMap</code> = <code>flatMap</code>. <code>filter</code> = <code>filter</code>. The names are almost identical because Java copied them.</td></tr>
+        <tr><td>Haskell <code>Either e a</code></td><td>= Java has no direct equivalent. <code>Right a</code> = success. <code>Left e</code> = failure. Vavr library adds this to Java. Rust's <code>Result&lt;T,E&gt;</code> is Either with better ergonomics.</td></tr>
+        <tr><td>Haskell Typeclasses</td><td>= Java Interfaces (weakly). Rust Traits (strongly). Scala Implicits (most faithfully). Java interfaces lack higher-kinded types needed for full typeclass power.</td></tr>
+      </table>
+    </div>
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Ecosystem, tooling, and hiring — Haskell's are minimal</li>
+          <li>Learning curve — Haskell is notoriously steep</li>
+          <li>Enterprise adoption — almost no Haskell in production fintech</li>
+          <li>Debugging — lazy evaluation makes Haskell stack traces cryptic</li>
+          <li>Performance predictability — lazy evaluation complicates it</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>What Haskell Does Better</h4>
+        <ul>
+          <li>Type system expressive power — encode more invariants as types</li>
+          <li>Correctness guarantees — if it compiles, it often works</li>
+          <li>Conciseness — typical Haskell is 3-5x fewer lines than Java</li>
+          <li>Pure functions by default — no side effects without declaration</li>
+          <li>GHC compiler quality — world-class type inference</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>What Java Absorbed from Haskell</h4>
+        <ul>
+          <li>Lambda expressions (Java 8) — Haskell has had them since 1990</li>
+          <li>Stream API — lazy list processing from Haskell/ML tradition</li>
+          <li>Optional — Maybe monad, 31 years later</li>
+          <li>Sealed types / ADTs — Haskell's data types, arrived Java 17</li>
+          <li>Pattern matching exhaustiveness checking</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ TYPESCRIPT ═══════════════ -->
+<section class="lang-section" id="lang-ts" style="animation-delay:0.5s">
+  <div class="lang-header">
+    <div class="lang-identity">
+      <span class="lang-badge-large" style="color:var(--ts);border-color:#103880;background:rgba(48,128,232,0.08)">TypeScript</span>
+      <div class="lang-name">TypeScript</div>
+      <div class="lang-year">Born 2012 · Microsoft · Anders Hejlsberg (Pascal → C# → TS)</div>
+      <div class="lang-tagline">"JavaScript as a Java developer would have designed it. Structural types, generics, and an IDE experience Java developers recognize."</div>
+      <div class="scores">
+        <div class="score-row"><span class="score-label">Performance</span><div class="score-track"><div class="score-fill" style="width:45%;background:var(--ts)"></div></div><span class="score-val">45</span></div>
+        <div class="score-row"><span class="score-label">Expressiveness</span><div class="score-track"><div class="score-fill" style="width:88%;background:var(--ts)"></div></div><span class="score-val">88</span></div>
+        <div class="score-row"><span class="score-label">Ecosystem</span><div class="score-track"><div class="score-fill" style="width:96%;background:var(--ts)"></div></div><span class="score-val">96</span></div>
+        <div class="score-row"><span class="score-label">Type Safety</span><div class="score-track"><div class="score-fill" style="width:82%;background:var(--ts)"></div></div><span class="score-val">82</span></div>
+        <div class="score-row"><span class="score-label">Learning Curve</span><div class="score-track"><div class="score-fill" style="width:80%;background:var(--ts)"></div></div><span class="score-val">80</span></div>
+        <div class="score-row"><span class="score-label">Java Similarity</span><div class="score-track"><div class="score-fill" style="width:55%;background:var(--ts)"></div></div><span class="score-val">55</span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="lang-content">
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--ts)"><span>⟨/⟩</span>TypeScript for Java Developers</div>
+<pre class="code"><span class="cm">// TypeScript — familiar structure, structural typing</span>
+<span class="kw">interface</span> <span class="tp">Payment</span> {
+  readonly id: <span class="tp">string</span>;
+  readonly amount: <span class="tp">number</span>;
+  status: <span class="tp">'pending'</span> | <span class="tp">'cleared'</span> | <span class="tp">'failed'</span>; <span class="cm">// union type</span>
+}
+
+<span class="cm">// Generics — recognizable from Java</span>
+<span class="kw">async function</span> <span class="fn">findById</span>&lt;T extends { id: <span class="tp">string</span> }&gt;(
+  id: <span class="tp">string</span>, repo: <span class="tp">Repository</span>&lt;T&gt;
+): <span class="tp">Promise</span>&lt;T | <span class="kw">null</span>&gt; {
+  <span class="kw">return</span> repo.<span class="fn">findOne</span>({ where: { id } });
+}
+
+<span class="cm">// Discriminated unions -- sealed interfaces in Java</span>
+<span class="kw">type</span> <span class="tp">Status</span> =
+  | { kind: <span class="str">'ok'</span>; clearedAt: <span class="tp">Date</span> }
+  | { kind: <span class="str">'failed'</span>; reason: <span class="tp">string</span> }
+  | { kind: <span class="str">'pending'</span> };
+
+<span class="cm">// NestJS — the Spring Boot of TypeScript</span>
+<span class="kw">@Controller</span>(<span class="str">'/payments'</span>)
+<span class="kw">export class</span> <span class="tp">PaymentController</span> {
+  <span class="kw">constructor</span>(<span class="kw">private</span> svc: <span class="tp">PaymentService</span>) {}  <span class="cm">// DI injection</span>
+
+  <span class="kw">@Get</span>(<span class="str">'/:id'</span>)
+  <span class="kw">async</span> <span class="fn">get</span>(<span class="kw">@Param</span>(<span class="str">'id'</span>) id: <span class="tp">string</span>): <span class="tp">Promise</span>&lt;<span class="tp">Payment</span>&gt; {
+    <span class="kw">return</span> <span class="kw">this</span>.svc.<span class="fn">find</span>(id);   <span class="cm">// Same mental model as @GetMapping</span>
+  }
+}</pre>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--ts)"><span>⊕</span>Structural vs Nominal Typing</div>
+      <table class="mini-table">
+        <tr><td>Nominal (Java)</td><td>Type compatibility based on name: <code>class Dog extends Animal</code> — Dog is an Animal because it's declared so. You cannot accidentally assign an unrelated type with the same shape.</td></tr>
+        <tr><td>Structural (TS)</td><td>Type compatibility based on shape: if it has the right properties and methods, it's compatible. Flexible — pass any object with {id, amount} where Payment is expected. Duck typing with compile-time checking.</td></tr>
+        <tr><td>Union Types</td><td><code>string | number | null</code> — Java has no direct equivalent. Sealed types approach it but TypeScript's unions are more flexible for rapid API design.</td></tr>
+        <tr><td>Template Literal Types</td><td><code>type Route = `/api/${string}`</code> — Java string templates (Java 21) don't reach this level of compile-time string type manipulation.</td></tr>
+        <tr><td>Mapped Types</td><td><code>Partial&lt;T&gt;, Readonly&lt;T&gt;, Record&lt;K,V&gt;</code> — derive new types from existing ones. Java has no equivalent — you write it by hand.</td></tr>
+        <tr><td>Nullability</td><td><code>strictNullChecks</code> makes null a separate type. <code>string | null</code> vs <code>string</code>. Similar to C#'s nullable types — both ahead of Java's Optional approach.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--ts)"><span>⬡</span>Frameworks — The Full-Stack Java Developer's Map</div>
+      <table class="mini-table">
+        <tr><td>NestJS</td><td>Spring Boot port for TypeScript. Decorators (@Controller, @Injectable, @Get) will feel completely familiar. If you've done Spring MVC, NestJS is a 2-day transition.</td></tr>
+        <tr><td>Next.js</td><td>React meta-framework for full-stack TypeScript. Server-side rendering, API routes, file-based routing. No Java equivalent — closest is Spring MVC + React but Next.js is more integrated.</td></tr>
+        <tr><td>Prisma</td><td>TypeScript-first ORM. Generated type-safe client from schema. Migrations as code. Closer to Hibernate's schema generation but with better type inference.</td></tr>
+        <tr><td>tRPC</td><td>End-to-end type-safe API calls — TypeScript types shared between server and client. No REST, no OpenAPI. No Java equivalent exists for this style.</td></tr>
+        <tr><td>Zod</td><td>Runtime schema validation — TypeScript's Pydantic. Validates API inputs, LLM outputs, env variables. Closer to Bean Validation but with runtime inference.</td></tr>
+      </table>
+    </div>
+    <div class="content-panel">
+      <div class="panel-title" style="color:var(--ts)"><span>⟳</span>Why TypeScript Matters for Your AI Role</div>
+      <table class="mini-table">
+        <tr><td>React</td><td>The job description lists React. React in 2025 means TypeScript. Your NestJS/Next.js awareness rounds out full-stack fintech development.</td></tr>
+        <tr><td>AI SDKs</td><td>Vercel AI SDK, OpenAI SDK, Anthropic SDK — all have TypeScript as first-class (alongside Python). Frontend AI features in fintech dashboards are TypeScript.</td></tr>
+        <tr><td>Node Backend</td><td>The job lists Node as a possible backend alongside Spring Boot. NestJS + TypeScript = production-grade Node backend that a Java developer can read.</td></tr>
+        <tr><td>Anders Hejlsberg</td><td>The same person who designed Turbo Pascal, Delphi, and C# designed TypeScript. His fingerprints — clean type system, excellent IDE integration, gradual adoption — are everywhere in TS.</td></tr>
+      </table>
+    </div>
+    <div class="verdict">
+      <div class="verdict-block wins">
+        <h4>Where Java Wins</h4>
+        <ul>
+          <li>Runtime type safety — TypeScript types are compile-only, erased at runtime</li>
+          <li>Performance — JVM is faster than V8 for backend compute</li>
+          <li>Nominal type system — more precise contracts</li>
+          <li>Enterprise ecosystem maturity</li>
+          <li>JVM tooling, GC tuning, observability</li>
+        </ul>
+      </div>
+      <div class="verdict-block loses">
+        <h4>Where TypeScript Wins</h4>
+        <ul>
+          <li>Frontend — JavaScript runs in the browser, Java doesn't (practically)</li>
+          <li>Structural typing — more flexible composition</li>
+          <li>Union types, mapped types — no Java equivalent</li>
+          <li>npm ecosystem — largest package registry in existence</li>
+          <li>Full-stack uniformity — one language, client to server</li>
+        </ul>
+      </div>
+      <div class="verdict-block learns">
+        <h4>Cross-Pollination</h4>
+        <ul>
+          <li>TypeScript decorators influenced Java annotation processors discussion</li>
+          <li>Optional chaining <code>?.</code> influenced Java's Optional chain design</li>
+          <li>NestJS proves Java-style DI patterns work in any typed language</li>
+          <li>TypeScript's discriminated unions pressure Java sealed type evolution</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ MASTER MATRIX ═══════════════ -->
+<section class="matrix-section">
+  <div class="eyebrow">Grand Comparison</div>
+  <h2 class="matrix-title">The Master <em>Matrix</em></h2>
+  <p class="matrix-subtitle">Every language, every dimension — scored relative to Java's baseline of 70 on each axis. Numbers are comparative, not absolute.</p>
+
+  <div class="matrix-wrap">
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>Language</th>
+          <th>Paradigm</th>
+          <th>Perf</th>
+          <th>Safety</th>
+          <th>Productivity</th>
+          <th>Concurrency</th>
+          <th>Ecosystem</th>
+          <th>GC</th>
+          <th>Fintech Use</th>
+          <th>AI Native</th>
+          <th>Java Gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--java)">☕ Java 21</td>
+          <td>OOP + FP + Structured</td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-3">●●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="mx-badge" style="color:#4ec88a;border-color:#1a6030">Yes / ZGC</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-3">●●●</span></td>
+          <td>— Baseline —</td>
+        </tr>
+        <tr>
+          <td style="color:var(--csharp)">◈ C# 12</td>
+          <td>OOP + FP + async</td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="mx-badge" style="color:#4ec88a;border-color:#1a6030">Yes / .NET GC</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-3">●●●</span></td>
+          <td>Reified generics, structs, async/await ergonomics ahead of Java</td>
+        </tr>
+        <tr>
+          <td style="color:var(--cpp)">⚙ C++ 23</td>
+          <td>Multi-paradigm, systems</td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td><span class="dot-1">●</span></td>
+          <td><span class="dot-3">●●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="mx-badge" style="color:#e85555;border-color:#602020">No / RAII</span></td>
+          <td><span class="dot-4">●●●● HFT</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td>Deterministic latency, zero-overhead templates — Java can't reach this ceiling</td>
+        </tr>
+        <tr>
+          <td style="color:var(--pascal)">▣ Pascal/Delphi</td>
+          <td>Structured OOP</td>
+          <td><span class="dot-3">●●●</span></td>
+          <td><span class="dot-3">●●●</span></td>
+          <td><span class="dot-4">●●●● (RAD)</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td><span class="dot-1">●</span></td>
+          <td><span class="mx-badge" style="color:#e89040;border-color:#604010">Optional</span></td>
+          <td><span class="dot-1">● Legacy</span></td>
+          <td><span class="dot-1">●</span></td>
+          <td>Ancestor. Modern Java absorbed its best ideas. No competition in 2025.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--golang)">⬡ Go 1.22</td>
+          <td>Procedural + Goroutines</td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-3">●●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="mx-badge" style="color:#4ec88a;border-color:#1a6030">Yes / Pacing GC</span></td>
+          <td><span class="dot-3">●●● Cloud</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td>Fast binary, goroutines 14yr ahead of Loom. No generics depth, no OOP hierarchy.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--rust)">⬡ Rust 2024</td>
+          <td>Systems + FP + Ownership</td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-3">●●●</span></td>
+          <td><span class="mx-badge" style="color:#e85555;border-color:#602020">No / Ownership</span></td>
+          <td><span class="dot-2">●● Growing</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td>Memory safety without GC. Java cannot match this without fundamental redesign.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--python)">⬡ Python 3.13</td>
+          <td>Dynamic OOP + FP + Scripting</td>
+          <td><span class="dot-1">●</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-2">●● (GIL)</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="mx-badge" style="color:#4ec88a;border-color:#1a6030">Yes / Ref Count</span></td>
+          <td><span class="dot-3">●●● AI tools</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td>The language of AI. Java will never catch Python's AI ecosystem depth.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--elixir)">⬡ Elixir 1.17</td>
+          <td>Functional + Actor (BEAM)</td>
+          <td><span class="dot-3">●●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-3">●●●</span></td>
+          <td><span class="mx-badge" style="color:#4ec88a;border-color:#1a6030">Yes / BEAM GC</span></td>
+          <td><span class="dot-3">●●● Realtime</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td>Millions of concurrent processes, let-it-crash reliability. Java's fault tolerance is middleware-dependent.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--haskell)">⬡ Haskell GHC</td>
+          <td>Pure Functional + Lazy</td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td><span class="mx-badge" style="color:#4ec88a;border-color:#1a6030">Yes / Generational</span></td>
+          <td><span class="dot-2">●● Finance DSL</span></td>
+          <td><span class="dot-2">●●</span></td>
+          <td>R&D lab for Java features. ADTs, pattern matching, monads — Java's future in Haskell's present.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--ts)">⬡ TypeScript 5.x</td>
+          <td>Structural OOP + FP</td>
+          <td><span class="dot-2">●●</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="dot-3">●●● (event loop)</span></td>
+          <td><span class="dot-5">●●●●●</span></td>
+          <td><span class="mx-badge" style="color:#4ec88a;border-color:#1a6030">Yes / V8 GC</span></td>
+          <td><span class="dot-3">●●● Frontend</span></td>
+          <td><span class="dot-4">●●●●</span></td>
+          <td>Frontend, full-stack, and AI SDK land. Java doesn't run in the browser — TypeScript always will.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════ FRAMEWORK MAP ═══════════════ -->
+<section class="timeline-section">
+  <div class="eyebrow">Ecosystem</div>
+  <h2 class="matrix-title">Framework <em>Equivalents</em></h2>
+  <p class="matrix-subtitle">When you reach for Spring Boot's toolbox, here is what each language's community reaches for instead.</p>
+
+  <div class="fw-grid">
+    <div class="fw-card">
+      <div class="fw-lang-name"><span class="fw-lang-dot" style="background:var(--java)"></span><span style="color:var(--java)">Java</span></div>
+      <div class="fw-name">Spring Boot 3</div>
+      <div class="fw-equiv">Web API + DI + Security + Data</div>
+      <div class="fw-desc">The undisputed king of enterprise Java. 20 years of ecosystem. Spring Security, Spring Data JPA, Spring Cloud, Actuator — nothing else in any language matches the breadth.</div>
+    </div>
+    <div class="fw-card">
+      <div class="fw-lang-name"><span class="fw-lang-dot" style="background:var(--csharp)"></span><span style="color:var(--csharp)">C#</span></div>
+      <div class="fw-name">ASP.NET Core 8</div>
+      <div class="fw-equiv">Minimal API + Razor + Blazor + EF Core</div>
+      <div class="fw-desc">Microsoft's modern web stack. Minimal API (5 lines to a REST endpoint) vs Spring Boot's convention-over-configuration. Blazor adds WebAssembly UI. EF Core migrations are smoother than Liquibase/Flyway.</div>
+    </div>
+    <div class="fw-card">
+      <div class="fw-lang-name"><span class="fw-lang-dot" style="background:var(--cpp)"></span><span style="color:var(--cpp)">C++</span></div>
+      <div class="fw-name">Drogon / Boost.Beast</div>
+      <div class="fw-equiv">Async HTTP + Coroutines</div>
+      <div class="fw-desc">Drogon claims to be the fastest web framework on TechEmpower benchmarks. Not a Spring Boot replacement — C++ web is a specialty. Boost.Asio for async I/O, which is what Netty's C++ underbelly is.</div>
+    </div>
+    <div class="fw-card">
+      <div class="fw-lang-name"><span class="fw-lang-dot" style="background:var(--golang)"></span><span style="color:var(--golang)">Go</span></div>
+      <div class="fw-name">net/http + Gin + Echo</div>
+      <div class="fw-equiv">No IoC container needed</div>
+      <div class="fw-desc">Go's standard library net/http handles production traffic without a framework. Gin/Echo add routing ergonomics. The intentional absence of Spring-style magic is a feature — explicit dependency wiring everywhere.</div>
+    </div>
+    <div class="fw-card">
+      <div class="fw-lang-name"><span class="fw-lang-dot" style="background:var(--rust)"></span><span style="color:var(--rust)">Rust</span></div>
+      <div class="fw-name">Axum + Tower + Tokio</div>
+      <div class="fw-equiv">Type-safe async web stack</div>
+      <div class="fw-desc">Axum (from Tokio team) + Tower middleware composability + Tokio async runtime. Actix-Web for maximum raw performance. SQLx for async type-safe SQL — no ORM magic, all queries compile-time checked.</div>
+    </div>
+    <div class="fw-card">
+      <div class="fw-lang-name"><span class="fw-lang-dot" style="background:var(--python)"></span><span style="color:var(--python)">Python</span></div>
+      <div class="fw-name">FastAPI + SQLAlchemy 2</div>
+      <div class="fw-equiv">Auto-docs + async ORM + Pydantic</div>
+      <div class="fw-desc">FastAPI generates OpenAPI docs automatically from type hints. Pydantic validates inputs and LLM outputs. SQLAlchemy 2 async. For AI-heavy services, FastAPI + LangChain is the primary production stack.</div>
+    </div>
+    <div class="fw-card">
+      <div class="fw-lang-name"><span class="fw-lang-dot" style="background:var(--elixir)"></span><span style="color:var(--elixir)">Elixir</span></div>
+      <div class="fw-name">Phoenix + Ecto + OTP</div>
+      <div class="fw-equiv">LiveView + Real-time + Supervision</div>
+      <div class="fw-desc">Phoenix LiveView enables real-time web UIs without JavaScript frameworks. Ecto enforces explicit data queries. OTP's supervisor trees replace what Java does with Kubernetes restarts — at the application level.</div>
+    </div>
+    <div class="fw-card">
+      <div class="fw-lang-name"><span class="fw-lang-dot" style="background:var(--ts)"></span><span style="color:var(--ts)">TypeScript</span></div>
+      <div class="fw-name">NestJS + Next.js + Prisma</div>
+      <div class="fw-equiv">Spring Boot for Node + React meta-framework</div>
+      <div class="fw-desc">NestJS decorators and module system will feel like Spring MVC. Next.js handles React SSR and API routes. Prisma gives type-safe database access. The AI SDK ecosystem (Vercel AI, OpenAI, Anthropic) is TypeScript-first.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ HISTORICAL TIMELINE ═══════════════ -->
+<section class="timeline-section" style="padding-top:0">
+  <div class="eyebrow">Chronology</div>
+  <h2 class="matrix-title">The <em>Timeline</em> of Influence</h2>
+  <p class="matrix-subtitle">Language ideas don't emerge in isolation — they are a conversation across decades. This is that conversation.</p>
+
+  <div class="tl-row">
+    <div class="tl-item">
+      <div class="tl-year">1970</div>
+      <div class="tl-lang" style="color:var(--pascal)">Pascal</div>
+      <div class="tl-note">Niklaus Wirth. Structured programming. Strong typing. Teaches a generation.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">1979</div>
+      <div class="tl-lang" style="color:var(--cpp)">C++</div>
+      <div class="tl-note">Stroustrup adds objects to C. Templates follow. Java was its simpler child.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">1983</div>
+      <div class="tl-lang" style="color:var(--pascal)">Turbo Pascal</div>
+      <div class="tl-note">Anders Hejlsberg's IDE-integrated compiler. Compilation in seconds. Borland.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">1986</div>
+      <div class="tl-lang" style="color:var(--elixir)">Erlang</div>
+      <div class="tl-note">Ericsson. Telecom grade fault tolerance. "Let it crash." Actor model.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">1990</div>
+      <div class="tl-lang" style="color:var(--haskell)">Haskell</div>
+      <div class="tl-note">Pure FP. Lazy evaluation. Monads. ADTs. The language Java steals from.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">1991</div>
+      <div class="tl-lang" style="color:var(--python)">Python</div>
+      <div class="tl-note">Van Rossum. Readability over performance. The AI language 30 years later.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">1995</div>
+      <div class="tl-lang" style="color:var(--java)">Java 1.0</div>
+      <div class="tl-note">Gosling / Sun. JVM. Write Once Run Anywhere. OOP for the web age.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">1995</div>
+      <div class="tl-lang" style="color:var(--pascal)">Delphi 1</div>
+      <div class="tl-note">Hejlsberg's visual Pascal. Components, interfaces, RAD. Predates Spring's IoC.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2000</div>
+      <div class="tl-lang" style="color:var(--csharp)">C# 1.0</div>
+      <div class="tl-note">Hejlsberg joins Microsoft. Java-killer. Gradually overtakes Java in language design.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2003</div>
+      <div class="tl-lang" style="color:var(--java)">Java 5</div>
+      <div class="tl-note">Generics. Enums. Annotations. The modern Java era begins.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2007</div>
+      <div class="tl-lang" style="color:var(--csharp)">C# 3 / LINQ</div>
+      <div class="tl-note">LINQ, lambda expressions, extension methods. Java Streams 7 years away.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2009</div>
+      <div class="tl-lang" style="color:var(--golang)">Go 1.0</div>
+      <div class="tl-note">Google. Goroutines. Channels. CSP. Compile in seconds. Intentional simplicity.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2011</div>
+      <div class="tl-lang" style="color:var(--elixir)">Elixir 1.0</div>
+      <div class="tl-note">Valim puts Ruby syntax on Erlang's BEAM. Macros. Phoenix framework follows.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2012</div>
+      <div class="tl-lang" style="color:var(--ts)">TypeScript</div>
+      <div class="tl-note">Hejlsberg's third masterwork. Structural types on JS. IDE that knows everything.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2014</div>
+      <div class="tl-lang" style="color:var(--java)">Java 8</div>
+      <div class="tl-note">Lambdas. Streams. Optional. Java finally functional — Haskell, 24 years later.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2015</div>
+      <div class="tl-lang" style="color:var(--rust)">Rust 1.0</div>
+      <div class="tl-note">Mozilla. Ownership. No GC. Memory safety without runtime cost. Rewrites history.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2021</div>
+      <div class="tl-lang" style="color:var(--java)">Java 17 LTS</div>
+      <div class="tl-note">Sealed classes. Records. Pattern matching preview. Modern Java crystallizes.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2023</div>
+      <div class="tl-lang" style="color:var(--java)">Java 21 LTS</div>
+      <div class="tl-note">Virtual threads (Go 2009). Structured concurrency. Pattern matching final. Peak Java.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2025</div>
+      <div class="tl-lang" style="color:var(--java)">Java 25 LTS</div>
+      <div class="tl-note">Value types (Project Valhalla). String templates final. The next decade begins.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ MEMORY MODEL SUMMARY ═══════════════ -->
+<section class="timeline-section" style="padding-top:0">
+  <div class="eyebrow">Memory Models</div>
+  <h2 class="matrix-title">How Each Language <em>Manages Memory</em></h2>
+  <p class="matrix-subtitle">The most consequential design decision in any language. Everything else follows from this choice.</p>
+  <div class="memory-grid">
+    <div class="mem-card">
+      <div class="mem-lang" style="color:var(--java)">Java / JVM</div>
+      <div class="mem-model">Generational GC</div>
+      <div class="mem-desc">ZGC, G1GC, Shenandoah. Sub-ms pauses achievable. You give up determinism; you gain safety and productivity. JVM heap tuning (-Xmx, -Xms, GC flags) is a deep craft.</div>
+    </div>
+    <div class="mem-card">
+      <div class="mem-lang" style="color:var(--csharp)">C# / .NET</div>
+      <div class="mem-model">Generational GC + Structs</div>
+      <div class="mem-desc">Similar to JVM but with stack-allocated structs for hot paths. Span&lt;T&gt; for zero-allocation slice operations. More control than Java without the danger of C++.</div>
+    </div>
+    <div class="mem-card">
+      <div class="mem-lang" style="color:var(--cpp)">C++</div>
+      <div class="mem-model">RAII + Smart Pointers</div>
+      <div class="mem-desc">unique_ptr, shared_ptr, weak_ptr — ownership semantics without a GC. Deterministic destruction at scope exit (RAII). Still possible to leak, but modern C++ makes it hard.</div>
+    </div>
+    <div class="mem-card">
+      <div class="mem-lang" style="color:var(--golang)">Go</div>
+      <div class="mem-model">Tricolor GC (Concurrent)</div>
+      <div class="mem-desc">Go's GC is designed for low-latency, not throughput. Sub-ms pause times by design. Escape analysis determines stack vs heap allocation. Less tunable than JVM — by design.</div>
+    </div>
+    <div class="mem-card">
+      <div class="mem-lang" style="color:var(--rust)">Rust</div>
+      <div class="mem-model">Ownership + Borrowing</div>
+      <div class="mem-desc">No GC, no runtime. The borrow checker proves at compile time that no use-after-free, double-free, or data race is possible. Deterministic drop at end of scope. The holy grail.</div>
+    </div>
+    <div class="mem-card">
+      <div class="mem-lang" style="color:var(--python)">Python</div>
+      <div class="mem-model">Ref Counting + Cycle GC</div>
+      <div class="mem-desc">CPython uses reference counting (fast for simple cases) + cyclic garbage collector. PyPy uses tracing GC. Python 3.13 free-threading removes GIL — changes the memory model significantly.</div>
+    </div>
+    <div class="mem-card">
+      <div class="mem-lang" style="color:var(--elixir)">Elixir / BEAM</div>
+      <div class="mem-model">Per-Process GC</div>
+      <div class="mem-desc">Each Erlang process has its own heap, collected independently. No global GC pause. A GC in one process doesn't affect others. This is why BEAM achieves consistent low latency at massive concurrency.</div>
+    </div>
+    <div class="mem-card">
+      <div class="mem-lang" style="color:var(--ts)">TypeScript / V8</div>
+      <div class="mem-model">V8 Generational GC</div>
+      <div class="mem-desc">V8's Orinoco GC — generational with parallel/concurrent marking. Similar model to JVM but less tunable. Node.js memory limits (--max-old-space-size) are the primary knob.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-quote">
+    Every language is a<br><strong>lens through which</strong><br>to see Java more clearly.
+  </div>
+  <div class="footer-meta">
+    Java vs The World<br>
+    Languages: 9 · Frameworks: 24+<br>
+    Built for the Java Veteran · 2025
+  </div>
+</footer>
+
+<script>
+// Animate score bars on scroll
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.score-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.width = w;
+        }));
+      });
+      io.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.lang-identity').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

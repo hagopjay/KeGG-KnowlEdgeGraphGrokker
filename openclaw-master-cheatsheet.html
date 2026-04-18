@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Technical Cheat Sheets</title>
+<style>
+  :root {
+    --bg: #0d0d14;
+    --bg2: #13131f;
+    --bg3: #1a1a2e;
+    --bg4: #16213e;
+    --accent: #e94560;
+    --accent2: #0f3460;
+    --accent3: #53d8fb;
+    --accent4: #a8ff78;
+    --warn: #ffb347;
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --border: #2a2a45;
+    --code-bg: #0a0a15;
+    --green: #39ff14;
+    --red: #ff4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Consolas', 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .page-header {
+    background: linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d1a2e 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .page-header h1 { font-size: 22px; color: var(--accent3); letter-spacing: 2px; text-transform: uppercase; }
+  .page-header p { color: var(--muted); font-size: 11px; margin-top: 4px; }
+  .badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 3px; font-size: 10px; }
+
+  .toc {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .toc a { color: var(--accent3); text-decoration: none; font-size: 11px; }
+  .toc a:hover { color: var(--accent); }
+
+  .container { max-width: 1600px; margin: 0 auto; padding: 0 16px; }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+
+  section { padding: 24px 0 8px; }
+  .section-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title .pill {
+    font-size: 9px;
+    background: var(--accent2);
+    color: var(--accent3);
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--accent3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-header .tag {
+    font-size: 9px;
+    color: var(--muted);
+    background: var(--bg4);
+    padding: 1px 6px;
+    border-radius: 2px;
+  }
+  .card-body { padding: 12px 14px; }
+
+  pre, code {
+    font-family: 'Consolas', 'JetBrains Mono', monospace;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  code { color: var(--accent4); font-size: 11px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th {
+    background: var(--bg4);
+    color: var(--accent3);
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  td {
+    padding: 5px 10px;
+    border-bottom: 1px solid rgba(42,42,69,0.5);
+    vertical-align: top;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 11px; }
+  .kv .k { color: var(--muted); white-space: nowrap; }
+  .kv .v { color: var(--text); font-family: 'Consolas', monospace; }
+
+  .tag-req { color: var(--accent); font-size: 10px; }
+  .tag-opt { color: var(--muted); font-size: 10px; }
+  .tag-warn { color: var(--warn); }
+  .tag-ok { color: var(--green); }
+  .tag-bad { color: var(--red); }
+
+  .callout {
+    border-left: 3px solid var(--warn);
+    background: rgba(255,179,71,0.06);
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 11px;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout.danger { border-color: var(--red); background: rgba(255,68,68,0.06); }
+  .callout.ok { border-color: var(--green); background: rgba(57,255,20,0.04); }
+  .callout.info { border-color: var(--accent3); background: rgba(83,216,251,0.04); }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+  .flow-node {
+    background: var(--bg4);
+    border: 1px solid var(--accent2);
+    border-radius: 4px;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+  .flow-arrow { color: var(--accent); font-weight: bold; }
+
+  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .pill {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 10px;
+    color: var(--accent3);
+  }
+
+  .indent { padding-left: 16px; border-left: 2px solid var(--border); margin: 6px 0; }
+
+  dl { font-size: 11px; }
+  dt { color: var(--accent4); margin-top: 6px; }
+  dd { color: var(--text); margin-left: 16px; margin-bottom: 2px; }
+
+  .two-col-list {
+    columns: 2;
+    column-gap: 16px;
+    font-size: 11px;
+    list-style: none;
+  }
+  .two-col-list li::before { content: "▸ "; color: var(--accent); }
+  .two-col-list li { margin-bottom: 4px; break-inside: avoid; }
+
+  .workspace-tree {
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .workspace-tree .dir { color: var(--accent3); }
+  .workspace-tree .file { color: var(--accent4); }
+  .workspace-tree .comment { color: var(--muted); }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 10px 0;
+  }
+
+  @media (max-width: 1000px) {
+    .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .col-span-2, .col-span-3 { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>OpenClaw · Technical Reference</h1>
+    <p>Dense cheat sheets for the Automate Everything handbook · All patterns, tools, configs, and architectures</p>
+  </div>
+  <div style="text-align:right;">
+    <span class="badge">CHEAT SHEETS v1</span>
+    <div style="color:var(--muted);font-size:10px;margin-top:6px;">v openclaw/2026.2.17 · claude-sonnet-4-5</div>
+  </div>
+</div>
+
+<div class="toc">
+  <a href="#arch">Architecture</a>
+  <a href="#install">Install/Config</a>
+  <a href="#tools">Tool Reference</a>
+  <a href="#cron">Cron</a>
+  <a href="#browser">Browser</a>
+  <a href="#multiagent">Multi-Agent</a>
+  <a href="#memory">Memory/Context</a>
+  <a href="#nodes">Nodes</a>
+  <a href="#channels">Channels</a>
+  <a href="#workspace">Workspace Layout</a>
+  <a href="#patterns">Patterns</a>
+  <a href="#security">Security</a>
+  <a href="#perf">Performance</a>
+  <a href="#debug">Debug</a>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════ ARCHITECTURE ═══════════════════════════════════════ -->
+<section id="arch">
+  <div class="section-title">Architecture <span class="pill">SYSTEM MODEL</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">Core Data Flow</div>
+      <div class="card-body">
+        <div class="flow-row" style="margin-bottom:8px;">
+          <div class="flow-node">You</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">Channel</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">Gateway</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">Agent</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">Tools</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">World</div>
+        </div>
+        <hr class="divider">
+        <dl>
+          <dt>Channel</dt><dd>WhatsApp / Telegram / Discord / Desktop App / CLI / Cron</dd>
+          <dt>Gateway</dt><dd>Long-running daemon (PID @ port 18789). Owns sessions, cron, workspace state, node connections</dd>
+          <dt>Agent</dt><dd>LLM instance with loaded context. Decides tool sequence</dd>
+          <dt>Tools</dt><dd>Typed actions with side effects (read/write/exec/fetch/message…)</dd>
+          <dt>World</dt><dd>Filesystem, web, shell, messaging platforms, paired devices</dd>
+        </dl>
+        <div class="callout info" style="margin-top:10px;">
+          Pipeline is composable: agents chain tools, spawn sub-agents, schedule via cron, all on same foundation
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Gateway Internals</div>
+      <div class="card-body">
+        <div class="kv">
+          <span class="k">Config</span><span class="v">~/.openclaw/openclaw.json</span>
+          <span class="k">Default port</span><span class="v">18789</span>
+          <span class="k">Web UI</span><span class="v">http://localhost:18789</span>
+          <span class="k">macOS daemon</span><span class="v">LaunchAgent (auto-start on boot)</span>
+          <span class="k">Linux daemon</span><span class="v">systemd service</span>
+        </div>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Gateway Commands</div>
+        <pre>openclaw gateway start
+openclaw gateway stop
+openclaw gateway restart   # required after config changes
+openclaw gateway status    # shows PID, uptime, port, workspace
+openclaw gateway logs      # tail logs</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Gateway Responsibilities</div>
+        <ul class="two-col-list">
+          <li>Inbound channel listener</li>
+          <li>Session lifecycle</li>
+          <li>Cron job executor</li>
+          <li>Workspace state</li>
+          <li>Node connections</li>
+          <li>Tool policy enforcement</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Session Types</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Label Pattern</th><th>Type</th><th>Notes</th></tr>
+          <tr><td><code>agent:main:main</code></td><td>Primary interactive</td><td>Always running while gateway is up</td></tr>
+          <tr><td><code>agent:main:subagent:{id}</code></td><td>Worker</td><td>Spawned by main, owns task, reports back</td></tr>
+          <tr><td><code>research-lead</code></td><td>Named specialist</td><td>Long-running, AGENTS.md-configured role</td></tr>
+          <tr><td><code>project-lead</code></td><td>Named specialist</td><td>Implementation orchestrator</td></tr>
+          <tr><td><code>test-lead</code></td><td>Named specialist</td><td>TEA audit runner</td></tr>
+        </table>
+        <div class="callout" style="margin-top:8px;">
+          Each session has its own context window. Multiple sessions can run simultaneously. State MUST be in files — not conversation history.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ INSTALL / CONFIG ═══════════════════════════════════════ -->
+<section id="install">
+  <div class="section-title">Installation &amp; Configuration <span class="pill">SETUP</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">System Requirements</div>
+      <div class="card-body">
+        <div class="kv">
+          <span class="k">macOS</span><span class="v">11 (Big Sur)+</span>
+          <span class="k">Linux</span><span class="v">Ubuntu 20.04+, Debian 11+</span>
+          <span class="k">Windows</span><span class="v">Win 10/11 + WSL2 only</span>
+          <span class="k">RAM</span><span class="v">4GB min, 8GB recommended</span>
+          <span class="k">Disk</span><span class="v">2GB openclaw + 5GB workspace/cache</span>
+          <span class="k">Node.js</span><span class="v">v18+ (npm 9+)</span>
+          <span class="k">Internet</span><span class="v">Required (API calls)</span>
+        </div>
+        <hr class="divider">
+        <pre># Homebrew (macOS/Linux — recommended)
+brew install openclaw
+
+# npm global (all platforms)
+npm install -g openclaw
+
+# From source
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw && npm install && npm link
+
+# Verify
+openclaw --version  # → openclaw/2026.2.17</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">onboard Wizard Steps</div>
+      <div class="card-body">
+        <pre>openclaw onboard</pre>
+        <dl>
+          <dt>1. Workspace path</dt>
+          <dd>Recommended: ~/clawd — all files, scripts, context</dd>
+          <dt>2. AI provider</dt>
+          <dd>Anthropic (claude-sonnet-4-5) | OpenAI (gpt-4o) | Gemini | Local</dd>
+          <dt>3. API key</dt>
+          <dd>Anthropic: console.anthropic.com → sk-ant-... (~$5-20/mo personal use)</dd>
+          <dt>4. Primary model</dt>
+          <dd>anthropic/claude-sonnet-4-5 — recommended. claude-haiku-3-5 for cheap cron tasks</dd>
+          <dt>5. Messaging channels</dt>
+          <dd>WhatsApp / Telegram / Discord / iMessage — optional, add after</dd>
+          <dt>6. Desktop app</dt>
+          <dd>Yes → localhost:18789 browser UI</dd>
+        </dl>
+        <div class="callout ok" style="margin-top:8px;">
+          Writes to: ~/.openclaw/openclaw.json &amp; initializes ~/clawd/ workspace
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">openclaw.json — Full Config Schema</div>
+      <div class="card-body">
+        <pre>{
+  "workspace": "/Users/you/clawd",
+  "model": "anthropic/claude-sonnet-4-5",
+  "defaultModel": "anthropic/claude-sonnet-4-5",
+  "timezone": "America/Chicago",   // local cron scheduling
+  "gateway": { "port": 18789 },
+  "tools": {
+    "exec": {
+      "security": "allowlist",      // deny | allowlist | full
+      "allowedCommands": ["python3","node","git","ls","cat"]
+    },
+    "exec.elevated": false
+  },
+  "cron": [
+    {
+      "schedule": "0 7 * * 1-5",
+      "task": "NL task description — specific paths, outputs",
+      "model": "anthropic/claude-haiku-3-5"  // per-job model override
+    }
+  ],
+  "channels": {
+    "whatsapp": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "allowFrom": ["+12225551234"]
+    },
+    "telegram": {
+      "enabled": true,
+      "token": "BOT_TOKEN",
+      "allowFrom": ["username"]
+    },
+    "discord": {
+      "enabled": true,
+      "token": "BOT_TOKEN",
+      "groupPolicy": "allowlist"
+    }
+  },
+  "nodes": {
+    "home-server": { "host": "192.168.1.10", "user": "pi" },
+    "my-iphone":   { "platform": "ios", "pairedId": "..." }
+  }
+}</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ TOOL REFERENCE ═══════════════════════════════════════ -->
+<section id="tools">
+  <div class="section-title">Complete Tool Reference <span class="pill">ALL TOOLS</span></div>
+  <div class="grid grid-2">
+
+    <div class="card">
+      <div class="card-header">File Tools <span class="tag">read / write / edit</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>Tool</th><th>Required Params</th><th>Optional Params</th><th>Key Notes</th></tr>
+          <tr>
+            <td><code>read</code></td>
+            <td><code>file_path</code></td>
+            <td><code>offset</code> (1-indexed line)<br/><code>limit</code> (max lines)</td>
+            <td>Max 2000 lines / 50KB. Images (jpg/png/gif/webp) sent as attachments. Use offset+limit for large files.</td>
+          </tr>
+          <tr>
+            <td><code>write</code></td>
+            <td><code>file_path</code><br/><code>content</code></td>
+            <td>—</td>
+            <td>Creates parent dirs automatically. <strong>Full overwrite.</strong> Use <code>edit</code> for partial changes.</td>
+          </tr>
+          <tr>
+            <td><code>edit</code></td>
+            <td><code>file_path</code><br/><code>oldText</code><br/><code>newText</code></td>
+            <td>—</td>
+            <td><code>oldText</code> must match exactly (whitespace, newlines, case). Read file fresh before editing. Fails if not found.</td>
+          </tr>
+        </table>
+        <div class="callout danger" style="margin-top:8px;">
+          Never rely on conversation history for state → Always write to files after significant actions
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Exec / Process Tools <span class="tag">exec / process</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>Param</th><th>Type</th><th>Notes</th></tr>
+          <tr><td><code>command*</code></td><td>string</td><td>Shell command. Use full paths or set env.PATH.</td></tr>
+          <tr><td><code>workdir</code></td><td>string</td><td>Default = workspace root. Prefer over <code>cd &amp;&amp; cmd</code></td></tr>
+          <tr><td><code>background</code></td><td>bool</td><td>Continue after yieldMs. Monitor with <code>process</code> tool.</td></tr>
+          <tr><td><code>yieldMs</code></td><td>number</td><td>Ms to wait before backgrounding (e.g. 5000)</td></tr>
+          <tr><td><code>timeout</code></td><td>number</td><td>Seconds before kill. Mandatory for long scripts.</td></tr>
+          <tr><td><code>pty</code></td><td>bool</td><td>Pseudo-terminal for TTY-dependent programs</td></tr>
+          <tr><td><code>elevated</code></td><td>bool</td><td>Elevated permissions. Off by default.</td></tr>
+          <tr><td><code>security</code></td><td>string</td><td><code>deny</code> | <code>allowlist</code> | <code>full</code></td></tr>
+          <tr><td><code>env</code></td><td>object</td><td>Environment variables dict</td></tr>
+        </table>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin-bottom:4px;">process tool actions</div>
+        <div class="pill-list">
+          <span class="pill">list</span><span class="pill">poll</span><span class="pill">log</span>
+          <span class="pill">write</span><span class="pill">send-keys</span><span class="pill">kill</span>
+        </div>
+        <pre style="margin-top:8px;"># Background + monitor pattern
+exec: { command: "python3 long.py", background: true, yieldMs: 10000 }
+process: { action: "poll", sessionId: "{id}", timeout: 5000 }</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Web Tools <span class="tag">web_search / web_fetch / browser</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>Tool</th><th>Key Params</th><th>Use When</th></tr>
+          <tr>
+            <td><code>web_search</code></td>
+            <td><code>query*</code>, <code>count</code> 1-10, <code>country</code> 2-letter, <code>freshness</code> pd|pw|pm|py, <code>search_lang</code></td>
+            <td>Structured search results. Returns URLs + snippets. No JS execution.</td>
+          </tr>
+          <tr>
+            <td><code>web_fetch</code></td>
+            <td><code>url*</code>, <code>extractMode</code> markdown|text, <code>maxChars</code></td>
+            <td>Static page content extraction. Fast. No JS rendering. Markdown mode preserves formatting.</td>
+          </tr>
+          <tr>
+            <td><code>browser</code></td>
+            <td><code>action*</code>, <code>profile</code> openclaw|chrome, <code>targetId</code>, <code>targetUrl</code>, <code>refs</code> role|aria, <code>request</code></td>
+            <td>JS-rendered sites, form fill, auth sessions (chrome profile), screenshots, dynamic scraping.</td>
+          </tr>
+        </table>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin-bottom:4px;">browser.action values</div>
+        <div class="pill-list">
+          <span class="pill">status</span><span class="pill">start</span><span class="pill">stop</span>
+          <span class="pill">open</span><span class="pill">navigate</span><span class="pill">snapshot</span>
+          <span class="pill">screenshot</span><span class="pill">act</span><span class="pill">console</span>
+          <span class="pill">pdf</span><span class="pill">tabs</span><span class="pill">focus</span><span class="pill">close</span>
+        </div>
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">browser.act request.kind values</div>
+        <div class="pill-list">
+          <span class="pill">click</span><span class="pill">fill</span><span class="pill">type</span>
+          <span class="pill">press</span><span class="pill">select</span><span class="pill">drag</span>
+          <span class="pill">hover</span><span class="pill">evaluate</span><span class="pill">wait</span><span class="pill">scroll</span>
+        </div>
+        <div class="callout info" style="margin-top:8px;">
+          <strong>fill</strong> vs <strong>type</strong>: fill clears the field first then sets value (preferred for inputs). type appends.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Communication + Agent + Other Tools</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Tool</th><th>Actions / Params</th><th>Notes</th></tr>
+          <tr>
+            <td><code>message</code></td>
+            <td><code>action*</code>: send|react|poll<br/><code>target</code>: phone/username<br/><code>message</code>, <code>media</code>, <code>caption</code>, <code>replyTo</code></td>
+            <td>Primary channel: WhatsApp. WA formatting: *bold* _italic_ ~strike~ `code`. After TTS call → respond NO_REPLY.</td>
+          </tr>
+          <tr>
+            <td><code>tts</code></td>
+            <td><code>text*</code>, <code>channel</code></td>
+            <td>Text-to-speech. Agent MUST follow with NO_REPLY to avoid duplicate text message.</td>
+          </tr>
+          <tr>
+            <td><code>subagents</code></td>
+            <td><code>action*</code>: list|kill|steer<br/><code>target</code>: session label<br/><code>message</code>: for steer<br/><code>recentMinutes</code>: for list</td>
+            <td>Manage running sub-sessions. Spawning sub-agents is done via task description (not a subagents call). Sub-agents are spawned by the main agent describing the task.</td>
+          </tr>
+          <tr>
+            <td><code>image</code></td>
+            <td><code>image</code>: path/URL<br/><code>images</code>: array (max 20)<br/><code>prompt</code>, <code>model</code></td>
+            <td>Vision model analysis. Used for receipt scanning, screenshot parsing, photo categorization.</td>
+          </tr>
+          <tr>
+            <td><code>canvas</code></td>
+            <td><code>action*</code>: present|hide|navigate|eval|snapshot<br/><code>url</code>, <code>javaScript</code>, <code>width</code>, <code>height</code></td>
+            <td>Control canvas UI panel. Separate from browser tool.</td>
+          </tr>
+          <tr>
+            <td><code>nodes</code></td>
+            <td>See Nodes section below</td>
+            <td>Interact with paired phones/servers/remote machines</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ CRON ═══════════════════════════════════════ -->
+<section id="cron">
+  <div class="section-title">Cron / Time-Based Automation <span class="pill">SCHEDULING</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">Cron Expression Cheat Sheet</div>
+      <div class="card-body">
+        <pre>FORMAT:  min  hour  dom  month  dow
+         0-59  0-23  1-31  1-12  0-7 (0,7=Sun)
+
+# ── Daily ──────────────────────────────
+0 7 * * *        → Daily 7:00 AM UTC
+0 7 * * 1-5      → Weekdays 7:00 AM UTC
+30 8 * * 1-5     → Weekdays 8:30 AM UTC
+0 9,17 * * 1-5   → Weekdays 9am and 5pm
+
+# ── Interval ───────────────────────────
+*/15 * * * *     → Every 15 minutes
+*/30 * * * *     → Every 30 minutes
+0 */2 * * *      → Every 2 hours
+0 */1 * * *      → Every hour
+
+# ── Weekly ─────────────────────────────
+0 9 * * 1        → Monday 9am UTC
+0 20 * * 0       → Sunday 8pm UTC
+0 1 * * 0        → Sunday 1am UTC
+
+# ── Monthly ────────────────────────────
+0 0 1 * *        → 1st of month midnight
+0 9 1 * *        → 1st of month 9am
+0 10 1 * *       → Monthly audit cron
+
+# ── Timezone correction (CST = UTC-6) ──
+0 13 * * 1-5     → 7am CST (CST = UTC-6)
+0 12 * * 1-5     → 7am CDT (CDT = UTC-5)
+
+# ── Common use cases ───────────────────
+0 7 * * 1-5      morning briefing (weekday)
+0 */2 * * *      heartbeat check
+30 17 * * 1-5    EOD summary
+0 18 * * 1-5     meeting notes processor
+0 21 * * *       screenshot cleanup
+30 16 * * 5      Friday weekly report
+0 8 * * 1        Monday content/task review</pre>
+        <div class="callout" style="margin-top:8px;">
+          <strong>Timezone gotcha:</strong> Cron runs in the server timezone. Use <code>"timezone": "America/Chicago"</code> in config, or manually convert to UTC. Always annotate which timezone in task description.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Writing Good vs Bad Cron Tasks</div>
+      <div class="card-body">
+        <div class="callout ok">✅ GOOD — specific paths, clear outputs, explicit state tracking</div>
+        <pre style="margin-top:6px;">{
+  "schedule": "*/15 * * * *",
+  "task": "Check /clawd/logs/errors.log for new
+errors in the last 15 minutes. If found, send
+WhatsApp alert with error details. Mark checked
+errors by noting last-checked timestamp in
+/clawd/data/monitor-state.json."
+}</pre>
+        <div class="callout danger" style="margin-top:10px;">❌ BAD — vague, no paths, non-deterministic</div>
+        <pre style="margin-top:6px;">{ "schedule": "*/15 * * * *",
+  "task": "Check for errors" }</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin-bottom:4px;">Per-task model override (cost optimization)</div>
+        <pre>{
+  "schedule": "0 */2 * * *",
+  "task": "Heartbeat check per HEARTBEAT.md",
+  "model": "anthropic/claude-haiku-3-5"
+}</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin-bottom:4px;">Standard cron task logging (append to every task)</div>
+        <pre>At the end, append one line to
+/clawd/logs/cron-history.log:
+ISO_TIMESTAMP | task-name | COMPLETE|FAIL | details</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Heartbeat Protocol Pattern</div>
+      <div class="card-body">
+        <pre># openclaw.json
+{
+  "schedule": "0 */2 * * *",
+  "task": "Execute heartbeat check per
+           protocols/HEARTBEAT.md"
+}</pre>
+        <hr class="divider">
+        <div style="font-size:11px;color:var(--accent3);font-weight:bold;margin:6px 0 4px;">HEARTBEAT.md checklist</div>
+        <pre># Heartbeat Protocol
+## Checklist (runs every 2h)
+1. Check active project sessions for pending results
+2. Review /clawd/logs/errors.log for unaddressed errors
+3. Disk usage — alert if above 80%
+4. Verify Gateway healthy
+5. Check unanswered operator messages
+6. Update /clawd/memory/heartbeat-YYYY-MM-DD.log
+
+## Alert Conditions
+- Any unaddressed ERROR → WhatsApp alert
+- Disk >80% → WhatsApp warning
+- Project stuck >24h in same state → WhatsApp alert
+
+## Normal Operation
+No outbound messages if all clear. Just log.</pre>
+        <div class="callout info" style="margin-top:8px;">
+          Heartbeat interval trade-off: Every 15min = 8× cost of 2hr for same coverage. Use 2hr unless you need &lt;2hr incident response.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ BROWSER ═══════════════════════════════════════ -->
+<section id="browser">
+  <div class="section-title">Browser Agent <span class="pill">WEB AUTOMATION</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">Profile Decision Matrix</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Profile</th><th>How</th><th>Session State</th><th>Use For</th></tr>
+          <tr>
+            <td><code>openclaw</code></td>
+            <td>Isolated headless Chromium managed by Gateway</td>
+            <td>Clean each time, no cookies</td>
+            <td>Public sites, research, price monitoring, screenshots, PDFs</td>
+          </tr>
+          <tr>
+            <td><code>chrome</code></td>
+            <td>Chrome Extension Relay → controls your real Chrome tab</td>
+            <td>All existing sessions + cookies intact</td>
+            <td>Authenticated workflows, internal tools, anti-headless sites</td>
+          </tr>
+        </table>
+        <div class="callout" style="margin-top:8px;">
+          <strong>Rule:</strong> Start with <code>openclaw</code>. Switch to <code>chrome</code> only when auth or bot-blocking is an issue. Chrome profile requires: extension installed + tab attached (badge ON).
+        </div>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">refs parameter</div>
+        <dl>
+          <dt>refs: "role"</dt>
+          <dd>Generates role+name refs (e.g. button[e12] "Submit"). More readable. Stable across sessions.</dd>
+          <dt>refs: "aria"</dt>
+          <dd>Playwright aria-ref IDs. More stable for complex programmatic automation.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Snapshot → Act Pattern</div>
+      <div class="card-body">
+        <pre># Step 1: Snapshot (get element refs)
+{
+  "tool": "browser",
+  "action": "snapshot",
+  "profile": "openclaw",
+  "refs": "role"         // returns: e12, e15, e23...
+}
+
+# Snapshot output example:
+# button[e12] "Submit"
+# input[e15] "Email address" value=""
+# link[e23] "Forgot password?"
+
+# Step 2: Fill a field
+{
+  "tool": "browser", "action": "act",
+  "request": { "kind": "fill", "ref": "e15",
+                "text": "user@example.com" }
+}
+# NOTE: fill clears first. type appends.
+
+# Step 3: Click
+{
+  "tool": "browser", "action": "act",
+  "request": { "kind": "click", "ref": "e12" }
+}
+
+# Step 4: Select dropdown
+{
+  "tool": "browser", "action": "act",
+  "request": { "kind": "select", "ref": "e23",
+                "values": ["option-value-2"] }
+}
+
+# Step 5: Keyboard shortcut
+{
+  "tool": "browser", "action": "act",
+  "request": { "kind": "press", "key": "Control+A" }
+}
+
+# Step 6: Wait for dynamic content
+{
+  "tool": "browser", "action": "act",
+  "request": { "kind": "wait", "text": "Dashboard" }
+}
+
+# Step 7: JavaScript evaluation
+{
+  "tool": "browser", "action": "act",
+  "request": {
+    "kind": "evaluate",
+    "fn": "Array.from(document.querySelectorAll(
+           'tr.data-row')).map(r => ({
+             id: r.dataset.id,
+             val: r.querySelector('.value').textContent
+           }))"
+  }
+}
+
+# Drag and drop
+{
+  "tool": "browser", "action": "act",
+  "request": { "kind": "drag",
+               "startRef": "e12", "endRef": "e34" }
+}
+
+# Multi-tab: pass targetId to stay on same tab
+{
+  "tool": "browser", "action": "snapshot",
+  "profile": "chrome", "targetId": "ABC123"
+}</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Failure Modes + Mitigations</div>
+      <div class="card-body">
+        <dl>
+          <dt>🔴 Page structure changed</dt>
+          <dd>Re-snapshot. Target by role/text not position. "Click the button that says 'Add to Cart'" not "third button in .product-actions div"</dd>
+          <dt>🔴 Rate limiting (429 / CAPTCHA)</dt>
+          <dd>Add delays between requests. setTimeout(2000) between fetches. Don't hammer. Respect Retry-After header.</dd>
+          <dt>🔴 Login session expired</dt>
+          <dd>Detect "Please log in". Re-auth from /clawd/secrets/credentials.json. Store cookies. Never hardcode creds — chmod 600 on secrets.</dd>
+          <dt>🔴 JS-heavy + anti-bot protection</dt>
+          <dd>1. Check for official API. 2. Use chrome profile with realistic delays. 3. Find alternative source. 4. Accept: this automation isn't feasible.</dd>
+        </dl>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Login flow template</div>
+        <pre>1. navigate {login_url}
+2. snapshot (get refs)
+3. fill email ref ← /clawd/secrets/credentials.json
+4. fill password ref ← credentials.json
+5. click submit ref
+6. wait: "Loading" disappear OR "Dashboard" appear
+7. snapshot → confirm login</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Screenshot / PDF generation</div>
+        <pre># Screenshot (PNG)
+{ "action": "screenshot", "profile": "openclaw",
+  "type": "png", "fullPage": true }
+
+# Save as PDF
+{ "action": "pdf", "profile": "openclaw" }</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MULTI-AGENT ═══════════════════════════════════════ -->
+<section id="multiagent">
+  <div class="section-title">Multi-Agent Orchestration <span class="pill">KELLY ROUTER</span></div>
+  <div class="grid grid-2">
+
+    <div class="card">
+      <div class="card-header">Kelly Router Architecture</div>
+      <div class="card-body">
+        <div class="flow-row" style="margin-bottom:8px;">
+          <div class="flow-node" style="border-color:var(--accent);">Operator</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node" style="border-color:var(--accent);">Kelly Router<br/>(main agent)</div>
+        </div>
+        <div style="padding-left:80px;margin-top:8px;">
+          <div class="flow-row">
+            <span class="flow-arrow">↙</span><span class="flow-arrow">↓</span><span class="flow-arrow">↘</span>
+          </div>
+          <div class="flow-row" style="margin-top:4px;">
+            <div class="flow-node">Research Lead<br/>→ parallel workers</div>
+            <div class="flow-node">Project Lead<br/>→ impl workers</div>
+            <div class="flow-node">Test Lead<br/>→ TEA workers</div>
+          </div>
+        </div>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Main agent responsibilities (NEVER do the work)</div>
+        <ul class="two-col-list">
+          <li>Route work to right lead</li>
+          <li>Validate quality gates</li>
+          <li>Communicate with operator</li>
+          <li>Handle RALPH escalation</li>
+          <li>Write memory/status</li>
+          <li>Create project dir structure</li>
+        </ul>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Project directory structure</div>
+        <pre>/clawd/projects/{YYYYMMDD-HHMMSS}/
+├── intake.md          ← raw request + classification
+├── research-artifacts/
+│   ├── evidence.md
+│   ├── decision-log.md
+│   └── research-summary.md  ← gate: READY|NOT-READY
+├── planning-artifacts/
+│   ├── prd.md
+│   ├── architecture.md
+│   └── planning-summary.md  ← gate: PASS|FAIL
+├── implementation-artifacts/
+│   ├── sprint-plan.md
+│   ├── stories/
+│   └── implementation-summary.md
+└── test-artifacts/
+    └── tea-summary.md  ← gate: PASS|PASS-WITH-FOLLOWUPS|REMEDIATE</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">AGENTS.md Full Schema</div>
+      <div class="card-body">
+        <pre># AGENTS.md
+## Role
+[Main agent's single responsibility — routing only]
+
+## Named Agents
+### research-lead
+**Role:** Research orchestrator
+**Triggers:** Tasks requiring external research/data
+**Capability:** Spawns N parallel research sub-agents
+**Output:** /clawd/research/{project-id}/
+**Reports to:** Main router
+
+### project-lead
+**Role:** Implementation orchestrator
+**Triggers:** Research-complete tasks ready for building
+**Capability:** Sprint plans + impl sub-agents
+**Output:** /clawd/projects/{project-id}/
+**Reports to:** Main router
+
+### test-lead
+**Role:** QA orchestrator (TEA: Test-Execute-Assess)
+**Triggers:** Implementations awaiting validation
+**Capability:** Runs tests, generates audit report
+**Output:** /clawd/projects/{project-id}/test-artifacts/
+**Reports to:** Main router
+
+## Routing Rules
+- "write" | "draft" → writer agent
+- "research" | "find" | "check" → researcher
+- "code" | "build" | "fix" → coder
+
+## Quality Gates
+Before routing to next phase, verify:
+□ Required artifact files exist at expected paths
+□ Files are non-empty
+□ Gate decision in summary.md = PASS|READY
+
+## RALPH Escalation Protocol
+On BLOCKED/FAILED from sub-agent:
+1. Log → /clawd/logs/escalations.log:
+   TIMESTAMP | Project {id} | Phase {phase} | Error | Retry {n}
+2. Retry (if n < 3): spawn new agent,
+   "Previous attempt failed with {error}. Different approach."
+3. Escalate (n >= 3 OR unrecoverable):
+   WhatsApp: 🚨 BLOCKED: {id} | {phase} | {error} | Awaiting decision
+4. HOLD: no further progress until operator responds
+
+## Memory Protocol
+After each phase completion, write to:
+/clawd/memory/YYYY-MM-DD.md (timestamped action log)
+Update /clawd/status-board.md with project status</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Subagent Spawning Patterns</div>
+      <div class="card-body">
+        <pre># Spawn a single worker
+Spawn a sub-agent labeled "research-phase-1" to:
+  [fully specified task with exact paths]
+  Report back when complete.
+
+# Spawn N parallel workers simultaneously
+Spawn three parallel research agents:
+1. Label: research-competitor-a
+   Task: Research Competitor A pricing and features.
+   Save to /clawd/research/20260222/competitor-a.md
+2. Label: research-competitor-b
+   Task: Research Competitor B pricing and features.
+   ...
+Wait for all three to complete.
+Compile findings into comparison report.
+
+# Steer a running agent
+{
+  "tool": "subagents",
+  "action": "steer",
+  "target": "research-task-1",
+  "message": "Also check Product Hunt for recent launches."
+}
+
+# Kill a stuck agent
+{ "tool": "subagents", "action": "kill",
+  "target": "research-task-1" }
+
+# List running agents
+{ "tool": "subagents", "action": "list",
+  "recentMinutes": 30 }</pre>
+        <div class="callout info" style="margin-top:8px;">
+          Parallel speedup example: 3 sequential research tasks × 5min = 15min. 3 parallel workers = 5min total (3× speedup).
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Agent Failure Patterns + Fixes</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Failure Type</th><th>Signs</th><th>Fix</th></tr>
+          <tr>
+            <td>Context overflow</td>
+            <td>Repetitive responses, "forgets" earlier instructions, incoherent output</td>
+            <td>Split task into smaller chunks. "Research aspect 1" + "Research aspect 2" as separate agents.</td>
+          </tr>
+          <tr>
+            <td>Going off-script</td>
+            <td>Unexpected output files, actions outside stated scope</td>
+            <td>Be prescriptive: "Your ONLY job is X. Do NOT write code. Do NOT do anything else. Save ONLY to {path}."</td>
+          </tr>
+          <tr>
+            <td>Lost results</td>
+            <td>Agent reports "complete" but artifact files missing</td>
+            <td>Always validate: <code>ls -la /clawd/projects/{id}/research-artifacts/</code>. Never trust verbal "done".</td>
+          </tr>
+          <tr>
+            <td>Infinite tool loops</td>
+            <td>Excessive repeated tool calls, task never completing</td>
+            <td>Add stopping conditions: "Research until 3+ credible sources OR 30 minutes elapsed. Then compile and report. Do not continue indefinitely."</td>
+          </tr>
+          <tr>
+            <td>Handoff failure</td>
+            <td>Receiving agent starts on incomplete/missing artifacts</td>
+            <td>Use structured handoff: explicit artifact paths, gate check before routing, handoff message format with project-id + expected outputs.</td>
+          </tr>
+        </table>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Structured handoff message format</div>
+        <pre>Project {id}: {Phase} phase
+Research gate: READY
+Research summary: /clawd/projects/{id}/research-artifacts/research-summary.md
+Your task: Execute planning phase
+Output dir: /clawd/projects/{id}/planning-artifacts/
+Expected artifacts: prd.md, architecture.md, planning-summary.md
+When complete: set gate in planning-summary.md + report back.</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MEMORY ═══════════════════════════════════════ -->
+<section id="memory">
+  <div class="section-title">Memory &amp; Context Management <span class="pill">PERSISTENCE</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">SOUL.md Schema</div>
+      <div class="card-body">
+        <pre># SOUL.md — [Agent Name]
+
+## Identity
+You are [role] working for [person]
+at [company]. [Personality traits.]
+
+## Principles
+1. [Core operating principle]
+2. [Next principle — ordered by priority]
+
+## Communication Style
+- [Tone descriptor]
+- [Format preference]
+- [Verbosity rule]
+- In WhatsApp messages: [channel-specific rule]
+
+## Domain Context
+- Tech stack: [languages/frameworks]
+- Cloud: [provider, region]
+- Team size: [n]
+- Business model: [type]
+
+## Keyword Commands
+- "status" → check /clawd/logs/ + report
+- "report" → generate project status
+- "check [url]" → fetch + summarize
+- "remind me [time] [thing]" → set reminder
+
+## Always Do
+- Log significant actions to memory/YYYY-MM-DD.md
+- Check MEMORY.md before starting a task
+- Confirm destructive actions before executing
+
+## Never Do
+- Commit to main without tests passing
+- Send messages to customers without review
+- Delete files without confirmation
+- Store credentials outside /clawd/secrets/</pre>
+        <div class="callout info" style="margin-top:8px;">
+          SOUL.md = persistent system prompt you can edit as a text file. Review when you repeatedly correct the same behavior.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">MEMORY.md Schema</div>
+      <div class="card-body">
+        <pre># MEMORY.md
+
+## Routing Decisions
+- YYYY-MM-DD: [decision] — Rationale: [why]
+- 2026-02-20: Research tasks → research-lead.
+  Main agent confused doing research + routing
+
+## Operator Preferences
+- Prefer bullet points over paragraphs in reports
+- Morning briefings: ≤ 5 items or won't be read
+- WhatsApp status: ≤ 300 words
+- Codebase: "src/" not "source/" not "app/"
+
+## System Configuration
+- Pipeline API now at v3 (v2 deprecated Feb 2026)
+- AWS region: us-east-1 (was us-west-2 until Jan 2026)
+- DB connection string: see /clawd/config/db-format-note.md
+
+## Known Issues
+- web_fetch sometimes empty on competitor.com
+  → use browser tool instead
+- Sales CSV has inconsistent date formats
+  → always normalize to YYYY-MM-DD
+
+## Escalation Patterns
+- Common block: [description] → Resolution: [approach]</pre>
+        <hr class="divider">
+        <div style="font-size:11px;color:var(--warn);font-weight:bold;">What NOT to put in MEMORY.md</div>
+        <div class="pill-list">
+          <span class="pill" style="border-color:var(--red);">daily op logs → use DAILY/</span>
+          <span class="pill" style="border-color:var(--red);">full datasets → use data files</span>
+          <span class="pill" style="border-color:var(--red);">code → use code files</span>
+          <span class="pill" style="border-color:var(--red);">large docs → use project artifacts</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Tiered Memory Architecture</div>
+      <div class="card-body">
+        <div class="workspace-tree">
+<span class="dir">memory/</span>
+├── <span class="file">CORE.md</span>     <span class="comment">← never expires: infra facts, hard rules, tech stack</span>
+├── <span class="file">CURRENT.md</span>  <span class="comment">← current quarter: active projects, open decisions</span>
+├── <span class="dir">ARCHIVE/</span>
+│   ├── <span class="file">2026-Q1.md</span>  <span class="comment">← rotated quarterly</span>
+│   └── <span class="file">2025-Q4.md</span>  <span class="comment">← loaded only when referenced</span>
+└── <span class="dir">DAILY/</span>
+    ├── <span class="file">2026-02-22.md</span>  <span class="comment">← operational log</span>
+    └── <span class="file">2026-02-21.md</span>
+        </div>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Memory loading protocol (in SOUL.md)</div>
+        <pre>At session start:
+1. Always read CORE.md
+2. Read CURRENT.md
+3. Read today's DAILY log if exists
+4. If project mentioned, read its context.md
+5. For deep questions, grep ARCHIVE/ on demand</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Searchable memory (large collections)</div>
+        <pre>grep -r "database migration"
+  /clawd/memory/ --include="*.md" -l
+# -l returns filenames only → load matching files</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Monthly compaction cron</div>
+        <pre>{
+  "schedule": "0 10 1 * *",
+  "task": "Read CURRENT.md. Archive entries >90d
+  to ARCHIVE/YYYY-QN.md. Keep under 500 lines.
+  Log what was archived to memory-compaction.log"
+}</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ NODES ═══════════════════════════════════════ -->
+<section id="nodes">
+  <div class="section-title">Node Network <span class="pill">MULTI-DEVICE</span></div>
+  <div class="grid grid-2">
+
+    <div class="card">
+      <div class="card-header">nodes Tool Reference</div>
+      <div class="card-body">
+        <table>
+          <tr><th>action</th><th>Use</th><th>Key Params</th></tr>
+          <tr><td><code>status</code></td><td>Check node online/offline</td><td><code>node</code></td></tr>
+          <tr><td><code>describe</code></td><td>Get node capabilities</td><td><code>node</code></td></tr>
+          <tr><td><code>run</code></td><td>Execute shell command on node</td><td><code>node</code>, <code>command</code> (array)</td></tr>
+          <tr><td><code>invoke</code></td><td>Call named capability on node</td><td><code>node</code></td></tr>
+          <tr><td><code>notify</code></td><td>Send native push notification</td><td><code>node</code>, <code>title</code>, <code>body</code>, <code>delivery</code>: system|overlay|auto</td></tr>
+          <tr><td><code>camera_snap</code></td><td>Take single photo</td><td><code>node</code>, <code>facing</code>: front|back|both</td></tr>
+          <tr><td><code>camera_list</code></td><td>List available cameras</td><td><code>node</code></td></tr>
+          <tr><td><code>camera_clip</code></td><td>Record video clip</td><td><code>node</code>, <code>durationMs</code></td></tr>
+          <tr><td><code>screen_record</code></td><td>Record screen</td><td><code>node</code>, <code>durationMs</code></td></tr>
+          <tr><td><code>location_get</code></td><td>Get device location</td><td><code>node</code>, <code>desiredAccuracy</code>: coarse|balanced|precise</td></tr>
+        </table>
+        <hr class="divider">
+        <pre># Run command on remote node
+{
+  "tool": "nodes", "action": "run",
+  "node": "home-server",
+  "command": ["bash", "-c", "df -h && free -h && uptime"]
+}
+
+# Native iOS notification (bypasses WhatsApp)
+{
+  "tool": "nodes", "action": "notify",
+  "node": "my-iphone",
+  "title": "Pipeline Complete",
+  "body": "47 items processed. 2 errors.",
+  "delivery": "system"
+}
+
+# Location-triggered automation
+When iphone-15 is within 0.5 miles of home
+AND home-state.mode is "away":
+→ set home-state.mode to "home"
+→ trigger welcome routine</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Node Config + Patterns</div>
+      <div class="card-body">
+        <div style="font-size:11px;font-weight:bold;margin-bottom:4px;">Config in openclaw.json</div>
+        <pre>{
+  "nodes": {
+    "home-server": {
+      "host": "192.168.1.10",
+      "user": "pi"
+    },
+    "my-iphone": {
+      "platform": "ios",
+      "pairedId": "DEVICE_UUID"
+    },
+    "remote-vps": {
+      "host": "vps.example.com",
+      "user": "deploy",
+      "key": "~/.ssh/id_rsa"
+    }
+  }
+}</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Distributed monitoring cron</div>
+        <pre>{
+  "schedule": "0 */1 * * *",
+  "task": "Check all server nodes: run
+  'df -h && free -h' on each. If any disk
+  >80% OR memory >90%, alert immediately."
+}</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Home office node setup</div>
+        <pre>mac-studio    ← primary workstation
+macbook-pro   ← laptop
+iphone-15     ← mobile (camera, location)
+home-server   ← NAS/backup server
+
+Morning startup:
+1. Check mac-studio running (nodes run → hostname)
+2. Check home-server backup (run → tail backup.log)
+3. Get iphone-15 location (home or traveling?)
+4. Send appropriate briefing based on location</pre>
+        <div class="callout info" style="margin-top:8px;">
+          Node notifications bypass WhatsApp entirely — direct native push to iOS/Android. No internet dependency on messaging platforms.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ CHANNELS ═══════════════════════════════════════ -->
+<section id="channels">
+  <div class="section-title">Communication Channels <span class="pill">MESSAGING</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">Channel Setup Cheat Sheet</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Channel</th><th>Auth Method</th><th>Config Keys</th></tr>
+          <tr>
+            <td>WhatsApp</td>
+            <td>QR code scan (whatsapp-web.js)</td>
+            <td><code>enabled</code>, <code>dmPolicy</code>: allowlist, <code>allowFrom</code>: ["+1..."]</td>
+          </tr>
+          <tr>
+            <td>Telegram</td>
+            <td>@BotFather → /newbot → token</td>
+            <td><code>enabled</code>, <code>token</code>, <code>allowFrom</code>: ["username"]</td>
+          </tr>
+          <tr>
+            <td>Discord</td>
+            <td>discord.com/developers → Bot tab → MESSAGE_CONTENT_INTENT</td>
+            <td><code>enabled</code>, <code>token</code>, <code>groupPolicy</code>: allowlist</td>
+          </tr>
+          <tr>
+            <td>iMessage</td>
+            <td>macOS only</td>
+            <td>Check current docs</td>
+          </tr>
+        </table>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">WhatsApp message formatting</div>
+        <pre>*bold text*
+_italic text_
+~strikethrough~
+`monospace`
+Line breaks: use \n in prompt</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Alert Severity System</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Level</th><th>Channels</th><th>Quiet Hours?</th></tr>
+          <tr><td>🔴 CRITICAL</td><td>WhatsApp + TTS + log</td><td>No — always sends</td></tr>
+          <tr><td>🟡 WARNING</td><td>WhatsApp + log</td><td>Yes — log only 10pm–7am</td></tr>
+          <tr><td>🟢 INFO</td><td>Log file only</td><td>N/A</td></tr>
+        </table>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Alert template (WhatsApp)</div>
+        <pre># Critical
+🚨 CRITICAL: {system}
+{what happened}
+{what to do}
+Time: {ISO_TIMESTAMP}
+
+# Warning
+⚠️ WARNING: {system}
+{what's wrong}
+{severity level}
+No action needed now.
+
+# Success
+✅ {task} complete
+{key metric}: {value}
+
+# Log line format
+ISO | LEVEL | component | action | details
+2026-02-22T07:00:01Z | INFO | briefing | sent | 3 items</pre>
+        <div class="callout danger" style="margin-top:8px;">
+          <strong>Proactive silence</strong> is important. "System normal" every hour → alert fatigue → all alerts ignored.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Communication Hub Architecture</div>
+      <div class="card-body">
+        <div class="flow-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="flow-node">Data Sources<br/>Files | Web | APIs | Cron</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node">Processors<br/>Transform | Filter | Format</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node">Router Logic<br/>Severity | Time | Rules</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node">Channels<br/>WA | TTS | Log</div>
+          </div>
+        </div>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Inbound WA command routing (SOUL.md)</div>
+        <pre>## Keyword Commands
+When I send a message starting with:
+- "status" → check /clawd/logs/ + report activity
+- "report" → generate + send project status
+- "check [url]" → fetch + summarize that URL
+- "remind me [time] [thing]" → set one-time reminder
+- "health log" → interactive health data entry
+</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">TTS pattern</div>
+        <pre># Read morning briefing aloud
+Read /clawd/briefings/YYYY-MM-DD.md
+and deliver via text-to-speech.
+# CRITICAL: agent must reply NO_REPLY after tts call
+# to prevent duplicate text message</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ WORKSPACE LAYOUT ═══════════════════════════════════════ -->
+<section id="workspace">
+  <div class="section-title">Workspace Layout <span class="pill">FILE SYSTEM</span></div>
+  <div class="grid grid-2">
+
+    <div class="card">
+      <div class="card-header">Canonical Directory Structure</div>
+      <div class="card-body">
+        <div class="workspace-tree">
+<span class="dir">~/clawd/</span>
+│
+├── <span class="comment">── Context files (loaded every session) ──</span>
+├── <span class="file">SOUL.md</span>       <span class="comment">agent identity, rules, keyword routing</span>
+├── <span class="file">MEMORY.md</span>     <span class="comment">persistent facts, decisions, preferences</span>
+├── <span class="file">AGENTS.md</span>     <span class="comment">routing rules, named agents, gates, RALPH</span>
+├── <span class="file">USER.md</span>       <span class="comment">your name, timezone, notif prefs, tools</span>
+├── <span class="file">APPS.md</span>       <span class="comment">app-specific context</span>
+│
+├── <span class="comment">── Protocols (load on demand) ──</span>
+└── <span class="dir">protocols/</span>
+│   ├── <span class="file">HEARTBEAT.md</span>  <span class="comment">2h health check checklist</span>
+│   ├── <span class="file">ALERTS.md</span>     <span class="comment">severity routing rules</span>
+│   └── <span class="file">TOOLS.md</span>      <span class="comment">installed skills + trigger keywords</span>
+│
+├── <span class="comment">── Memory system ──</span>
+├── <span class="dir">memory/</span>
+│   ├── <span class="file">CORE.md</span>        <span class="comment">permanent infra facts</span>
+│   ├── <span class="file">CURRENT.md</span>     <span class="comment">current quarter context</span>
+│   ├── <span class="dir">ARCHIVE/</span>       <span class="comment">YYYY-QN.md — rotated quarterly</span>
+│   └── <span class="dir">DAILY/</span>         <span class="comment">YYYY-MM-DD.md — operational logs</span>
+│
+├── <span class="comment">── Operational ──</span>
+├── <span class="dir">logs/</span>             <span class="comment">cron-history.log, errors.log, pipeline.log</span>
+├── <span class="dir">data/</span>             <span class="comment">JSON/CSV persistent data, monitor-state.json</span>
+├── <span class="dir">tmp/</span>              <span class="comment">ephemeral scratch (cleanup: 7d)</span>
+│
+├── <span class="comment">── Work products ──</span>
+├── <span class="dir">projects/</span>         <span class="comment">YYYYMMDD-HHMMSS/ per project</span>
+├── <span class="dir">research/</span>         <span class="comment">research artifacts</span>
+├── <span class="dir">reports/</span>          <span class="comment">generated outputs (monthly/, weekly/)</span>
+├── <span class="dir">drafts/</span>           <span class="comment">work in progress content</span>
+├── <span class="dir">briefings/</span>        <span class="comment">YYYY-MM-DD.md morning briefings</span>
+│
+├── <span class="comment">── Infrastructure ──</span>
+├── <span class="dir">scripts/</span>          <span class="comment">python/bash automation scripts</span>
+├── <span class="dir">templates/</span>        <span class="comment">document/report templates</span>
+├── <span class="dir">config/</span>           <span class="comment">non-secret configuration</span>
+└── <span class="dir">secrets/</span>          <span class="comment">chmod 700 | api-keys.json, credentials.json</span>
+    <span class="comment">chmod 600 on all files inside</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Python Script Canonical Template</div>
+      <div class="card-body">
+        <pre>#!/usr/bin/env python3
+"""
+script-name.py
+One-line description of what this does.
+Usage: python3 script-name.py [args]
+"""
+import sys, json, logging
+from pathlib import Path
+from datetime import datetime
+
+WORKSPACE  = Path("/Users/you/clawd")
+INPUT_FILE = WORKSPACE / "data" / "input.json"
+OUTPUT_FILE= WORKSPACE / "data" / "output.json"
+LOG_FILE   = WORKSPACE / "logs" / "script-name.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler(LOG_FILE)
+    ]
+)
+log = logging.getLogger(__name__)
+
+def load_input():
+    if not INPUT_FILE.exists():
+        log.error(f"Input not found: {INPUT_FILE}")
+        sys.exit(1)
+    try:
+        return json.loads(INPUT_FILE.read_text())
+    except json.JSONDecodeError as e:
+        log.error(f"Bad JSON: {e}"); sys.exit(1)
+
+def process(data):
+    result = {
+        "timestamp": datetime.now().isoformat(),
+        "status": "success", "processed": 0, "errors": []
+    }
+    # ── Your logic here ──
+    return result
+
+def save_output(result):
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_FILE.write_text(json.dumps(result, indent=2))
+    log.info(f"Output saved: {OUTPUT_FILE}")
+
+def main():
+    log.info("Starting script-name")
+    data = load_input()
+    result = process(data)
+    save_output(result)
+    # Terse stdout for agent consumption
+    print(json.dumps({
+        "status": result["status"],
+        "processed": result["processed"],
+        "error_count": len(result["errors"])
+    }))
+    if result["status"] != "success":
+        sys.exit(1)  # non-zero → triggers RALPH
+
+if __name__ == "__main__":
+    main()</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ PATTERNS ═══════════════════════════════════════ -->
+<section id="patterns">
+  <div class="section-title">Common Automation Patterns <span class="pill">RECIPES</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">Error Handling Patterns</div>
+      <div class="card-body">
+        <pre># Pattern 1: Retry with exponential backoff
+def with_retry(fn, max_attempts=3, delay=2):
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return fn()
+        except Exception as e:
+            if attempt == max_attempts: raise
+            wait = delay ** attempt
+            logging.warning(
+              f"Attempt {attempt} failed: {e}. Retry {wait}s")
+            time.sleep(wait)
+
+# Pattern 2: Graceful degradation
+def get_with_fallback(primary_path, fallback_path):
+    try:
+        return fetch_fresh_data(primary_path)
+    except Exception as e:
+        logging.warning(f"Primary failed: {e}. Fallback.")
+        if Path(fallback_path).exists():
+            return json.loads(Path(fallback_path).read_text())
+        return None
+
+# Pattern 3: Resumable state tracking
+def load_state():
+    f = Path("/clawd/data/process-state.json")
+    return json.loads(f.read_text()) if f.exists() else \
+           {"last_processed_id": None, "processed_count": 0}
+
+def save_state(state):
+    f = Path("/clawd/data/process-state.json")
+    state["updated_at"] = datetime.now().isoformat()
+    f.write_text(json.dumps(state, indent=2))
+
+# In main loop:
+state = load_state()
+for item in items:
+    if state["last_processed_id"] and \
+       item["id"] <= state["last_processed_id"]:
+        continue  # skip already processed
+    process(item)
+    state["last_processed_id"] = item["id"]
+    state["processed_count"] += 1
+    save_state(state)  # resumable if interrupted</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Web Scraping at Scale</div>
+      <div class="card-body">
+        <pre>import time, requests, hashlib, json
+from pathlib import Path
+from urllib import robotparser
+from urllib.parse import urlparse
+
+def check_robots(url):
+    parsed = urlparse(url)
+    rp = robotparser.RobotFileParser()
+    rp.set_url(f"{parsed.scheme}://{parsed.netloc}/robots.txt")
+    try: rp.read(); return rp.can_fetch("*", url)
+    except: return True  # assume allowed if check fails
+
+def polite_get(url, delay=2):
+    if not check_robots(url):
+        raise ValueError(f"robots.txt blocks: {url}")
+    r = requests.get(url, headers={
+        "User-Agent": "Mozilla/5.0 (compatible; bot/1.0)"
+    }, timeout=30)
+    time.sleep(delay)  # politeness delay
+    return r
+
+# URL-based pagination
+def scrape_all_pages(base_url, max_pages=50):
+    results = []
+    for page in range(1, max_pages + 1):
+        data = parse_page(polite_get(
+            f"{base_url}?page={page}").text)
+        if not data: break
+        results.extend(data)
+    return results
+
+# Response caching (TTL-based)
+CACHE_DIR = Path("/clawd/data/web-cache")
+def get_cached_or_fetch(url, ttl_hours=24):
+    key = hashlib.md5(url.encode()).hexdigest()
+    f = CACHE_DIR / f"{key}.json"
+    if f.exists():
+        cached = json.loads(f.read_text())
+        if (time.time()-cached["timestamp"])/3600 < ttl_hours:
+            return cached["content"]
+    content = polite_get(url).text
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps({
+        "url": url, "timestamp": time.time(),
+        "content": content
+    }))
+    return content</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Pipeline Checkpointing (Debugging Aid)</div>
+      <div class="card-body">
+        <pre>def save_checkpoint(stage, data):
+    f = Path(f"/clawd/data/checkpoint-{stage}.json")
+    f.write_text(json.dumps({
+        "stage": stage,
+        "timestamp": datetime.now().isoformat(),
+        "data": data
+    }))
+
+def load_checkpoint(stage):
+    f = Path(f"/clawd/data/checkpoint-{stage}.json")
+    return json.loads(f.read_text())["data"] \
+           if f.exists() else None
+
+# In pipeline: save at each major stage
+save_checkpoint("fetch", raw_data)
+save_checkpoint("transform", transformed)
+save_checkpoint("validate", validated)
+
+# To replay from stage:
+data = load_checkpoint("transform") or fetch_fresh()</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Pipeline trace logging (in task description)</div>
+        <pre>Execute the pipeline. After each major step,
+append ONE line to /clawd/logs/pipeline-trace.log:
+Format: ISO_TS | STEP | RESULT | DETAILS
+Steps: fetch-data, transform, validate, output</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Agent log inspection</div>
+        <pre># Find recent session logs
+ls -lt ~/.openclaw/logs/ | head -10
+# Read specific session
+cat ~/.openclaw/logs/session-20260222-143000.log</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ SECURITY ═══════════════════════════════════════ -->
+<section id="security">
+  <div class="section-title">Security Hardening <span class="pill">PRODUCTION</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">Exec Security Modes</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Mode</th><th>Behavior</th><th>Use When</th></tr>
+          <tr><td><code>deny</code></td><td>Blocks ALL exec tool calls</td><td>Write-only agents, pure analysis agents that should never run shell</td></tr>
+          <tr><td><code>allowlist</code></td><td>Only explicitly listed commands allowed</td><td>⭐ Default for most agents</td></tr>
+          <tr><td><code>full</code></td><td>No restrictions — arbitrary commands</td><td>Only when explicitly needed + trusted context. Dangerous in automated pipelines.</td></tr>
+        </table>
+        <hr class="divider">
+        <pre># Recommended allowlist config
+{
+  "tools": {
+    "exec": {
+      "security": "allowlist",
+      "allowedCommands": [
+        "python3","node","git","ls","cat",
+        "find","grep","awk","sed","jq","curl"
+      ]
+    },
+    "exec.elevated": false
+  }
+}</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Secrets Management</div>
+      <div class="card-body">
+        <div class="callout danger">
+          NEVER put credentials in: task descriptions, SOUL.md, MEMORY.md, AGENTS.md, log files, conversation history
+        </div>
+        <hr class="divider">
+        <div class="workspace-tree" style="margin:8px 0;">
+<span class="dir">secrets/</span>           <span class="comment">chmod 700</span>
+├── <span class="file">api-keys.json</span>  <span class="comment">chmod 600</span>
+├── <span class="file">credentials.json</span> <span class="comment">chmod 600</span>
+└── <span class="file">tokens.json</span>    <span class="comment">chmod 600</span>
+        </div>
+        <pre>chmod 700 /Users/you/clawd/secrets/
+chmod 600 /Users/you/clawd/secrets/*.json</pre>
+        <hr class="divider">
+        <div style="font-size:11px;margin:6px 0 4px;">Reference in tasks (runtime read, never logs)</div>
+        <pre>Fill in the email with the email from
+/clawd/secrets/credentials.json
+and the password from the same file.
+
+# In Python:
+creds = json.loads(Path(
+  "/clawd/secrets/credentials.json").read_text())</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Human Approval Gates</div>
+      <div class="card-body">
+        <div class="callout danger">
+          Automations that affect others (messages to customers, financial transactions, customer data modifications) → ALWAYS generate drafts, never auto-send.
+        </div>
+        <hr class="divider">
+        <pre># Client communication pattern
+Generate status update email for Acme Corp.
+Save to /clawd/drafts/client-updates/
+  YYYY-MM-DD/acme.md for review.
+Do NOT send. I will review and send manually.
+
+# Invoice pattern
+Generate invoice for Acme from timelog.md.
+Save to /clawd/drafts/invoices/acme-2026-02.md.
+Do NOT send. Awaiting review.
+
+# Code review gate
+Review code in last commit against standards.
+Save to /clawd/reviews/pre-push-YYYYMMDD-HHMMSS.md
+Do NOT commit.</pre>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Behavior audit</div>
+        <pre>Review cron-history.log past week.
+Review outbound-messages.log.
+Report: unusual actions, unexpected patterns,
+high-frequency surprises.</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ PERFORMANCE ═══════════════════════════════════════ -->
+<section id="perf">
+  <div class="section-title">Performance &amp; Cost Optimization <span class="pill">EFFICIENCY</span></div>
+  <div class="grid grid-2">
+
+    <div class="card">
+      <div class="card-header">Cost Sources + Reduction Strategies</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Cost Source</th><th>Reduction Strategy</th></tr>
+          <tr>
+            <td>Input tokens (context window)</td>
+            <td>Keep SOUL.md, MEMORY.md, AGENTS.md concise. Summarize and archive aged entries. Tiered memory: load only what's needed.</td>
+          </tr>
+          <tr>
+            <td>Output tokens</td>
+            <td>For automated file-writing tasks: "Log results to file. Do not produce verbose output — one-line completion summary only."</td>
+          </tr>
+          <tr>
+            <td>Sub-agent sessions</td>
+            <td>Each has context overhead. Use sub-agents for parallelism + isolation. Direct tool calls for sequential single tasks.</td>
+          </tr>
+          <tr>
+            <td>Cron frequency</td>
+            <td>Every 15min vs 2hr = 8× cost difference. Most heartbeats are fine at 2h. Evaluate: does 1h give adequate response time vs 30min?</td>
+          </tr>
+          <tr>
+            <td>Model selection</td>
+            <td>Use <code>claude-haiku-3-5</code> for simple cron tasks. Reserve <code>claude-sonnet-4-5</code> for complex reasoning. Per-job model override in config.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Long-term Maintenance</div>
+      <div class="card-body">
+        <table>
+          <tr><th>Problem</th><th>Mitigation</th></tr>
+          <tr>
+            <td>Decay: sites change, APIs update, formats shift</td>
+            <td>Alert on failure (not just on run). Monthly audit of what's actually working. "last successful run" timestamps in logs. Alert if job hasn't run recently.</td>
+          </tr>
+          <tr>
+            <td>Documentation debt: clever code, no docs</td>
+            <td>Write at creation time not after. CHANGELOG as you go. When something breaks and you fix it → document in MEMORY.md what broke and why.</td>
+          </tr>
+          <tr>
+            <td>Version incompatibility: model/API updates</td>
+            <td>Pin model versions when stability > capability. Test after updates. Keep working configs in git for rollback.</td>
+          </tr>
+        </table>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Monthly system audit cron</div>
+        <pre>{
+  "schedule": "0 10 1 * *",
+  "task": "Monthly audit: Check all cron jobs ran
+  in past month (cron-history.log). Identify
+  failed/missing runs. Check disk usage. Review
+  /clawd/data/ for stale files. Verify all scripts
+  in /clawd/scripts/ exist + executable.
+  Report findings + recommendations."
+}</pre>
+        <div class="callout ok" style="margin-top:8px;">
+          Web request timeouts: always set <code>timeout=10</code> in requests.get(). No timeout = script can hang indefinitely.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ DEBUG ═══════════════════════════════════════ -->
+<section id="debug">
+  <div class="section-title">Debugging &amp; Troubleshooting <span class="pill">OPS</span></div>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <div class="card-header">Common Failures + Fixes</div>
+      <div class="card-body">
+        <dl>
+          <dt>Gateway not responding</dt>
+          <dd><code>openclaw gateway status</code> → if not running: <code>openclaw gateway start</code></dd>
+          <dt>Permission denied errors</dt>
+          <dd><code>ls -la ~/clawd</code> → Fix: <code>sudo chown -R $USER ~/clawd</code></dd>
+          <dt>API key invalid</dt>
+          <dd><code>openclaw configure --section auth</code> → re-enter key</dd>
+          <dt>Port already in use</dt>
+          <dd><code>lsof -i :18789</code> → kill process or change <code>gateway.port</code> in config</dd>
+          <dt>WhatsApp QR times out</dt>
+          <dd>Not already connected on another device. <code>openclaw gateway restart</code>. Check <code>openclaw gateway logs</code>.</dd>
+          <dt>Model not found</dt>
+          <dd><code>openclaw config get agents.defaults.model.primary</code> → <code>openclaw configure --section models</code></dd>
+          <dt>exec PATH issues</dt>
+          <dd>Use full paths: <code>/usr/local/bin/python3</code>. Or set <code>"env": {"PATH": "/usr/local/bin:/opt/homebrew/bin:..."}</code></dd>
+          <dt>Script relative path issues</dt>
+          <dd>Set explicit <code>workdir</code> in exec params instead of using <code>cd &amp;&amp; cmd</code></dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Debugging Workflow</div>
+      <div class="card-body">
+        <ol style="font-size:11px;padding-left:16px;line-height:1.8;">
+          <li><strong>Read logs first</strong>: <code>~/.openclaw/logs/session-*.log</code></li>
+          <li><strong>Add verbose logging temporarily</strong> to scripts: Python <code>logging.basicConfig(level=logging.DEBUG)</code>, bash <code>set -x</code></li>
+          <li><strong>Add trace logging in task description</strong>: "After each major step, write one line to pipeline-trace.log: ISO | STEP | RESULT | DETAILS"</li>
+          <li><strong>Minimal reproduction</strong>: smallest possible version of failing task. Add complexity back gradually.</li>
+          <li><strong>Test cron tasks manually</strong>: "Manually execute the morning briefing cron task right now for testing."</li>
+          <li><strong>Validate artifacts explicitly</strong>: <code>ls -la /clawd/projects/{id}/research-artifacts/</code> — never trust verbal "done"</li>
+          <li><strong>Checkpoint pattern</strong>: save state at each pipeline stage, replay from checkpoint after fix</li>
+        </ol>
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:bold;margin:6px 0 4px;">Exec tips</div>
+        <pre># Timeout for long scripts (kills at limit)
+{ "timeout": 300 }
+
+# Background + poll pattern
+{ "background": true, "yieldMs": 10000 }
+→ process: { "action": "poll", "sessionId": "...",
+             "timeout": 5000 }
+
+# PTY mode (for TTY-dependent apps)
+{ "pty": true }</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Disk Guardian Pattern</div>
+      <div class="card-body">
+        <pre>#!/usr/bin/env python3
+"""disk-guardian.py — Monitor disk thresholds"""
+import shutil, json
+from datetime import datetime
+from pathlib import Path
+
+WATCH_PATHS = [
+    {"path": "/", "warn": 80, "crit": 90},
+    {"path": Path.home() / "clawd", "warn": 85, "crit": 95}
+]
+
+def check_path(cfg):
+    usage = shutil.disk_usage(cfg["path"])
+    pct = (usage.used / usage.total) * 100
+    status = (
+        "CRITICAL" if pct >= cfg["crit"] else
+        "WARNING"  if pct >= cfg["warn"] else
+        "OK"
+    )
+    return {"path": str(cfg["path"]),
+            "percent": round(pct, 1),
+            "free_gb": round(usage.free/1e9, 1),
+            "status": status}
+
+results = [check_path(p) for p in WATCH_PATHS]
+print(json.dumps({
+    "timestamp": datetime.now().isoformat(),
+    "results": results,
+    "has_critical": any(r["status"]=="CRITICAL" for r in results),
+    "has_warning":  any(r["status"]=="WARNING"  for r in results)
+}, indent=2))</pre>
+        <hr class="divider">
+        <pre># Cron: every 3 hours
+{
+  "schedule": "0 */3 * * *",
+  "task": "Run disk-guardian.py. If has_critical:
+  immediate WhatsApp. If has_warning and 8-20h:
+  WhatsApp warning. Otherwise log only."
+}</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div style="height:40px;"></div>
+
+</div><!-- /container -->
+</body>
+</html>

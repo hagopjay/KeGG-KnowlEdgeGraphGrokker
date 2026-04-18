@@ -1,0 +1,2791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The pytest Grimoire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b10;
+    --bg2: #0d1117;
+    --bg3: #111820;
+    --surface: #141c26;
+    --surface2: #1a2435;
+    --border: #1e2d40;
+    --border2: #243446;
+    --acid: #00e5a0;
+    --cyan: #00c8e8;
+    --amber: #f0a020;
+    --rose: #f05070;
+    --violet: #a070f0;
+    --text: #c8d8e8;
+    --text2: #7090a8;
+    --text3: #405060;
+    --head: #e8f4ff;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Cormorant Garamond', serif;
+    --sans: 'DM Sans', sans-serif;
+    --sidebar-w: 240px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.75;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 2rem 0 4rem;
+    flex-shrink: 0;
+  }
+
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-track { background: transparent; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .sidebar-logo {
+    padding: 0 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+
+  .sidebar-logo .logo-title {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    color: var(--acid);
+    font-style: italic;
+    letter-spacing: 0.02em;
+  }
+
+  .sidebar-logo .logo-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .nav-section {
+    margin-bottom: 0.25rem;
+  }
+
+  .nav-section-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0.75rem 1.25rem 0.25rem;
+    display: block;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.3rem 1.25rem;
+    font-size: 12.5px;
+    color: var(--text2);
+    text-decoration: none;
+    font-weight: 400;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .nav-link:hover, .nav-link.active {
+    color: var(--acid);
+    border-left-color: var(--acid);
+    background: rgba(0,229,160,0.05);
+  }
+
+  /* ── Main Content ── */
+  #main {
+    flex: 1;
+    min-width: 0;
+    padding: 0 3rem 6rem;
+    max-width: 900px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3.5rem;
+  }
+
+  .hero-kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--acid);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .hero-kicker::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--acid);
+    display: block;
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: 4.5rem;
+    font-weight: 600;
+    color: var(--head);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-subtitle {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    color: var(--text2);
+    font-style: italic;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border-radius: 2px;
+    border: 1px solid;
+  }
+
+  .tag-green { color: var(--acid); border-color: rgba(0,229,160,0.3); background: rgba(0,229,160,0.06); }
+  .tag-cyan { color: var(--cyan); border-color: rgba(0,200,232,0.3); background: rgba(0,200,232,0.06); }
+  .tag-amber { color: var(--amber); border-color: rgba(240,160,32,0.3); background: rgba(240,160,32,0.06); }
+  .tag-rose { color: var(--rose); border-color: rgba(240,80,112,0.3); background: rgba(240,80,112,0.06); }
+  .tag-violet { color: var(--violet); border-color: rgba(160,112,240,0.3); background: rgba(160,112,240,0.06); }
+
+  .hero-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .hero-stat {
+    background: var(--bg2);
+    padding: 1rem 1.25rem;
+  }
+
+  .hero-stat-val {
+    font-family: var(--mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--acid);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .hero-stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Sections ── */
+  .section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 2rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.2em;
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: 2.1rem;
+    font-weight: 600;
+    color: var(--head);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  .section-title .accent { color: var(--acid); }
+
+  h3 {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--head);
+    margin: 2.5rem 0 1rem;
+    letter-spacing: -0.01em;
+  }
+
+  h4 {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin: 1.75rem 0 0.75rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+
+  /* ── Code Blocks ── */
+  .code-block {
+    margin: 1.25rem 0;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .code-block-header {
+    background: var(--surface);
+    padding: 0.4rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-block-filename {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.05em;
+  }
+
+  .code-block-lang {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .code-block pre {
+    margin: 0 !important;
+    padding: 1.25rem 1.5rem !important;
+    background: var(--bg2) !important;
+    border-radius: 0 !important;
+    overflow-x: auto;
+    font-size: 12.5px !important;
+    line-height: 1.65 !important;
+    font-family: var(--mono) !important;
+  }
+
+  .code-block pre::-webkit-scrollbar { height: 4px; }
+  .code-block pre::-webkit-scrollbar-track { background: var(--bg2); }
+  .code-block pre::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  /* Inline code */
+  :not(pre) > code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface);
+    color: var(--acid);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Callouts ── */
+  .callout {
+    border-left: 3px solid;
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .callout-tip { border-color: var(--acid); background: rgba(0,229,160,0.05); }
+  .callout-warn { border-color: var(--amber); background: rgba(240,160,32,0.05); }
+  .callout-danger { border-color: var(--rose); background: rgba(240,80,112,0.05); }
+  .callout-info { border-color: var(--cyan); background: rgba(0,200,232,0.05); }
+
+  .callout-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+  }
+
+  .callout-tip .callout-title { color: var(--acid); }
+  .callout-warn .callout-title { color: var(--amber); }
+  .callout-danger .callout-title { color: var(--rose); }
+  .callout-info .callout-title { color: var(--cyan); }
+
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  td code { font-size: 11px; }
+
+  /* ── Grid layouts ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.1rem 1.25rem;
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-title.green { color: var(--acid); }
+  .card-title.cyan { color: var(--cyan); }
+  .card-title.amber { color: var(--amber); }
+  .card-title.rose { color: var(--rose); }
+  .card-title.violet { color: var(--violet); }
+
+  .card p { font-size: 13px; margin-bottom: 0; }
+
+  /* ── Pipeline diagram ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 1.25rem 0;
+    overflow-x: auto;
+  }
+
+  .pipe-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.6rem 1rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .pipe-arrow {
+    font-family: var(--mono);
+    color: var(--text3);
+    padding: 0 0.4rem;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* ── Scope matrix ── */
+  .scope-matrix {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 1.25rem 0;
+    font-size: 12px;
+  }
+
+  .scope-cell {
+    background: var(--bg2);
+    padding: 0.75rem;
+    text-align: center;
+  }
+
+  .scope-cell.header {
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 600;
+  }
+
+  .scope-cell .scope-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .scope-cell .scope-desc {
+    font-size: 10px;
+    color: var(--text2);
+    line-height: 1.3;
+  }
+
+  .dot-green { color: var(--acid); }
+  .dot-amber { color: var(--amber); }
+  .dot-rose { color: var(--rose); }
+
+  /* ── Divider ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 2.5rem 0;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .divider span {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  /* ── Prism overrides ── */
+  code[class*="language-"], pre[class*="language-"] {
+    font-family: var(--mono) !important;
+  }
+
+  /* ── Print-ish decorative line ── */
+  .ruled-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ruled-head::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+
+  /* ── CLI block ── */
+  .cli {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    margin: 1.25rem 0;
+    overflow-x: auto;
+  }
+
+  .cli .prompt { color: var(--acid); user-select: none; }
+  .cli .cmd { color: var(--head); }
+  .cli .comment { color: var(--text3); }
+  .cli .output { color: var(--text2); }
+  .cli .pass { color: var(--acid); }
+  .cli .fail { color: var(--rose); }
+  .cli .warn { color: var(--amber); }
+
+  /* ── Annotation inline ── */
+  .annot {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin: 0 4px;
+    vertical-align: middle;
+  }
+
+  .annot-green { background: rgba(0,229,160,0.12); color: var(--acid); }
+  .annot-amber { background: rgba(240,160,32,0.12); color: var(--amber); }
+  .annot-rose { background: rgba(240,80,112,0.12); color: var(--rose); }
+
+  /* scrollbar for main */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* active nav highlight */
+  .nav-link.active {
+    color: var(--acid);
+    border-left-color: var(--acid);
+    background: rgba(0,229,160,0.05);
+  }
+
+  @media (max-width: 900px) {
+    #sidebar { display: none; }
+    #main { padding: 0 1.5rem 4rem; }
+    .hero-title { font-size: 2.8rem; }
+    .hero-meta { grid-template-columns: 1fr 1fr; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .scope-matrix { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">The pytest Grimoire</div>
+    <div class="logo-sub">Production Field Manual</div>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-section-title">Foundations</span>
+    <a href="#architecture" class="nav-link">Architecture &amp; Internals</a>
+    <a href="#discovery" class="nav-link">Test Discovery</a>
+    <a href="#assertions" class="nav-link">Assertion Introspection</a>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-section-title">Fixtures</span>
+    <a href="#fixtures-core" class="nav-link">Core Fixture System</a>
+    <a href="#fixture-scopes" class="nav-link">Scopes &amp; Lifetimes</a>
+    <a href="#conftest" class="nav-link">conftest.py Mastery</a>
+    <a href="#factory-fixtures" class="nav-link">Factory Patterns</a>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-section-title">Parametrization</span>
+    <a href="#parametrize" class="nav-link">parametrize Deep Dive</a>
+    <a href="#indirect" class="nav-link">Indirect &amp; IDs</a>
+    <a href="#marks" class="nav-link">Mark System</a>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-section-title">Debugging</span>
+    <a href="#debugging-local" class="nav-link">Local Debugging</a>
+    <a href="#debugging-live" class="nav-link">Live / Production Debug</a>
+    <a href="#tb-options" class="nav-link">Tracebacks &amp; Output</a>
+    <a href="#flaky-tests" class="nav-link">Flaky Test Forensics</a>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-section-title">Scale &amp; CI</span>
+    <a href="#plugins" class="nav-link">Plugin Ecosystem</a>
+    <a href="#xdist" class="nav-link">Parallel with xdist</a>
+    <a href="#coverage" class="nav-link">Coverage Strategy</a>
+    <a href="#ci-cd" class="nav-link">CI/CD Integration</a>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-section-title">Advanced</span>
+    <a href="#asyncio" class="nav-link">Async Testing</a>
+    <a href="#hypothesis" class="nav-link">Property-Based Tests</a>
+    <a href="#plugin-writing" class="nav-link">Writing Plugins</a>
+    <a href="#antipatterns" class="nav-link">Anti-patterns</a>
+    <a href="#checklist" class="nav-link">Production Checklist</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main id="main">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-kicker">The Definitive Reference</div>
+    <h1 class="hero-title">The pytest<br>Grimoire</h1>
+    <p class="hero-subtitle">From first assert to distributed CI — a practitioner's grimoire</p>
+    <div class="hero-tags">
+      <span class="tag tag-green">pytest ≥ 7.x</span>
+      <span class="tag tag-cyan">Python 3.9–3.13</span>
+      <span class="tag tag-amber">xdist · coverage · asyncio</span>
+      <span class="tag tag-rose">Live Debugging</span>
+      <span class="tag tag-violet">Plugin Architecture</span>
+    </div>
+    <div class="hero-meta">
+      <div class="hero-stat">
+        <div class="hero-stat-val">1200+</div>
+        <div class="hero-stat-label">community plugins</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">5</div>
+        <div class="hero-stat-label">fixture scopes</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">∞</div>
+        <div class="hero-stat-label">parametrize combos</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">0</div>
+        <div class="hero-stat-label">boilerplate needed</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §1 ARCHITECTURE
+  ══════════════════════════════════════════ -->
+  <section class="section" id="architecture">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Architecture &amp; <span class="accent">Internals</span></h2>
+    </div>
+
+    <p>pytest is built around a hook-based plugin engine — every phase of the collection and execution lifecycle is a sequence of hook calls that any plugin (including your own <code>conftest.py</code>) can intercept. Understanding this makes everything else click.</p>
+
+    <div class="pipeline">
+      <div class="pipe-step">Config load</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Plugin register</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Collection</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Runtest setup</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Call</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Teardown</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Reporting</div>
+    </div>
+
+    <h3>The Hook System</h3>
+    <p>pytest uses <strong>pluggy</strong> under the hood — a minimalist hook specification &amp; calling library. Hooks are declared in <code>pytest.hookspec</code>; any plugin implementing a matching <code>pytest_*</code> function participates automatically.</p>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">conftest.py — hook anatomy</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+# Every conftest.py is implicitly a plugin.
+# Hook implementations are just functions with matching names.
+
+def pytest_configure(config):
+    """Called after command-line options have been parsed.
+    Register custom marks here to avoid PytestUnknownMarkWarning."""
+    config.addinivalue_line("markers", "slow: mark test as slow to run")
+    config.addinivalue_line("markers", "integration: requires live services")
+    config.addinivalue_line("markers", "smoke: quick sanity gate")
+
+def pytest_collection_modifyitems(config, items):
+    """Mutate or reorder the collected test list.
+    Classic use: auto-mark tests in certain paths."""
+    for item in items:
+        if "integration" in item.nodeid:
+            item.add_marker(pytest.mark.integration)
+        # Ensure slow tests run last — minimises CI tail latency
+        if item.get_closest_marker("slow"):
+            item.add_marker(pytest.mark.last)   # requires pytest-ordering
+
+def pytest_runtest_makereport(item, call):
+    """Intercept per-phase outcomes (setup/call/teardown).
+    Attach phase outcome to item for use in fixtures."""
+    if call.when == "call":
+        item._call_outcome = call   # stash for fixture teardown use
+      </code></pre>
+    </div>
+
+    <h3>Internal Object Hierarchy</h3>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">object hierarchy</span>
+        <span class="code-block-lang">text</span>
+      </div>
+      <pre><code class="language-text">
+Session                     # top-level: one per pytest run
+  └─ Package / Module       # collected file(s)
+       └─ Class             # class Test* (optional)
+            └─ Function     # def test_*
+                 ├─ FixtureManager   # resolves & caches fixtures
+                 └─ CallInfo         # captures setup/call/teardown outcomes
+      </code></pre>
+    </div>
+
+    <h4>Key Config Locations (Resolution Order)</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Location</th><th>Wins when</th></tr></thead>
+        <tbody>
+          <tr><td><code>pytest.ini</code></td><td>root</td><td>always, explicit pytest config</td></tr>
+          <tr><td><code>pyproject.toml</code> <code>[tool.pytest.ini_options]</code></td><td>root</td><td>preferred for modern projects</td></tr>
+          <tr><td><code>setup.cfg</code> <code>[tool:pytest]</code></td><td>root</td><td>legacy, avoid for new projects</td></tr>
+          <tr><td><code>tox.ini</code> <code>[pytest]</code></td><td>root</td><td>when tox is already driving the runner</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">pyproject.toml — canonical config</span>
+        <span class="code-block-lang">toml</span>
+      </div>
+      <pre><code class="language-toml">
+[tool.pytest.ini_options]
+minversion       = "7.4"
+addopts          = [
+    "-ra",                   # show reasons for all non-passing tests
+    "--strict-markers",      # fail on undeclared marks
+    "--strict-config",       # fail on unknown ini options
+    "--tb=short",            # concise tracebacks by default
+    "--import-mode=importlib",  # avoids sys.path pollution
+]
+testpaths        = ["tests"]
+python_files     = ["test_*.py", "*_test.py"]
+python_classes   = ["Test*"]
+python_functions = ["test_*"]
+markers          = [
+    "slow: long-running test (deselect with '-m not slow')",
+    "integration: requires external services",
+    "smoke: fast sanity check",
+    "unit: pure-unit, no I/O",
+]
+filterwarnings   = [
+    "error",                 # treat all warnings as errors
+    "ignore::DeprecationWarning:pkg_resources",
+]
+log_cli          = true
+log_cli_level    = "INFO"
+log_format       = "%(asctime)s %(levelname)-8s %(name)s — %(message)s"
+log_date_format  = "%H:%M:%S"
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §2 DISCOVERY
+  ══════════════════════════════════════════ -->
+  <section class="section" id="discovery">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Test <span class="accent">Discovery</span></h2>
+    </div>
+
+    <p>pytest traverses the filesystem starting from <code>testpaths</code> (or current dir) and collects anything matching the configured naming conventions. Understanding discovery prevents the two most common new-user pitfalls: import errors and duplicated test IDs.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title green">Default discovery rules</div>
+        <p>Recurse into <code>test_*.py</code> / <code>*_test.py</code> files. Collect <code>Test*</code> classes (no <code>__init__</code>) and <code>test_*</code> functions/methods. Also collects <code>unittest.TestCase</code> subclasses.</p>
+      </div>
+      <div class="card">
+        <div class="card-title amber">--import-mode</div>
+        <p><code>prepend</code> (legacy): inserts parent dirs into <code>sys.path</code>. <code>importlib</code> (recommended): unique import per file, no <code>__init__.py</code> needed, no path pollution. Set in <code>pyproject.toml</code>.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">recommended project layout</span>
+        <span class="code-block-lang">text</span>
+      </div>
+      <pre><code class="language-text">
+myproject/
+├── src/
+│   └── myapp/
+│       ├── __init__.py
+│       ├── core.py
+│       └── utils.py
+├── tests/
+│   ├── conftest.py          ← session-wide fixtures & hooks
+│   ├── unit/
+│   │   ├── conftest.py      ← unit-scope fixtures
+│   │   ├── test_core.py
+│   │   └── test_utils.py
+│   ├── integration/
+│   │   ├── conftest.py      ← db/service fixtures
+│   │   └── test_api.py
+│   └── e2e/
+│       └── test_flows.py
+├── pyproject.toml
+└── pytest.ini               ← or [tool.pytest.ini_options] in above
+      </code></pre>
+    </div>
+
+    <h4>Running Subsets — nodeids &amp; expressions</h4>
+    <div class="cli">
+      <div><span class="prompt">$ </span><span class="cmd">pytest tests/unit/</span>                    <span class="comment"># directory</span></div>
+      <div><span class="prompt">$ </span><span class="cmd">pytest tests/unit/test_core.py</span>         <span class="comment"># file</span></div>
+      <div><span class="prompt">$ </span><span class="cmd">pytest tests/unit/test_core.py::test_add</span><span class="comment"># specific function</span></div>
+      <div><span class="prompt">$ </span><span class="cmd">pytest tests/unit/test_core.py::TestMath::test_mul</span><span class="comment"># class method</span></div>
+      <div><span class="prompt">$ </span><span class="cmd">pytest -k "add or subtract and not slow"</span>  <span class="comment"># keyword expr</span></div>
+      <div><span class="prompt">$ </span><span class="cmd">pytest -m "integration and not slow"</span>       <span class="comment"># mark expr</span></div>
+      <div><span class="prompt">$ </span><span class="cmd">pytest --collect-only -q</span>                  <span class="comment"># dry-run: show what would run</span></div>
+      <div><span class="prompt">$ </span><span class="cmd">pytest --co -q -m smoke</span>                   <span class="comment"># collect smoke tests only</span></div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §3 ASSERTION INTROSPECTION
+  ══════════════════════════════════════════ -->
+  <section class="section" id="assertions">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Assertion <span class="accent">Introspection</span></h2>
+    </div>
+
+    <p>pytest rewrites <code>assert</code> statements at import time using AST transformation. The rewritten bytecode captures sub-expression values, giving surgical failure messages without any helper infrastructure.</p>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">test_assertions.py — what good failures look like</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest
+
+# ── Basic scalar ──────────────────────────────────────────────────
+def test_scalar_failure():
+    x = 42
+    assert x == 43
+    # FAILURE OUTPUT:
+    # AssertionError: assert 42 == 43
+    #  +  where 42 = x
+
+# ── Collection membership ─────────────────────────────────────────
+def test_membership():
+    result = {"a": 1, "b": 2}
+    assert "c" in result
+    # AssertionError: assert 'c' in {'a': 1, 'b': 2}
+
+# ── Complex expressions ───────────────────────────────────────────
+def test_complex():
+    data = [1, 2, 3, 4]
+    assert len(data) == 3
+    # AssertionError: assert 4 == 3
+    #  +  where 4 = len([1, 2, 3, 4])
+
+# ── Custom failure messages — use sparingly ───────────────────────
+def test_with_message():
+    user_id = 99
+    assert user_id > 0, f"Expected positive user_id, got {user_id!r}"
+
+# ── Exception testing (best practice) ────────────────────────────
+def test_raises():
+    with pytest.raises(ValueError, match=r"invalid literal.*'abc'"):
+        int("abc")
+
+def test_raises_captures():
+    with pytest.raises(KeyError) as exc_info:
+        d = {}; d["missing"]
+    assert exc_info.value.args[0] == "missing"
+
+# ── Approximate equality (floats) ─────────────────────────────────
+def test_approx():
+    assert 0.1 + 0.2 == pytest.approx(0.3)
+    assert 0.1 + 0.2 == pytest.approx(0.3, rel=1e-6)   # relative tol
+    assert [0.1, 0.2] == pytest.approx([0.1, 0.2], abs=1e-9)
+
+# ── Warning assertions ────────────────────────────────────────────
+def test_warning():
+    import warnings
+    with pytest.warns(DeprecationWarning, match="use new_api"):
+        warnings.warn("use new_api", DeprecationWarning)
+
+# ── Assertion rewriting hooks — extend for custom objects ─────────
+# In conftest.py:
+# pytest.register_assert_rewrite("myapp.testing")
+# Any module registered here gets assertion rewriting too.
+      </code></pre>
+    </div>
+
+    <div class="callout callout-tip">
+      <div class="callout-title">Pythonic assertion style</div>
+      <p>Never write <code>assertEqual</code>, <code>assertTrue</code>, <code>assertIsNone</code> — these are unittest relics. A plain <code>assert</code> with pytest's rewriter is more informative. The only exception: <code>pytest.approx</code> for floats and <code>pytest.raises</code> / <code>pytest.warns</code> for exception/warning capture.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §4 FIXTURES — CORE
+  ══════════════════════════════════════════ -->
+  <section class="section" id="fixtures-core">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Core <span class="accent">Fixture System</span></h2>
+    </div>
+
+    <p>Fixtures are pytest's superpower: composable, lazily-resolved dependency injections with deterministic teardown. They replace <code>setUp/tearDown</code> with something far more expressive.</p>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">tests/conftest.py — foundational patterns</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest
+import tempfile, os, contextlib
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+# ── Basic fixture (function scope) ────────────────────────────────
+@pytest.fixture
+def sample_user():
+    """Minimal user dict. Teardown not needed for pure data."""
+    return {"id": 1, "name": "Ada Lovelace", "role": "admin"}
+
+# ── Yield fixture: setup / teardown ──────────────────────────────
+@pytest.fixture
+def temp_dir():
+    """Temporary directory that is always cleaned up."""
+    with tempfile.TemporaryDirectory() as d:
+        yield Path(d)           # ← test body runs here
+        # TemporaryDirectory.__exit__ runs teardown automatically
+
+# ── Explicit teardown via finaliser ──────────────────────────────
+@pytest.fixture
+def database_connection(db_url):
+    conn = create_connection(db_url)       # hypothetical
+    conn.begin()
+    try:
+        yield conn
+    finally:
+        conn.rollback()     # always rollback — tests are isolated
+        conn.close()
+
+# ── Fixture consuming other fixtures ─────────────────────────────
+@pytest.fixture
+def authenticated_client(client, sample_user):
+    """Compose fixtures — pytest resolves the graph automatically."""
+    client.login(username=sample_user["name"], password="secret")
+    yield client
+    client.logout()
+
+# ── Autouse: applied to every test in scope ───────────────────────
+@pytest.fixture(autouse=True)
+def reset_environ():
+    """Guarantee clean env-var state around every test."""
+    original = os.environ.copy()
+    yield
+    os.environ.clear()
+    os.environ.update(original)
+
+# ── Fixture with params (generates multiple test instances) ───────
+@pytest.fixture(params=["sqlite", "postgres", "mysql"])
+def db_engine(request):
+    engine = request.param
+    # request.param gives the current parameter value
+    yield engine
+
+# ── Parametrized fixture with IDs ─────────────────────────────────
+SETTINGS = [
+    pytest.param({"debug": True,  "cache": False}, id="debug-nocache"),
+    pytest.param({"debug": False, "cache": True},  id="prod-cached"),
+    pytest.param({"debug": False, "cache": False}, id="prod-nocache"),
+]
+
+@pytest.fixture(params=SETTINGS)
+def app_settings(request):
+    return request.param
+
+# ── request object — the fixture's introspection API ─────────────
+@pytest.fixture
+def tmp_file(request, tmp_path):
+    """Use request.param when called with indirect parametrization."""
+    filename = getattr(request, "param", "default.txt")
+    p = tmp_path / filename
+    p.write_text("")
+    return p
+
+# ── Accessing test metadata inside a fixture ─────────────────────
+@pytest.fixture
+def log_test_info(request):
+    """Know which test is running, its markers, and module."""
+    test_name = request.node.name
+    module    = request.node.module.__name__
+    markers   = [m.name for m in request.node.iter_markers()]
+    print(f"\n[fixture] running {module}::{test_name} marks={markers}")
+      </code></pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-title">Teardown guarantee</div>
+      <p>A <code>yield</code> fixture's teardown block runs even if the test raises — pytest ensures it. But if an <em>earlier fixture</em> in the dependency graph fails during setup, later fixtures won't be set up (or torn down). Design fixture graphs to be resilient to partial setup by wrapping teardown in <code>try/finally</code>.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §5 FIXTURE SCOPES
+  ══════════════════════════════════════════ -->
+  <section class="section" id="fixture-scopes">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Scopes &amp; <span class="accent">Lifetimes</span></h2>
+    </div>
+
+    <p>Scope determines when a fixture's factory runs and when its teardown fires. Choosing scope is the single biggest lever for suite performance.</p>
+
+    <div class="scope-matrix">
+      <div class="scope-cell header">Scope</div>
+      <div class="scope-cell header">Lifetime</div>
+      <div class="scope-cell header">Created</div>
+      <div class="scope-cell header">Destroyed</div>
+      <div class="scope-cell header">Best for</div>
+
+      <div class="scope-cell"><div class="scope-name dot-rose">function</div></div>
+      <div class="scope-cell"><div class="scope-desc">1 per test</div></div>
+      <div class="scope-cell"><div class="scope-desc">each test setup</div></div>
+      <div class="scope-cell"><div class="scope-desc">each test teardown</div></div>
+      <div class="scope-cell"><div class="scope-desc">default; pure isolation</div></div>
+
+      <div class="scope-cell"><div class="scope-name dot-amber">class</div></div>
+      <div class="scope-cell"><div class="scope-desc">1 per Test* class</div></div>
+      <div class="scope-cell"><div class="scope-desc">first method</div></div>
+      <div class="scope-cell"><div class="scope-desc">last method</div></div>
+      <div class="scope-cell"><div class="scope-desc">shared class state</div></div>
+
+      <div class="scope-cell"><div class="scope-name dot-amber">module</div></div>
+      <div class="scope-cell"><div class="scope-desc">1 per file</div></div>
+      <div class="scope-cell"><div class="scope-desc">first test in file</div></div>
+      <div class="scope-cell"><div class="scope-desc">last test in file</div></div>
+      <div class="scope-cell"><div class="scope-desc">expensive shared setup</div></div>
+
+      <div class="scope-cell"><div class="scope-name dot-green">package</div></div>
+      <div class="scope-cell"><div class="scope-desc">1 per package dir</div></div>
+      <div class="scope-cell"><div class="scope-desc">first test in pkg</div></div>
+      <div class="scope-cell"><div class="scope-desc">last test in pkg</div></div>
+      <div class="scope-cell"><div class="scope-desc">cross-module shared setup</div></div>
+
+      <div class="scope-cell"><div class="scope-name dot-green">session</div></div>
+      <div class="scope-cell"><div class="scope-desc">1 per run</div></div>
+      <div class="scope-cell"><div class="scope-desc">first test ever</div></div>
+      <div class="scope-cell"><div class="scope-desc">end of session</div></div>
+      <div class="scope-cell"><div class="scope-desc">DB schema, docker containers</div></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">tests/conftest.py — scope ladder</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest
+import docker                      # pip install docker
+import sqlalchemy as sa
+
+# ── Session scope: start docker postgres once per CI run ──────────
+@pytest.fixture(scope="session")
+def postgres_container():
+    """Start a real Postgres container for the whole session."""
+    client = docker.from_env()
+    container = client.containers.run(
+        "postgres:16-alpine",
+        environment={"POSTGRES_PASSWORD": "secret", "POSTGRES_DB": "testdb"},
+        ports={"5432/tcp": None},   # random host port
+        detach=True,
+        remove=True,
+    )
+    container.reload()
+    host_port = container.ports["5432/tcp"][0]["HostPort"]
+    # Wait for pg to be ready
+    import time
+    for _ in range(30):
+        try:
+            eng = sa.create_engine(f"postgresql://postgres:secret@localhost:{host_port}/testdb")
+            with eng.connect(): break
+        except Exception:
+            time.sleep(1)
+    yield f"postgresql://postgres:secret@localhost:{host_port}/testdb"
+    container.stop()
+
+# ── Session scope: create schema once ────────────────────────────
+@pytest.fixture(scope="session")
+def db_engine(postgres_container):
+    engine = sa.create_engine(postgres_container, pool_pre_ping=True)
+    Base.metadata.create_all(engine)     # hypothetical ORM base
+    yield engine
+    Base.metadata.drop_all(engine)
+    engine.dispose()
+
+# ── Module scope: one connection pool per test file ───────────────
+@pytest.fixture(scope="module")
+def db_session_factory(db_engine):
+    factory = sessionmaker(bind=db_engine)
+    yield factory
+
+# ── Function scope: isolated transaction per test (fast!) ─────────
+@pytest.fixture
+def db(db_session_factory):
+    """Each test runs in a transaction that is always rolled back.
+    Reads committed data from session fixtures but never pollutes."""
+    session = db_session_factory()
+    session.begin_nested()             # savepoint
+    try:
+        yield session
+    finally:
+        session.rollback()
+        session.close()
+
+# ── Dynamic scope: determined at runtime ──────────────────────────
+def determine_scope(fixture_name, config):
+    """Use --integration flag to upgrade fixture to session scope."""
+    if config.getoption("--integration", default=False):
+        return "session"
+    return "function"
+
+@pytest.fixture(scope=determine_scope)
+def external_api_client(request):
+    """Mock locally, real in integration runs."""
+    if request.scope == "function":
+        yield MagicMock()        # fast unit default
+    else:
+        client = RealAPIClient(base_url=os.environ["API_URL"])
+        yield client
+        client.close()
+      </code></pre>
+    </div>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">Scope mismatch: the silent killer</div>
+      <p>A <code>function</code>-scoped fixture <strong>cannot</strong> depend on a <code>session</code>-scoped one without pytest raising <code>ScopeMismatch</code>. The rule: a fixture can only consume fixtures of <em>equal or broader</em> scope. Violating this is caught at collection time — but confusingly only when the offending combination is actually requested.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §6 CONFTEST MASTERY
+  ══════════════════════════════════════════ -->
+  <section class="section" id="conftest">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2 class="section-title">conftest.py <span class="accent">Mastery</span></h2>
+    </div>
+
+    <p><code>conftest.py</code> files are auto-loaded plugins scoped to their directory tree. pytest walks the filesystem upward from each collected test, loading every <code>conftest.py</code> it encounters — nearest wins.</p>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">tests/conftest.py — the session-level hub</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest
+import logging
+
+# ── Custom CLI options ────────────────────────────────────────────
+def pytest_addoption(parser):
+    """Add project-specific CLI flags."""
+    parser.addoption(
+        "--integration", action="store_true", default=False,
+        help="run integration tests against real services"
+    )
+    parser.addoption(
+        "--env", choices=["dev", "staging", "prod"], default="dev",
+        help="target environment for integration tests"
+    )
+
+@pytest.fixture(scope="session")
+def env(request):
+    return request.config.getoption("--env")
+
+@pytest.fixture(scope="session")
+def run_integration(request):
+    return request.config.getoption("--integration")
+
+# ── Skip integration unless flag given ───────────────────────────
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption("--integration", default=False):
+        skip = pytest.mark.skip(reason="pass --integration to run")
+        for item in items:
+            if item.get_closest_marker("integration"):
+                item.add_marker(skip)
+
+# ── Capture logs per-test automatically ──────────────────────────
+@pytest.fixture(autouse=True)
+def capture_logs(caplog):
+    """Ensure every test gets log capture at DEBUG level."""
+    with caplog.at_level(logging.DEBUG):
+        yield
+
+# ── Freeze time globally for pure unit tests ─────────────────────
+@pytest.fixture
+def frozen_time(freezer):            # pytest-freezegun or time-machine
+    """Pin datetime.now() to 2024-01-15T12:00:00Z."""
+    freezer.move_to("2024-01-15T12:00:00Z")
+    yield freezer
+
+# ── Shared mock for external HTTP ─────────────────────────────────
+@pytest.fixture
+def mock_http(responses):            # pytest-responses
+    """Block all real HTTP; explicit responses must be registered."""
+    responses.start()
+    responses.add_passthrough("http://localhost")  # allow localhost
+    yield responses
+    responses.stop()
+    responses.reset()
+
+# ── Conftest chaining: tests/unit/conftest.py ─────────────────────
+# (In tests/unit/conftest.py, not this file)
+# Fixtures defined here OVERRIDE same-named fixtures from parent.
+# This enables per-subtree specialisation.
+      </code></pre>
+    </div>
+
+    <h3>Factory Fixtures</h3>
+    <div class="code-block" id="factory-fixtures">
+      <div class="code-block-header">
+        <span class="code-block-filename">factory pattern — flexible test data</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest
+from dataclasses import dataclass, field
+from typing import Any
+
+@dataclass
+class User:
+    id: int
+    name: str
+    email: str
+    role: str = "viewer"
+    metadata: dict = field(default_factory=dict)
+
+# ── Factory fixture: returns a callable ───────────────────────────
+@pytest.fixture
+def make_user():
+    """Factory: each call creates an independent User.
+    Tests can customise fields without fixture explosion."""
+    created = []
+
+    def _factory(name="Alice", email=None, role="viewer", **kwargs) -> User:
+        user = User(
+            id=len(created) + 1,
+            name=name,
+            email=email or f"{name.lower()}@example.com",
+            role=role,
+            **kwargs,
+        )
+        created.append(user)
+        return user
+
+    yield _factory
+    # teardown: could persist cleanup of created objects
+
+# ── Usage in tests ────────────────────────────────────────────────
+def test_admin_can_delete(make_user):
+    admin = make_user(role="admin")
+    viewer = make_user(name="Bob")
+    assert admin.role == "admin"
+    assert viewer.id == 2           # independent IDs
+
+def test_user_email_defaults(make_user):
+    user = make_user(name="Charlie")
+    assert user.email == "charlie@example.com"
+
+# ── Model baker / factory_boy integration ────────────────────────
+# For Django/SQLAlchemy, pair with factory_boy:
+@pytest.fixture
+def user_factory(db):
+    """SQLAlchemy-backed user factory with auto-commit."""
+    import factory, factory.alchemy
+    class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = User
+            sqlalchemy_session = db
+        name  = factory.Faker("name")
+        email = factory.LazyAttribute(lambda o: f"{o.name.lower()}@test.com")
+        role  = "viewer"
+    return UserFactory
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §7 PARAMETRIZE
+  ══════════════════════════════════════════ -->
+  <section class="section" id="parametrize">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2 class="section-title">parametrize <span class="accent">Deep Dive</span></h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">test_parametrize.py — from basics to combinatorics</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest
+import math
+
+# ── Single argument ───────────────────────────────────────────────
+@pytest.mark.parametrize("n,expected", [
+    (0,  1),
+    (1,  1),
+    (5,  120),
+    (10, 3628800),
+])
+def test_factorial(n, expected):
+    assert math.factorial(n) == expected
+
+# ── Named params with pytest.param ───────────────────────────────
+@pytest.mark.parametrize("payload,status_code", [
+    pytest.param({"name": ""},      400, id="empty-name"),
+    pytest.param({"name": "x"*300}, 422, id="name-too-long"),
+    pytest.param({"name": "Valid"}, 201, id="valid"),
+    pytest.param(None,              400, id="null-body"),
+])
+def test_create_user_validation(client, payload, status_code):
+    resp = client.post("/users", json=payload)
+    assert resp.status_code == status_code
+
+# ── Stacked parametrize: Cartesian product ────────────────────────
+# Generates 2 × 3 = 6 test cases automatically
+@pytest.mark.parametrize("protocol", ["http", "https"])
+@pytest.mark.parametrize("method",   ["GET", "POST", "PUT"])
+def test_request_routing(protocol, method):
+    # 6 combinations: http+GET, http+POST, http+PUT, https+GET, ...
+    url = f"{protocol}://api.example.com/resource"
+    assert url.startswith(protocol)
+
+# ── Conditional skip/xfail inside params ─────────────────────────
+import sys
+
+@pytest.mark.parametrize("algo", [
+    "sha256",
+    pytest.param("sha3_256", marks=pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="sha3 requires Python 3.6+"
+    )),
+    pytest.param("blake2b", marks=pytest.mark.xfail(
+        reason="known collision in test data"
+    )),
+])
+def test_hash_algo(algo):
+    import hashlib
+    h = hashlib.new(algo, b"data").hexdigest()
+    assert len(h) > 0
+
+# ── Parametrize with complex objects ─────────────────────────────
+from datetime import date
+
+@pytest.mark.parametrize("start,end,expected_days", [
+    pytest.param(date(2024, 1, 1), date(2024, 1, 31), 30, id="january"),
+    pytest.param(date(2024, 2, 1), date(2024, 2, 29), 28, id="leap-feb"),
+    pytest.param(date(2023, 2, 1), date(2023, 2, 28), 27, id="non-leap-feb"),
+])
+def test_date_range_days(start, end, expected_days):
+    assert (end - start).days == expected_days
+      </code></pre>
+    </div>
+
+    <div class="code-block" id="indirect">
+      <div class="code-block-header">
+        <span class="code-block-filename">indirect parametrization — fixture as param transformer</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest
+
+# Fixture that receives its parameter via indirect=
+@pytest.fixture
+def configured_app(request):
+    """request.param is the dict passed via indirect parametrize."""
+    settings = request.param
+    app = create_app(settings)          # hypothetical
+    app.testing = True
+    with app.test_client() as client:
+        yield client
+
+# Only 'configured_app' is indirect; 'expected_feature' is direct
+@pytest.mark.parametrize(
+    "configured_app,expected_feature",
+    [
+        ({"FEATURE_X": True,  "BETA": False}, "feature_x"),
+        ({"FEATURE_X": False, "BETA": True},  "beta_mode"),
+    ],
+    indirect=["configured_app"],    # <-- only fixture args go indirect
+)
+def test_feature_flags(configured_app, expected_feature):
+    resp = configured_app.get("/features")
+    assert expected_feature in resp.json["enabled"]
+
+# ── Indirect with scope: parametrized session fixtures ───────────
+@pytest.fixture(scope="session")
+def db_url(request):
+    dialect = request.param
+    return {
+        "sqlite":   "sqlite:///test.db",
+        "postgres": "postgresql://user:pw@localhost/test",
+    }[dialect]
+
+@pytest.mark.parametrize("db_url", ["sqlite", "postgres"],
+                         indirect=True, scope="session")
+def test_cross_dialect_query(db_url):
+    engine = sa.create_engine(db_url)
+    with engine.connect() as conn:
+        result = conn.execute(sa.text("SELECT 1"))
+        assert result.scalar() == 1
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §8 MARKS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="marks">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2 class="section-title">The Mark <span class="accent">System</span></h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">test_marks.py — the full mark vocabulary</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest, sys, os
+
+# ── skip: unconditional ───────────────────────────────────────────
+@pytest.mark.skip(reason="WIP: not implemented yet")
+def test_future_feature():
+    ...
+
+# ── skipif: conditional ───────────────────────────────────────────
+@pytest.mark.skipif(sys.platform == "win32", reason="posix-only API")
+def test_unix_permissions():
+    assert oct(os.stat("/tmp").st_mode)[-3:] in {"755", "1777"}
+
+# ── xfail: expected failure ───────────────────────────────────────
+@pytest.mark.xfail(reason="upstream bug GH-1234", strict=False)
+def test_buggy_upstream():
+    # If this PASSES (XPASS), it's reported but not an error
+    # strict=True: XPASS becomes an error — great for bug tracking
+    from upstream import broken_function
+    assert broken_function() == 42
+
+@pytest.mark.xfail(strict=True, reason="must remain broken until patch")
+def test_known_regression():
+    # strict=True means: if this starts passing, FAIL the suite.
+    # Perfect for preventing accidental regressions from passing silently.
+    raise NotImplementedError
+
+# ── xfail with condition and raises ──────────────────────────────
+@pytest.mark.xfail(
+    sys.version_info < (3, 11),
+    reason="ExceptionGroup requires 3.11+",
+    raises=AttributeError,
+)
+def test_exception_group():
+    raise ExceptionGroup("multi", [ValueError("a"), TypeError("b")])
+
+# ── usefixtures: apply fixtures without receiving them ────────────
+@pytest.mark.usefixtures("reset_environ", "mock_http")
+class TestAPIClient:
+    def test_get(self, client):
+        resp = client.get("/health")
+        assert resp.status_code == 200
+
+# ── Custom marks with metadata ────────────────────────────────────
+# Declared in pyproject.toml to avoid warnings; used here:
+@pytest.mark.slow
+@pytest.mark.integration
+def test_full_data_pipeline(db, s3_client):
+    """Full ETL: only runs with -m integration."""
+    ...
+
+# ── Mark class (applies to all methods) ──────────────────────────
+@pytest.mark.unit
+@pytest.mark.parametrize("n", range(100))  # 100 unit tests
+class TestMathIdentities:
+    def test_square_root(self, n):
+        assert math.isclose(math.sqrt(n) ** 2, n, rel_tol=1e-9)
+
+# ── Reading marks inside a fixture ───────────────────────────────
+@pytest.fixture(autouse=True)
+def apply_timeout(request):
+    """Apply per-test timeout from mark: @pytest.mark.timeout(5)"""
+    marker = request.node.get_closest_marker("timeout")
+    timeout = marker.args[0] if marker else 30   # default 30s
+    # Signal handler or threading.Timer approach:
+    import signal
+    def _handler(sig, frame): raise TimeoutError(f"Test exceeded {timeout}s")
+    old = signal.signal(signal.SIGALRM, _handler)
+    signal.alarm(timeout)
+    yield
+    signal.alarm(0)
+    signal.signal(signal.SIGALRM, old)
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §9 LOCAL DEBUGGING
+  ══════════════════════════════════════════ -->
+  <section class="section" id="debugging-local">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <h2 class="section-title">Local <span class="accent">Debugging</span></h2>
+    </div>
+
+    <div class="code-block" id="tb-options">
+      <div class="code-block-header">
+        <span class="code-block-filename">CLI — debugging flags reference</span>
+        <span class="code-block-lang">bash</span>
+      </div>
+      <pre><code class="language-bash">
+# ── Verbosity ─────────────────────────────────────────────────────
+pytest -v          # show each test name + status
+pytest -vv         # extra verbose (full diffs in assertions)
+pytest -q          # quiet: only failures + summary
+pytest -s          # disable output capture (print() shows live)
+pytest --tb=short  # default: concise tracebacks
+pytest --tb=long   # full tracebacks + locals
+pytest --tb=no     # suppress tracebacks (summary only)
+pytest --tb=line   # one line per failure
+pytest --tb=native # Python's native format (no pytest magic)
+pytest -l          # show local variables in tracebacks (--showlocals)
+
+# ── Stopping early ────────────────────────────────────────────────
+pytest -x          # stop after first failure
+pytest --maxfail=3 # stop after N failures
+pytest -x --lf    # stop after first failure, then re-run only that
+
+# ── Re-running failures ───────────────────────────────────────────
+pytest --lf        # --last-failed: only run failed tests from last run
+pytest --ff        # --failed-first: run failed first, then rest
+pytest --nf        # --new-first: run new/modified tests first
+
+# ── PDB integration ───────────────────────────────────────────────
+pytest --pdb       # drop to pdb on failure
+pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb  # use ipdb
+pytest -x --pdb    # most common: stop at first failure, open debugger
+
+# ── Duration analysis ─────────────────────────────────────────────
+pytest --durations=10       # show 10 slowest tests
+pytest --durations=0        # show all, sorted by duration
+pytest --durations-min=0.5  # only show tests taking > 0.5s
+
+# ── Output capture control ────────────────────────────────────────
+pytest -s                   # no capture at all
+pytest --capture=sys        # capture sys.stdout/stderr
+pytest --capture=fd         # capture at file-descriptor level (default)
+pytest --capture=tee-sys    # show AND capture (great for CI)
+      </code></pre>
+    </div>
+
+    <h3>pdb Mastery Inside Tests</h3>
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">test_debug_patterns.py</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+import pytest
+
+# ── Explicit breakpoint (preferred: uses sys.breakpointhook) ──────
+def test_tricky_logic():
+    result = complex_computation()
+    breakpoint()          # Python 3.7+: respects PYTHONBREAKPOINT env var
+    assert result == expected
+
+# Set PYTHONBREAKPOINT=ipdb.set_trace for ipdb
+# Set PYTHONBREAKPOINT=0 to disable all breakpoints (e.g. in CI)
+
+# ── Conditional breakpoint ────────────────────────────────────────
+def test_parametrized_many(make_user):
+    for i in range(1000):
+        user = make_user(name=f"User{i}")
+        if i == 42:               # only break on specific iteration
+            breakpoint()
+        assert user.id == i + 1
+
+# ── pytest.set_trace() — legacy but useful ────────────────────────
+def test_legacy_trace():
+    x = some_function()
+    pytest.set_trace()    # enters pdb, plays nice with capture
+
+# ── Using capsys to inspect captured output ───────────────────────
+def test_output_capture(capsys):
+    print("hello")
+    logging.info("world")
+    captured = capsys.readouterr()   # returns (out, err)
+    assert "hello" in captured.out
+
+def test_output_capture_bytes(capfd):
+    os.write(1, b"raw bytes\n")     # write to fd 1 directly
+    cap = capfd.readouterr()
+    assert b"raw bytes" in cap.out.encode()
+
+# ── caplog: log capture ───────────────────────────────────────────
+import logging
+
+def test_log_emission(caplog):
+    with caplog.at_level(logging.WARNING, logger="myapp"):
+        logging.getLogger("myapp").warning("something bad")
+    assert "something bad" in caplog.text
+    assert caplog.records[0].levelname == "WARNING"
+
+# ── Debugging fixture interactions ────────────────────────────────
+@pytest.fixture
+def tracing_fixture(request):
+    """Print fixture call order for debugging complex graphs."""
+    print(f"\n  SETUP  → {request.fixturename}")
+    yield
+    print(f"\n  TEARDOWN ← {request.fixturename}")
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §10 LIVE / PRODUCTION DEBUGGING
+  ══════════════════════════════════════════ -->
+  <section class="section" id="debugging-live">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2 class="section-title">Live &amp; Production <span class="accent">Debugging</span></h2>
+    </div>
+
+    <p>The hardest bugs are the ones that only reproduce in production. pytest can be wielded to systematically reproduce, narrow, and confirm production incidents — without deploying code changes.</p>
+
+    <h4>Strategy: Incident-Driven Test Writing</h4>
+    <div class="callout callout-info">
+      <div class="callout-title">The Golden Rule</div>
+      <p>Before fixing a production bug: <strong>write a failing test that reproduces it</strong>. Only then fix. Run the test. Green means fixed. The test becomes a permanent regression guard. This is not TDD religion — it's engineering discipline under fire.</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">tests/regression/test_incident_20240315.py</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+"""
+Regression: GH-1842
+Incident: 2024-03-15 03:42 UTC
+Symptom: UserSerializer.to_dict() returns None for users
+         with deleted=True when serialised after 00:00 UTC.
+Root cause: timezone-naive datetime comparison bug.
+"""
+import pytest
+from datetime import datetime, timezone
+from freezegun import freeze_time
+
+from myapp.serializers import UserSerializer
+
+# ── Reproduce the exact production state ──────────────────────────
+@pytest.fixture
+def deleted_user():
+    return {
+        "id": 99,
+        "name": "Ghost",
+        "deleted_at": datetime(2024, 3, 14, 23, 59, 59),  # naive: production bug
+    }
+
+@pytest.mark.regression
+def test_gh_1842_serialiser_deleted_user_across_midnight(deleted_user):
+    """Reproduces the exact production failure."""
+    # Freeze time to just after midnight UTC to trigger the bug
+    with freeze_time("2024-03-15 00:00:01"):
+        result = UserSerializer(deleted_user).to_dict()
+        # This was returning None in production
+        assert result is not None
+        assert result["id"] == 99
+
+@pytest.mark.regression
+def test_gh_1842_serialiser_timezone_aware(deleted_user):
+    """Verify fix: aware datetimes must survive serialisation."""
+    deleted_user["deleted_at"] = datetime(2024, 3, 14, 23, 59, 59,
+                                          tzinfo=timezone.utc)
+    with freeze_time("2024-03-15 00:00:01"):
+        result = UserSerializer(deleted_user).to_dict()
+        assert result is not None
+
+# ── Snapshot testing for complex dicts/JSON ───────────────────────
+# pytest-snapshot or syrupy:
+def test_serialiser_output_snapshot(deleted_user, snapshot):
+    """Freeze the exact output shape. Fails on unexpected changes."""
+    result = UserSerializer(deleted_user).to_dict()
+    assert result == snapshot          # first run: creates .ambr file
+    # Subsequent runs: compare against saved snapshot
+    # Update with: pytest --snapshot-update
+      </code></pre>
+    </div>
+
+    <h3>Remote Debugging with pytest-xdist Workers</h3>
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">debugging in CI / parallel environments</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+# ── Log everything in CI (never lose context) ─────────────────────
+# pyproject.toml:
+# log_cli = true
+# log_cli_level = "DEBUG"
+# log_file = "pytest-debug.log"
+# log_file_level = "DEBUG"
+
+# ── Capture ALL exceptions, even SystemExit ───────────────────────
+@pytest.fixture(autouse=True)
+def capture_unhandled(request):
+    """In CI: capture unhandled exceptions to a structured JSON log."""
+    import json, traceback, pathlib
+    yield
+    # After test — check if it failed
+    report = getattr(request.node, "_call_outcome", None)
+    if report and report.failed:
+        artifact = {
+            "test": request.node.nodeid,
+            "longrepr": str(report.longrepr),
+        }
+        log_dir = pathlib.Path("test-artifacts")
+        log_dir.mkdir(exist_ok=True)
+        safe_name = request.node.nodeid.replace("/", "_").replace("::", "__")
+        (log_dir / f"{safe_name}.json").write_text(json.dumps(artifact, indent=2))
+
+# ── pytest-recording: record/replay HTTP for live service bugs ────
+# pip install pytest-recording vcrpy
+@pytest.mark.vcr               # first run: records HTTP to cassette
+def test_payment_gateway_flow(client):
+    """Records real HTTP exchange; replays in CI without network."""
+    resp = client.post("/charge", json={"amount": 100, "currency": "usd"})
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "succeeded"
+
+# ── Debugging data-dependent failures ─────────────────────────────
+@pytest.fixture
+def production_sample(pytestconfig):
+    """Load a scrubbed copy of production data for local reproduction."""
+    sample_path = pytestconfig.rootdir / "tests" / "fixtures" / "prod_sample.json"
+    if not sample_path.exists():
+        pytest.skip("Production sample not available")
+    import json
+    return json.loads(sample_path.read_text())
+
+def test_reproduce_prod_data_bug(production_sample):
+    """Run against scrubbed prod data to reproduce data-specific bugs."""
+    from myapp.processor import process
+    result = process(production_sample)
+    assert result["status"] == "ok"
+
+# ── Live environment probing ──────────────────────────────────────
+@pytest.mark.integration
+def test_production_health(env, run_integration):
+    """Smoke test against live URL — run with --integration --env=prod."""
+    if not run_integration:
+        pytest.skip("integration not requested")
+    import httpx
+    base = {"dev": "http://localhost:8000", "staging": "https://staging.api.com",
+            "prod": "https://api.com"}[env]
+    r = httpx.get(f"{base}/health", timeout=5)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "healthy"
+    assert "version" in body
+      </code></pre>
+    </div>
+
+    <h3>Flaky Test Forensics</h3>
+    <div class="code-block" id="flaky-tests">
+      <div class="code-block-header">
+        <span class="code-block-filename">flaky test detection &amp; mitigation</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+# ── pytest-rerunfailures: retry flaky tests with backoff ─────────
+# pip install pytest-rerunfailures
+@pytest.mark.flaky(reruns=3, reruns_delay=0.5)
+def test_external_service_call():
+    """Retry up to 3× with 0.5s delay — quarantine network flakiness."""
+    resp = requests.get("https://api.partner.com/status", timeout=3)
+    assert resp.status_code == 200
+
+# Global config (pyproject.toml):
+# addopts = ["--reruns=2", "--reruns-delay=1"]
+
+# ── Isolation: detect order-dependent tests ───────────────────────
+# pip install pytest-randomly  → randomises collection order
+# pip install pytest-repeat    → repeat N times to catch flakiness
+#
+# pytest --randomly-seed=last  # reproduce exact failure order
+# pytest --count=10 tests/unit/test_flaky.py  # hammer one test
+
+# ── Hunting state leakage ─────────────────────────────────────────
+@pytest.fixture(autouse=True)
+def assert_no_db_changes(db):
+    """Assert transaction was rolled back — catches state leakage."""
+    count_before = db.execute("SELECT COUNT(*) FROM users").scalar()
+    yield
+    count_after = db.execute("SELECT COUNT(*) FROM users").scalar()
+    assert count_before == count_after, (
+        f"DB state leaked: {count_after - count_before} rows added"
+    )
+
+# ── Detect socket leakage ─────────────────────────────────────────
+import socket
+
+@pytest.fixture(autouse=True)
+def no_socket_leaks():
+    """Fail if a test leaves open connections."""
+    before = len([c for c in __import__('gc').get_objects()
+                  if isinstance(c, socket.socket)])
+    yield
+    after = len([c for c in __import__('gc').get_objects()
+                 if isinstance(c, socket.socket)])
+    assert after <= before, f"Socket leak detected: {after - before} sockets left open"
+
+# ── pytest-timeout: kill hanging tests in CI ─────────────────────
+# pip install pytest-timeout
+# pyproject.toml: addopts = ["--timeout=60"]
+
+@pytest.mark.timeout(5)
+def test_fast_operation():
+    """Fails with TimeoutExpired if it takes > 5s."""
+    result = fast_function()
+    assert result is not None
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §11 PLUGINS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="plugins">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2 class="section-title">Plugin <span class="accent">Ecosystem</span></h2>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Plugin</th><th>Install</th><th>Purpose</th><th>Key flags</th></tr></thead>
+        <tbody>
+          <tr><td><code>pytest-xdist</code></td><td><code>pip install pytest-xdist</code></td><td>Parallel / distributed execution</td><td><code>-n auto</code></td></tr>
+          <tr><td><code>pytest-cov</code></td><td><code>pip install pytest-cov</code></td><td>Coverage integration</td><td><code>--cov --cov-report=html</code></td></tr>
+          <tr><td><code>pytest-asyncio</code></td><td><code>pip install pytest-asyncio</code></td><td>async def tests</td><td><code>asyncio_mode=auto</code></td></tr>
+          <tr><td><code>pytest-django</code></td><td><code>pip install pytest-django</code></td><td>Django integration</td><td><code>--ds=settings</code></td></tr>
+          <tr><td><code>pytest-mock</code></td><td><code>pip install pytest-mock</code></td><td>Mocker fixture (unittest.mock)</td><td><code>mocker.patch</code></td></tr>
+          <tr><td><code>hypothesis</code></td><td><code>pip install hypothesis</code></td><td>Property-based testing</td><td><code>@given</code></td></tr>
+          <tr><td><code>pytest-randomly</code></td><td><code>pip install pytest-randomly</code></td><td>Randomise execution order</td><td><code>--randomly-seed</code></td></tr>
+          <tr><td><code>pytest-timeout</code></td><td><code>pip install pytest-timeout</code></td><td>Per-test time limits</td><td><code>--timeout=N</code></td></tr>
+          <tr><td><code>pytest-snapshot</code></td><td><code>pip install syrupy</code></td><td>Snapshot assertions</td><td><code>--snapshot-update</code></td></tr>
+          <tr><td><code>pytest-recording</code></td><td><code>pip install pytest-recording vcrpy</code></td><td>HTTP cassette record/replay</td><td><code>--vcr-record=none</code></td></tr>
+          <tr><td><code>pytest-benchmark</code></td><td><code>pip install pytest-benchmark</code></td><td>Performance benchmarks</td><td><code>--benchmark-autosave</code></td></tr>
+          <tr><td><code>pytest-httpx</code></td><td><code>pip install pytest-httpx</code></td><td>Mock httpx requests</td><td><code>httpx_mock</code> fixture</td></tr>
+          <tr><td><code>pytest-freezegun</code></td><td><code>pip install pytest-freezegun</code></td><td>Freeze datetime.now()</td><td><code>freezer</code> fixture</td></tr>
+          <tr><td><code>pytest-watch</code></td><td><code>pip install pytest-watch</code></td><td>Re-run on file change</td><td><code>ptw --</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>xdist: Parallel Execution</h3>
+    <div class="code-block" id="xdist">
+      <div class="code-block-header">
+        <span class="code-block-filename">xdist patterns &amp; pitfalls</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+# ── Basic parallel run ────────────────────────────────────────────
+# pytest -n auto           # workers = CPU core count
+# pytest -n 4              # explicit worker count
+# pytest -n auto --dist=loadscope   # group by module (safer)
+# pytest -n auto --dist=loadfile    # group by file
+# pytest -n auto --dist=worksteal   # dynamic — best throughput
+
+# ── xdist-safe fixtures ───────────────────────────────────────────
+@pytest.fixture(scope="session")
+def worker_id(request):
+    """Get the xdist worker ID ('gw0', 'gw1', ... or 'master')."""
+    return getattr(request.config, "workerinput", {}).get("workerid", "master")
+
+@pytest.fixture(scope="session")
+def db_url(worker_id, tmp_path_factory):
+    """Each worker gets its own isolated SQLite DB — no contention."""
+    if worker_id == "master":
+        db_path = tmp_path_factory.mktemp("db") / "test.db"
+    else:
+        # Workers share a base temp dir; differentiate by worker ID
+        db_path = tmp_path_factory.getbasetemp().parent / f"{worker_id}/test.db"
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+    return f"sqlite:///{db_path}"
+
+# ── Session-scoped fixtures with xdist (shared across workers) ────
+# Use pytest-xdist's --forked or shared tmp_path_factory:
+@pytest.fixture(scope="session")
+def shared_resource(tmp_path_factory):
+    """All workers share this — initialise once via file lock."""
+    import filelock
+    base = tmp_path_factory.getbasetemp()
+    flag = base / "shared_resource.ready"
+    lock = filelock.FileLock(str(base / "shared_resource.lock"))
+    with lock:
+        if not flag.exists():
+            # One worker does initialisation
+            _setup_expensive_shared_resource(base)
+            flag.write_text("ready")
+    return base / "resource"
+
+# ── Detecting xdist in conftest ───────────────────────────────────
+def pytest_configure(config):
+    if config.pluginmanager.hasplugin("xdist"):
+        # adjust config for parallel runs
+        pass
+
+# ── Disabling parallel for specific tests ─────────────────────────
+@pytest.mark.run(processes=1)       # requires pytest-forked
+def test_must_run_alone():
+    """Tests that manipulate global process state."""
+    import signal
+    # Can't share signal handlers across workers
+    ...
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §12 COVERAGE
+  ══════════════════════════════════════════ -->
+  <section class="section" id="coverage">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <h2 class="section-title">Coverage <span class="accent">Strategy</span></h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">.coveragerc — production configuration</span>
+        <span class="code-block-lang">ini</span>
+      </div>
+      <pre><code class="language-ini">
+[coverage:run]
+branch    = true              ; branch coverage, not just line coverage
+source    = src/myapp         ; only measure our code
+omit      =
+    */tests/*
+    */migrations/*
+    */conftest.py
+    */settings*.py
+    */__main__.py
+parallel  = true              ; needed for -n xdist workers
+concurrency = thread,greenlet ; for gevent/asyncio apps
+
+[coverage:report]
+fail_under  = 80              ; CI gate: fail if < 80%
+show_missing = true
+skip_covered = false
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    \.\.\.
+    pass$
+
+[coverage:html]
+directory = htmlcov
+title     = MyApp Coverage Report
+
+[coverage:xml]
+output = coverage.xml         ; for SonarQube / Codecov upload
+      </code></pre>
+    </div>
+
+    <div class="cli">
+      <div><span class="prompt">$ </span><span class="cmd">pytest --cov=src/myapp --cov-report=term-missing --cov-branch</span></div>
+      <div><span class="output">---------- coverage: platform linux, python 3.12 ----------</span></div>
+      <div><span class="output">Name                      Stmts   Miss Branch BrPart  Cover</span></div>
+      <div><span class="output">-------------------------------------------------------------</span></div>
+      <div><span class="pass">src/myapp/core.py            42      2     16      1    94%</span></div>
+      <div><span class="warn">src/myapp/utils.py           88     18     32      4    76%</span></div>
+      <div><span class="fail">src/myapp/legacy.py         204     89     78     21    48%</span></div>
+      <div><span class="output">-------------------------------------------------------------</span></div>
+      <div><span class="output">TOTAL                       334    109    126     26    74%</span></div>
+      <div><span class="fail">FAIL Required test coverage of 80% not reached. Total coverage: 74%</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">coverage with xdist — combine parallel results</span>
+        <span class="code-block-lang">bash</span>
+      </div>
+      <pre><code class="language-bash">
+# Run parallel; each worker writes .coverage.gw*
+pytest -n auto --cov=src/myapp --cov-parallel
+
+# Combine and report
+coverage combine
+coverage report --fail-under=80
+coverage html                # → htmlcov/index.html
+coverage xml                 # → coverage.xml for external tools
+
+# One-liner for CI
+pytest -n auto \
+  --cov=src/myapp \
+  --cov-report=xml:coverage.xml \
+  --cov-report=html:htmlcov \
+  --cov-report=term-missing \
+  --cov-fail-under=80 \
+  --junitxml=test-results.xml
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §13 CI/CD
+  ══════════════════════════════════════════ -->
+  <section class="section" id="ci-cd">
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <h2 class="section-title">CI/CD <span class="accent">Integration</span></h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">.github/workflows/test.yml — GitHub Actions</span>
+        <span class="code-block-lang">yaml</span>
+      </div>
+      <pre><code class="language-yaml">
+name: Test Suite
+
+on:
+  push:    { branches: [main, develop] }
+  pull_request: { branches: [main] }
+
+env:
+  PYTHONBREAKPOINT: "0"    # disable breakpoints in CI
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false      # don't cancel sibling jobs on failure
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        test-group:
+          - { name: unit,        args: "-m unit -n auto" }
+          - { name: integration, args: "-m integration --integration" }
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: testdb
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run ${{ matrix.test-group.name }} tests
+        run: |
+          pytest ${{ matrix.test-group.args }} \
+            --junitxml=test-results/${{ matrix.test-group.name }}.xml \
+            --cov=src/myapp \
+            --cov-report=xml:coverage-${{ matrix.test-group.name }}.xml \
+            --cov-fail-under=80 \
+            -v
+        env:
+          DATABASE_URL: postgresql://postgres:secret@localhost:5432/testdb
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()         # upload even on failure — crucial for debugging
+        with:
+          name: test-results-py${{ matrix.python-version }}-${{ matrix.test-group.name }}
+          path: |
+            test-results/
+            coverage-*.xml
+            htmlcov/
+
+      - name: Publish coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-${{ matrix.test-group.name }}.xml
+          flags: ${{ matrix.test-group.name }},py${{ matrix.python-version }}
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §14 ASYNC
+  ══════════════════════════════════════════ -->
+  <section class="section" id="asyncio">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <h2 class="section-title">Async <span class="accent">Testing</span></h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">pyproject.toml + test_async.py</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+# pyproject.toml:
+# [tool.pytest.ini_options]
+# asyncio_mode = "auto"   # every async def test_ is automatically async
+
+import pytest
+import asyncio
+import httpx
+from unittest.mock import AsyncMock, patch
+
+# ── Basic async test ──────────────────────────────────────────────
+@pytest.mark.asyncio            # explicit, or omit with asyncio_mode=auto
+async def test_async_fetch():
+    async with httpx.AsyncClient() as client:
+        resp = await client.get("https://httpbin.org/get")
+    assert resp.status_code == 200
+
+# ── Async fixtures ────────────────────────────────────────────────
+@pytest.fixture
+async def async_db():
+    """Async session fixture — works with asyncpg, SQLAlchemy async."""
+    import sqlalchemy.ext.asyncio as asa
+    engine = asa.create_async_engine("sqlite+aiosqlite:///test.db")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    async with asa.AsyncSession(engine) as session:
+        async with session.begin():
+            yield session
+            await session.rollback()
+    await engine.dispose()
+
+async def test_async_db_write(async_db):
+    user = User(name="async_alice")
+    async_db.add(user)
+    await async_db.flush()
+    assert user.id is not None
+
+# ── Mocking async callables ────────────────────────────────────────
+async def test_async_service_call(mocker):
+    mock_send = AsyncMock(return_value={"status": "sent"})
+    mocker.patch("myapp.email.send_async", mock_send)
+    from myapp.notifications import notify_user
+    result = await notify_user(user_id=1, message="hello")
+    assert result["status"] == "sent"
+    mock_send.assert_awaited_once()
+
+# ── Async generator fixtures (streaming / SSE) ────────────────────
+@pytest.fixture
+async def event_stream():
+    async def _stream():
+        for i in range(5):
+            yield {"event": "update", "data": i}
+            await asyncio.sleep(0.01)
+    return _stream()
+
+async def test_stream_events(event_stream):
+    events = [e async for e in event_stream]
+    assert len(events) == 5
+    assert events[-1]["data"] == 4
+
+# ── Testing asyncio.gather / concurrent operations ────────────────
+async def test_concurrent_tasks():
+    async def delayed(n):
+        await asyncio.sleep(0.01)
+        return n * 2
+    results = await asyncio.gather(*[delayed(i) for i in range(10)])
+    assert results == [i * 2 for i in range(10)]
+
+# ── Event loop scope (pytest-asyncio ≥ 0.21) ─────────────────────
+# Default scope is 'function'. For session-scoped async fixtures:
+@pytest.fixture(scope="session")
+async def session_async_resource():
+    """Shared async resource — requires asyncio_mode=auto + event_loop_scope."""
+    resource = await create_expensive_resource()
+    yield resource
+    await resource.close()
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §15 HYPOTHESIS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="hypothesis">
+    <div class="section-header">
+      <span class="section-num">15</span>
+      <h2 class="section-title">Property-Based <span class="accent">Testing</span></h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">test_hypothesis.py — finding edge cases you didn't think of</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+from hypothesis import given, settings, assume, example
+from hypothesis import strategies as st
+import pytest
+
+# ── Basic property: roundtrip serialisation ───────────────────────
+@given(st.text())
+def test_json_roundtrip(s):
+    import json
+    assert json.loads(json.dumps(s)) == s
+
+# ── Stateful property: sort is idempotent ─────────────────────────
+@given(st.lists(st.integers()))
+def test_sort_idempotent(lst):
+    assert sorted(sorted(lst)) == sorted(lst)
+
+# ── assume: discard invalid examples ─────────────────────────────
+@given(st.integers(), st.integers())
+def test_division(a, b):
+    assume(b != 0)
+    result = a / b
+    assert isinstance(result, float)
+
+# ── example: pin specific edge cases ──────────────────────────────
+@given(st.floats(allow_nan=False, allow_infinity=False))
+@example(0.0)
+@example(-0.0)
+@example(1e-300)
+def test_my_sqrt(x):
+    assume(x >= 0)
+    from myapp.math import safe_sqrt
+    result = safe_sqrt(x)
+    assert result >= 0
+    assert abs(result ** 2 - x) < 1e-9 * max(x, 1)
+
+# ── Composite strategies: domain-specific data ────────────────────
+@st.composite
+def user_strategy(draw):
+    name  = draw(st.text(min_size=1, max_size=100))
+    age   = draw(st.integers(min_value=0, max_value=150))
+    email = draw(st.emails())
+    return {"name": name, "age": age, "email": email}
+
+@given(user_strategy())
+def test_user_serialisation(user):
+    from myapp.serializers import UserSerializer
+    serialised = UserSerializer(user).to_dict()
+    assert serialised["name"] == user["name"]
+    assert serialised["age"]  == user["age"]
+
+# ── Settings: tune shrinking and example count ─────────────────────
+@settings(max_examples=500, deadline=None)   # 500 examples, no timeout
+@given(st.binary())
+def test_compression_roundtrip(data):
+    import zlib
+    assert zlib.decompress(zlib.compress(data)) == data
+
+# ── Database / stateful testing ───────────────────────────────────
+from hypothesis.stateful import RuleBasedStateMachine, rule, invariant, initialize
+
+class TodoMachineTest(RuleBasedStateMachine):
+    """Model-based test: TodoList maintains invariants under any operation sequence."""
+
+    @initialize()
+    def setup(self):
+        self.model = []          # reference model
+        self.sut   = TodoList()  # system under test
+
+    @rule(item=st.text(min_size=1))
+    def add(self, item):
+        self.model.append(item)
+        self.sut.add(item)
+
+    @rule()
+    def remove_first(self):
+        assume(len(self.model) > 0)
+        self.model.pop(0)
+        self.sut.remove_first()
+
+    @invariant()
+    def lists_match(self):
+        assert self.sut.items() == self.model
+
+    @invariant()
+    def count_correct(self):
+        assert self.sut.count() == len(self.model)
+
+TestTodoMachine = TodoMachineTest.TestCase
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §16 PLUGIN WRITING
+  ══════════════════════════════════════════ -->
+  <section class="section" id="plugin-writing">
+    <div class="section-header">
+      <span class="section-num">16</span>
+      <h2 class="section-title">Writing <span class="accent">Plugins</span></h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">pytest_myplugin.py — full plugin skeleton</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+"""
+pytest_myplugin.py
+A minimal but complete pytest plugin demonstrating the hook lifecycle.
+Register as a local plugin via conftest.py:
+    pytest_plugins = ["pytest_myplugin"]
+Or as an installable package via entry_points:
+    [options.entry_points]
+    pytest11 = myplugin = pytest_myplugin
+"""
+import pytest
+import time
+from typing import Optional
+
+# ── 1. Hook specs this plugin implements ─────────────────────────
+def pytest_addoption(parser):
+    group = parser.getgroup("myplugin", "MyPlugin options")
+    group.addoption(
+        "--myplugin-verbose",
+        action="store_true",
+        help="Enable verbose MyPlugin output",
+    )
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "myplugin: tests under MyPlugin control")
+    # Store config for later use
+    config._myplugin_verbose = config.getoption("--myplugin-verbose", default=False)
+
+# ── 2. Collection hooks ───────────────────────────────────────────
+def pytest_collect_file(parent, file_path):
+    """Optionally collect non-standard files."""
+    # Example: collect *.feature files for BDD
+    if file_path.suffix == ".feature":
+        return FeatureFile.from_parent(parent, path=file_path)
+
+def pytest_collection_finish(session):
+    print(f"\nCollected {len(session.items)} tests")
+
+# ── 3. Runtest hooks ──────────────────────────────────────────────
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_protocol(item, nextitem):
+    """Wrap the entire test protocol. hookwrapper=True gives before/after."""
+    start = time.perf_counter()
+    yield                           # pytest runs setup/call/teardown here
+    duration = time.perf_counter() - start
+    if item.config._myplugin_verbose:
+        print(f"\n  [{duration:.3f}s] {item.nodeid}")
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Intercept the per-phase report (setup/call/teardown)."""
+    outcome = yield
+    report  = outcome.get_result()
+    # Attach phase reports to the item for fixture access:
+    item.stash.setdefault("phases", {})[call.when] = report
+
+def pytest_runtest_logreport(report):
+    """Called after each phase report is generated."""
+    if report.when == "call" and report.failed:
+        # Hook into every test failure — send to Slack, PagerDuty, etc.
+        _notify_failure(report.nodeid, report.longreprtext)
+
+# ── 4. Session hooks ──────────────────────────────────────────────
+def pytest_sessionstart(session):
+    session._plugin_start = time.time()
+
+def pytest_sessionfinish(session, exitstatus):
+    elapsed = time.time() - session._plugin_start
+    passed  = session.testscollected - session.testsfailed
+    print(f"\nMyPlugin: {passed}/{session.testscollected} passed in {elapsed:.1f}s")
+
+# ── 5. Terminal reporting hooks ───────────────────────────────────
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    """Add a custom section at the end of the terminal report."""
+    tr = terminalreporter
+    tr.write_sep("=", "MyPlugin Summary", cyan=True)
+    slow_tests = [
+        r for r in tr.stats.get("passed", [])
+        if hasattr(r, "duration") and r.duration > 1.0
+    ]
+    if slow_tests:
+        tr.write_line(f"  {len(slow_tests)} slow tests (>1s):", yellow=True)
+        for r in sorted(slow_tests, key=lambda x: -x.duration)[:5]:
+            tr.write_line(f"    {r.nodeid:60s} {r.duration:.2f}s")
+
+# ── 6. Providing fixtures from a plugin ───────────────────────────
+@pytest.fixture
+def myplugin_context(request):
+    """Fixture provided by the plugin — available to any test."""
+    return {
+        "test_name": request.node.name,
+        "markers":   [m.name for m in request.node.iter_markers()],
+    }
+
+def _notify_failure(nodeid, longrepr):
+    """Stub: in production, send to PagerDuty / Slack."""
+    pass
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §17 ANTI-PATTERNS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="antipatterns">
+    <div class="section-header">
+      <span class="section-num">17</span>
+      <h2 class="section-title">Anti-patterns &amp; <span class="accent">Pitfalls</span></h2>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title rose">Over-mocking</div>
+        <p>Mocking <em>everything</em> produces tests that pass even when the code is wrong. Mock at the boundary (HTTP, DB, filesystem) — not internal functions. If you're mocking 10+ things, the test is testing the mocks, not the code.</p>
+      </div>
+      <div class="card">
+        <div class="card-title rose">Fixture soup</div>
+        <p>A fixture that does 12 things and has 8 dependencies is a smell. Split into composable single-responsibility fixtures. Each fixture should have exactly one reason to exist.</p>
+      </div>
+      <div class="card">
+        <div class="card-title amber">Shared mutable state</div>
+        <p>Session-scoped mutable objects shared across tests cause order-dependent failures. Either use immutable session fixtures or transaction rollbacks for function-scoped isolation.</p>
+      </div>
+      <div class="card">
+        <div class="card-title amber">assert in fixtures</div>
+        <p>Assertions inside fixtures produce confusing errors (test shows as ERROR, not FAIL). Assertions belong in tests. Fixtures should only set up state and yield it.</p>
+      </div>
+      <div class="card">
+        <div class="card-title amber">Undeclared marks</div>
+        <p>Without <code>--strict-markers</code>, a typo in a mark (<code>@pytest.mark.integratoin</code>) silently creates a new mark. Always use <code>--strict-markers</code> and declare all marks in <code>pyproject.toml</code>.</p>
+      </div>
+      <div class="card">
+        <div class="card-title rose">sleep() in tests</div>
+        <p>Never use <code>time.sleep()</code> in tests. It's brittle on slow CI. Use <code>pytest-freezegun</code> to mock time, or proper async event loops. If testing retry logic, mock the delay function.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">anti-pattern vs pythonic: side-by-side</span>
+        <span class="code-block-lang">python</span>
+      </div>
+      <pre><code class="language-python">
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  ANTI-PATTERN                  PYTHONIC PYTEST               ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+# ✗ setup/teardown methods
+class TestBad:
+    def setup_method(self):
+        self.db = connect()
+    def teardown_method(self):
+        self.db.close()
+
+# ✓ yield fixture — composable, reusable, properly scoped
+@pytest.fixture
+def db():
+    conn = connect()
+    yield conn
+    conn.close()
+
+# ─────────────────────────────────────────────────────────────────
+
+# ✗ unittest-style assertions
+self.assertEqual(result, expected)
+self.assertIn(key, d)
+self.assertIsNone(val)
+
+# ✓ plain assert with introspection
+assert result == expected
+assert key in d
+assert val is None
+
+# ─────────────────────────────────────────────────────────────────
+
+# ✗ try/except in tests — hides real failures
+def test_bad():
+    try:
+        risky()
+    except Exception:
+        pass   # silent failure!
+
+# ✓ explicit exception assertion
+def test_good():
+    with pytest.raises(ValueError, match="expected message"):
+        risky()
+
+# ─────────────────────────────────────────────────────────────────
+
+# ✗ global state in module-level code
+DB = connect()   # runs at import time → breaks in parallel
+
+# ✓ fixture manages lifecycle
+@pytest.fixture(scope="session")
+def db():
+    conn = connect()
+    yield conn
+    conn.close()
+
+# ─────────────────────────────────────────────────────────────────
+
+# ✗ one mega-test
+def test_entire_user_flow():
+    user = create_user(...)
+    token = login(user)
+    profile = get_profile(token)
+    updated = update_profile(token, name="New")
+    assert updated["name"] == "New"   # if create_user fails → no info
+
+# ✓ granular tests with shared fixtures
+def test_create_user_returns_id(make_user):
+    user = make_user(); assert user.id > 0
+
+def test_login_returns_token(client, sample_user):
+    resp = client.post("/login", json=sample_user)
+    assert "token" in resp.json()
+
+def test_update_profile(client, auth_token):
+    resp = client.patch("/profile", json={"name": "New"}, headers=auth_token)
+    assert resp.json()["name"] == "New"
+      </code></pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       §18 CHECKLIST
+  ══════════════════════════════════════════ -->
+  <section class="section" id="checklist">
+    <div class="section-header">
+      <span class="section-num">18</span>
+      <h2 class="section-title">Production <span class="accent">Checklist</span></h2>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title green">Foundation</div>
+        <p>
+          ✓ <code>--strict-markers</code> enabled<br>
+          ✓ All marks declared in <code>pyproject.toml</code><br>
+          ✓ <code>--import-mode=importlib</code><br>
+          ✓ <code>filterwarnings = error</code><br>
+          ✓ <code>minversion</code> pinned<br>
+          ✓ <code>testpaths</code> explicit
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title cyan">Fixtures</div>
+        <p>
+          ✓ Scope chosen deliberately<br>
+          ✓ Teardown in <code>finally</code> or <code>yield</code><br>
+          ✓ No assertions inside fixtures<br>
+          ✓ Session fixtures are immutable<br>
+          ✓ Factory pattern for test data<br>
+          ✓ autouse sparsely used
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title violet">CI/CD</div>
+        <p>
+          ✓ JUnit XML output (<code>--junitxml</code>)<br>
+          ✓ Coverage gate (<code>--cov-fail-under</code>)<br>
+          ✓ Artifacts uploaded on failure<br>
+          ✓ Matrix across Python versions<br>
+          ✓ Plugin versions pinned<br>
+          ✓ <code>PYTHONBREAKPOINT=0</code>
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title amber">Debugging</div>
+        <p>
+          ✓ <code>--tb=short</code> default, <code>-l</code> in dev<br>
+          ✓ <code>--lf</code> for re-runs<br>
+          ✓ <code>log_cli=true</code> in CI<br>
+          ✓ <code>pytest-timeout</code> installed<br>
+          ✓ Regression tests for every bug<br>
+          ✓ <code>caplog</code> not <code>print</code>
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title green">Parallelism</div>
+        <p>
+          ✓ xdist <code>-n auto</code> in CI<br>
+          ✓ Worker-isolated DB per worker<br>
+          ✓ No global state mutations<br>
+          ✓ File locks for shared setup<br>
+          ✓ <code>--dist=loadscope</code> or <code>loadfile</code><br>
+          ✓ Coverage combined post-run
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title rose">Quality</div>
+        <p>
+          ✓ No <code>time.sleep()</code><br>
+          ✓ No order dependencies<br>
+          ✓ <code>pytest-randomly</code> in dev<br>
+          ✓ Hypothesis for edge cases<br>
+          ✓ Snapshot tests for complex output<br>
+          ✓ VCR cassettes for HTTP
+        </p>
+      </div>
+    </div>
+
+    <div class="divider"><span>Quick Reference</span></div>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">must-know one-liners</span>
+        <span class="code-block-lang">bash</span>
+      </div>
+      <pre><code class="language-bash">
+# Zero-to-running
+pip install pytest && pytest --tb=short
+
+# Full production run
+pytest -n auto --cov=src --cov-fail-under=80 --junitxml=results.xml -ra
+
+# Debug a single failing test
+pytest tests/unit/test_core.py::test_foo -xvs -l --pdb
+
+# Find slow tests
+pytest --durations=10 --tb=no -q
+
+# Re-run only failures from last run
+pytest --lf -x
+
+# Dry-run: see what would run
+pytest --collect-only -q -m "smoke"
+
+# Randomised order (flakiness hunting)
+pytest --randomly-seed=random --count=3
+
+# Profile test startup overhead
+pytest --setup-show --co -q   # see fixture setup order
+      </code></pre>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script>
+  // Active nav highlight on scroll
+  const sections = document.querySelectorAll(".section");
+  const navLinks = document.querySelectorAll(".nav-link");
+
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          navLinks.forEach(a => a.classList.remove("active"));
+          const id = e.target.id;
+          const active = document.querySelector(`.nav-link[href="#${id}"]`);
+          if (active) {
+            active.classList.add("active");
+            // Ensure visible in sidebar
+            active.scrollIntoView({ block: "nearest" });
+          }
+        }
+      });
+    },
+    { rootMargin: "-20% 0px -70% 0px" }
+  );
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

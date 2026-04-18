@@ -1,0 +1,156 @@
+
+<style>
+.gd{padding:4px 0 24px;font-family:var(--font-sans)}
+.gd-hdr{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px}
+.gz{padding:10px 7px;border-radius:var(--border-radius-md);text-align:center}
+.gz-n{font-size:12px;font-weight:500}
+.gz-s{font-size:10px;margin-top:2px;opacity:.72;word-wrap:break-word}
+.gz-wd{background:var(--color-background-success);color:var(--color-text-success)}
+.gz-st{background:var(--color-background-warning);color:var(--color-text-warning)}
+.gz-lo{background:var(--color-background-info);color:var(--color-text-info)}
+.gz-re{background:var(--color-background-danger);color:var(--color-text-danger)}
+.gd-hint{font-size:11px;color:var(--color-text-tertiary);margin-bottom:12px;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:8px}
+.gd-grp{margin-top:12px}
+.gd-gh{font-size:9px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.09em;padding:8px 0 5px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:3px}
+.gd-row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:2px;cursor:pointer;border-radius:var(--border-radius-md);margin-bottom:2px}
+.gd-row:hover .cb{opacity:.82}
+.gd-row.op .cb{opacity:.82}
+.cb{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:5px;font-family:var(--font-mono);font-size:11px;font-weight:500;min-width:0;overflow:hidden}
+.cb code{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ar{font-size:10px;flex-shrink:0;opacity:.75}
+.cb-wd{background:var(--color-background-success);color:var(--color-text-success)}
+.cb-st{background:var(--color-background-warning);color:var(--color-text-warning)}
+.cb-lo{background:var(--color-background-info);color:var(--color-text-info)}
+.cb-re{background:var(--color-background-danger);color:var(--color-text-danger)}
+.cb-na{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.dp{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:13px 15px;margin:2px 0 8px;display:none;border:0.5px solid var(--color-border-tertiary)}
+.dp.op{display:block}
+.dp-cmd{font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0 0 7px}
+.dp-d{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin:0 0 10px}
+.dp-fs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.dp-f{font-family:var(--font-mono);font-size:11px;padding:2px 7px;border-radius:3px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary)}
+.dp-ex{font-family:var(--font-mono);font-size:11px;padding:9px 11px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);white-space:pre;margin:0;line-height:1.7;overflow-x:auto}
+.dp-w{font-size:12px;color:var(--color-text-warning);padding:6px 10px;background:var(--color-background-warning);border-radius:4px;margin-top:9px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary)}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+</style>
+<div class="gd">
+<div class="gd-hdr">
+<div class="gz gz-wd"><div class="gz-n">Working Directory</div><div class="gz-s">Untracked &amp; modified files</div></div>
+<div class="gz gz-st"><div class="gz-n">Staging Area</div><div class="gz-s">Files prepared for commit</div></div>
+<div class="gz gz-lo"><div class="gz-n">Local Repository</div><div class="gz-s">History on your machine</div></div>
+<div class="gz gz-re"><div class="gz-n">Remote Repository</div><div class="gz-s">Shared history with others</div></div>
+</div>
+<div class="gd-hint">Click any command to expand description, flags, and examples. Badge spans the zones it touches; arrow shows direction of data flow.</div>
+<div id="gd-body"></div>
+<div class="legend">
+<div class="leg"><div class="leg-dot" style="background:var(--color-text-success)"></div>starts from Working Directory</div>
+<div class="leg"><div class="leg-dot" style="background:var(--color-text-warning)"></div>starts from Staging Area</div>
+<div class="leg"><div class="leg-dot" style="background:var(--color-text-info)"></div>starts from Local Repo</div>
+<div class="leg"><div class="leg-dot" style="background:var(--color-text-danger)"></div>starts from Remote</div>
+<div class="leg"><div class="leg-dot" style="background:var(--color-text-secondary)"></div>inspection / config</div>
+</div>
+</div>
+<script>
+const e=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const ZI={wd:1,st:2,lo:3,re:4};
+const BC={wd:'cb-wd',st:'cb-st',lo:'cb-lo',re:'cb-re'};
+const D=[
+{g:'SETUP & CONFIGURATION',items:[
+{c:'git init',f:null,t:'lo',d:'Create a new local repository in the current directory. Initializes a hidden .git folder containing all version control metadata.',fl:['--bare (server repo, no working dir)','--initial-branch=main (name the default branch)','--template=<dir>'],ex:'git init\ngit init my-project\ngit init --initial-branch=main .'},
+{c:'git config',f:null,t:null,dz:'lo',d:'Set configuration options at global (~/.gitconfig), local (.git/config), or system scope. Identity settings are required before your first commit.',fl:['--global user.name "Your Name"','--global user.email "you@example.com"','--global core.editor "code --wait"','--global alias.lg "log --oneline --graph --all"','--list --show-origin (view all settings + source)'],ex:'git config --global user.name "Alice"\ngit config --global alias.lg "log --oneline --graph --all --decorate"\ngit config --list'},
+{c:'git remote add',f:'lo',t:'re',d:'Connect your local repository to a remote URL. "origin" is the conventional alias for the primary remote. You can have multiple remotes (e.g., origin + upstream for open-source forks).',fl:['origin <url>','-v (list all remotes with URLs)','rename <old> <new>','remove <name>','set-url origin <newurl>'],ex:'git remote add origin https://github.com/user/repo.git\ngit remote -v\ngit remote rename origin upstream'},
+]},
+{g:'SAVING CHANGES',items:[
+{c:'git add',f:'wd',t:'st',d:'Stage file changes — move them from the working directory into the staging area (index) to be included in the next commit. Does not modify the working directory.',fl:['. (all changes in current dir & subdirs)','-p / --patch (interactively select diff hunks)','-u (only already-tracked files)','<glob> e.g. *.ts, src/','--intent-to-add (stage new empty files)'],ex:'git add .\ngit add src/login.js README.md\ngit add -p  # review each hunk before staging'},
+{c:'git add -p',f:'wd',t:'st',d:'Interactive patch mode: review and choose individual diff hunks to stage. Lets you split one file\'s edits across multiple logical commits. One of Git\'s most powerful everyday tools.',fl:['y (stage this hunk)','n (skip this hunk)','s (split hunk into smaller pieces)','e (open editor to manually edit hunk)','q (quit — stop staging)','? (help with all options)'],ex:'git add -p              # all modified files\ngit add -p src/app.js   # specific file only'},
+{c:'git commit',f:'st',t:'lo',d:'Create a permanent snapshot of all staged changes in the local repository. Each commit has a unique SHA-1 hash, stores author, date, message, and pointer to parent commit(s).',fl:['-m "message" (inline commit message)','-a (auto-stage all tracked changes, skip add)','-v (show staged diff in editor window)','--allow-empty (commit with no changes)','--no-verify (skip pre-commit hooks)'],ex:'git commit -m "feat(auth): add JWT login"\ngit commit  # opens $EDITOR for multi-line message\ngit commit -am "fix: quick one-liner tweak"'},
+{c:'git commit --amend',f:'lo',t:'lo',d:'Rewrite the most recent commit: change its message, add forgotten files, or fix authorship. Replaces the old commit with a new one (new SHA). Cannot be undone cleanly if already pushed.',fl:['--no-edit (keep existing message)','--reset-author (update name/email/date)','-m "new message"','--date="now" (reset timestamp)'],ex:'git add forgot-file.txt\ngit commit --amend --no-edit\n\ngit commit --amend -m "better commit message"',w:'Rewrites history — only amend commits that have NOT been pushed to shared branches.'},
+{c:'git push',f:'lo',t:'re',d:'Upload local commits to the remote repository, advancing the remote branch pointer to match yours. The first push of a new branch needs -u to set the upstream tracking reference.',fl:['origin <branch>','-u / --set-upstream (link branch, required on first push)','--tags (include all annotated tags)','--all (push all local branches)','--delete origin <branch> (delete a remote branch)'],ex:'git push origin main\ngit push -u origin feature/login  # first push\ngit push origin --delete old-feature'},
+{c:'git push --force-with-lease',f:'lo',t:'re',d:'Force-push safely — fails if the remote has commits you have not fetched, preventing you from silently overwriting a teammate\'s work. Always prefer this over --force.',fl:['--force-with-lease','--force-if-includes (even stricter check)','--force / -f (dangerous — skips all safety checks)'],ex:'# After interactive rebase, update the remote:\ngit rebase -i HEAD~3\ngit push --force-with-lease origin feature/my-branch',w:'Still rewrites remote history. Only use on your own private feature branches, never on main/shared branches.'},
+]},
+{g:'GETTING CHANGES',items:[
+{c:'git clone',f:'re',t:'wd',d:'Download a complete copy of a remote repository — every commit, branch, and tag — to your machine. Automatically configures "origin" as the remote and checks out the default branch.',fl:['<url>','--depth=1 (shallow clone, no full history — much faster)','--branch <name> (start on a specific branch)','--single-branch (only fetch that branch\'s history)','--recurse-submodules (also init nested submodules)','--filter=blob:none (partial clone)'],ex:'git clone https://github.com/user/repo.git\ngit clone --depth=1 https://github.com/torvalds/linux.git'},
+{c:'git fetch',f:'re',t:'lo',d:'Download new commits, branches, and tags from the remote but do NOT update your working directory or current branch. Updates remote-tracking refs (e.g. origin/main). Always safe to run — nothing in your workspace changes.',fl:['origin','--all (fetch from all remotes)','--prune (remove stale remote-tracking refs for deleted branches)','--tags','--dry-run'],ex:'git fetch origin\ngit fetch --all --prune\n# Inspect what arrived:\ngit log HEAD..origin/main --oneline'},
+{c:'git pull',f:'re',t:'wd',d:'Fetch from remote then immediately merge (or rebase) into your current branch. Shorthand for git fetch + git merge. Use --rebase for a cleaner linear history with no extra merge commits.',fl:['origin <branch>','--rebase (rebase instead of merge — preferred for clean history)','--ff-only (abort if not a fast-forward, no merge commit)','--no-commit (merge changes but do not auto-commit)','--autostash (stash, pull, reapply automatically)'],ex:'git pull origin main\ngit pull --rebase origin main\n# Check before merging:\ngit fetch && git log HEAD..origin/main --oneline'},
+]},
+{g:'BRANCHING',items:[
+{c:'git branch',f:null,t:null,dz:'lo',d:'List, create, rename, or delete branches. With no arguments, lists local branches (* marks the current one). Branches are just lightweight pointers (40-byte SHA) to commits — cheap to create.',fl:['-a (all branches including remote-tracking)','-d <name> (safe delete — refuses if unmerged)','-D <name> (force delete regardless)','-m <old> <new> (rename a branch)','-r (remote branches only)','--merged / --no-merged <branch> (filter by merge status)'],ex:'git branch              # list local branches\ngit branch -a           # list all\ngit branch feature/nav  # create new branch\ngit branch -d done-feature'},
+{c:'git switch',f:'lo',t:'wd',d:'Switch to a different branch — the modern, purpose-built replacement for "git checkout" for branch switching. Safer: refuses ambiguous names and won\'t accidentally restore files.',fl:['<branch> (switch to existing)','- (switch to previous branch, like cd -)','--detach <commit> (enter detached HEAD state)','-c / --create <name> (create + switch in one step)'],ex:'git switch main\ngit switch feature/login\ngit switch -    # toggle between last two branches\ngit switch -c feature/dark-mode'},
+{c:'git checkout -b',f:'lo',t:'wd',d:'Create and immediately switch to a new branch (classic syntax). Equivalent to git branch <name> + git checkout <name>. Still widely used; git switch -c is the modern alternative.',fl:['-b <new-branch>','<start-point> (base branch on specific commit or tag)','-t origin/<name> (track a remote branch)','-B (create or hard-reset an existing branch)'],ex:'git checkout -b feature/payments\ngit checkout -b hotfix/bug-101 main\ngit checkout -b my-local -t origin/remote-feature'},
+{c:'git tag',f:'lo',t:'lo',d:'Mark a specific commit with a memorable name, typically a release version. Annotated tags (-a) are preferred for releases as they store tagger name, date, and message, and can be signed.',fl:['-a v1.0 -m "Release 1.0" (annotated — preferred)','v1.0 (lightweight tag — just a name pointer)','-l "v1.*" (list matching tags)','-d <tag> (delete local tag)','git push origin --tags (upload all tags)'],ex:'git tag -a v2.0.0 -m "Version 2.0.0 — LTS release"\ngit push origin v2.0.0\ngit tag -l "v1.*"  # list all v1.x tags'},
+]},
+{g:'MERGING & REBASING',items:[
+{c:'git merge',f:'lo',t:'lo',d:'Integrate all changes from another branch into your current branch. Creates a merge commit (unless fast-forward possible), preserving the full topology of both branch histories.',fl:['<branch>','--no-ff (always create a merge commit, even if fast-forward is possible)','--ff-only (abort if not a fast-forward)','--squash (collapse to one commit, staged but not auto-committed)','--abort (cancel an in-progress conflicted merge)','--strategy-option=ours / theirs'],ex:'git switch main\ngit merge feature/login\ngit merge --no-ff feature/login  # always record the merge\n\n# Preview before merging:\ngit log main..feature/login --oneline'},
+{c:'git rebase',f:'lo',t:'lo',d:'Replay your branch\'s commits on top of another branch tip, producing a clean linear history without merge commits. Rewrites all commit SHAs — never rebase commits already pushed to shared branches.',fl:['<branch>','--onto <newbase> <upstream> (rebase subset of commits)','--abort / --continue / --skip','origin/main (sync feature branch with latest main)'],ex:'git switch feature\ngit rebase main\ngit push --force-with-lease  # required after rebase',w:'Rewrites history (changes all commit SHAs). Never rebase commits already pushed to a team-shared branch.'},
+{c:'git rebase -i',f:'lo',t:'lo',d:'Interactive rebase: opens an editor listing commits oldest-first. Lets you reorder, squash, fixup, edit messages, split, or drop individual commits. The ultimate history-polishing tool before a PR.',fl:['pick / p (keep commit unchanged)','squash / s (combine with previous commit, merge messages)','fixup / f (combine with previous, discard this message)','reword / r (edit only the commit message)','edit / e (stop here to git add / git commit --amend)','drop / d (permanently delete this commit)','exec / x <cmd> (run shell command after commit)'],ex:'# Polish last 5 commits before opening a PR:\ngit rebase -i HEAD~5\n\n# All commits since branching from main:\ngit rebase -i origin/main',w:'Rewrites commit SHAs. Only use on commits not yet pushed to shared branches.'},
+{c:'git cherry-pick',f:'lo',t:'lo',d:'Apply the exact diff introduced by one or more specific commits onto the current branch — creating new commits with the same changes but different SHAs. Essential for backporting bug fixes.',fl:['<hash>','<hash1>^..<hash2> (inclusive range of commits)','--no-commit / -n (stage changes but do not commit)','--edit / -e (edit the commit message)','-x (append "cherry-picked from <hash>" to message)','--abort'],ex:'# Backport a fix from main to a release branch:\ngit switch release/1.x\ngit cherry-pick a1b2c3d\n\n# Apply a range:\ngit cherry-pick abc123^..def456'},
+]},
+{g:'UNDOING CHANGES',items:[
+{c:'git restore',f:'lo',t:'wd',d:'Discard working directory changes for one or more files, reverting them to the last committed version. With --staged, moves files back from staging to the working directory (unstages).',fl:['<file>','. (all files in current dir)','--staged <file> (unstage only, keep WD changes)','--staged --worktree (unstage AND discard WD changes)','--source=HEAD~2 <file> (restore from an older commit)'],ex:'git restore README.md          # discard WD edits\ngit restore --staged src/app.js # unstage only\ngit restore .                   # discard all WD changes',w:'Working directory changes discarded this way are unrecoverable (unless git stash was used first or git reflog catches them).'},
+{c:'git reset --soft',f:'lo',t:'st',d:'Move HEAD (and current branch pointer) back by N commits, keeping all the changes from those commits staged. Lets you re-commit everything as a single cleaner commit.',fl:['HEAD~1 (undo last commit, keep staged)','HEAD~N (undo N commits)','<commit-hash>'],ex:'# Squash last 3 messy commits into one clean commit:\ngit reset --soft HEAD~3\ngit commit -m "feat: complete login system"\n\ngit reset --soft HEAD~1  # simple undo'},
+{c:'git reset --mixed',f:'lo',t:'wd',d:'Move HEAD back and unstage the changes, but keep them in the working directory. The default mode (--mixed can be omitted). Lets you re-stage only the changes you actually want.',fl:['HEAD~1','HEAD~N','<commit-hash>','(default — --mixed is optional)'],ex:'git reset HEAD~1       # same as --mixed\ngit reset --mixed HEAD~2\n# Now selectively re-stage:\ngit add -p'},
+{c:'git reset --hard',f:'lo',t:'wd',d:'Move HEAD back and PERMANENTLY DISCARD all changes from both staging and working directory. The nuclear option. Use git reflog immediately if you need to recover.',fl:['HEAD~1 (undo + discard last commit)','origin/main (reset local to exactly match remote)','ORIG_HEAD (undo last merge or rebase — Git sets this automatically)'],ex:'# Reset branch to match remote (discard all local changes):\ngit reset --hard origin/main\n\n# Recover after accidental reset:\ngit reflog              # find the hash\ngit reset --hard HEAD@{2}',w:'Permanently discards staged and working directory changes. Commits can be recovered via git reflog before garbage collection. WD changes cannot be recovered.'},
+{c:'git revert',f:'lo',t:'lo',d:'Create a new commit that exactly undoes the changes of a target commit. Safe for shared/public branches because it adds to history rather than rewriting it. The correct tool for "undo" on main.',fl:['<hash>','HEAD (revert the most recent commit)','HEAD~3..HEAD (revert a range of commits)','-n / --no-commit (stage the reversal without auto-committing)','-m 1 (revert a merge commit — specify which parent is "mainline")'],ex:'git revert a1b2c3d       # creates an "undo" commit\ngit revert HEAD          # safely undo last commit\ngit revert HEAD~3..HEAD  # undo last 3 commits'},
+{c:'git clean',f:'wd',t:'wd',d:'Remove untracked files (and optionally directories) from the working directory. Files tracked by Git are never touched. Always preview with -n before running destructively.',fl:['-n / --dry-run (preview what would be deleted)','-f / --force (required to actually delete)','-d (also remove untracked directories)','-x (also remove .gitignored files)','-i (interactive mode — confirm each deletion)'],ex:'git clean -n     # preview first!\ngit clean -fd    # delete files + untracked dirs\ngit clean -fdx   # also delete ignored build artifacts',w:'Removed untracked files are not recoverable. Always run git clean -n to preview before using -f.'},
+]},
+{g:'STASH',items:[
+{c:'git stash',f:'wd',t:'lo',d:'Temporarily shelve all uncommitted changes (working dir + staged) onto a LIFO stack stored in the local repo. Reverts your workspace to a clean HEAD so you can switch contexts freely.',fl:['push -m "description" (named stash for clarity)','--include-untracked (also stash new untracked files)','--all (include .gitignored files too)','--keep-index (stash WD changes only, leave staging intact)','--patch (interactively choose what to stash)'],ex:'git stash\ngit stash push -m "WIP: half-done auth refactor"\ngit stash --include-untracked'},
+{c:'git stash list',f:null,t:null,dz:'lo',d:'Show all stashed changesets in the stack. stash@{0} is the most recent. Each entry records the branch it was made on and your optional description.',fl:['--stat (show changed files per stash entry)','git stash show -p stash@{N} (show full diff of a stash)'],ex:'git stash list\ngit stash show stash@{1}          # brief\ngit stash show -p stash@{0}      # full diff'},
+{c:'git stash pop',f:'lo',t:'wd',d:'Apply the most recent stash (or a specific one) to the working directory then delete it from the stack. If conflicts occur, the stash entry is kept so you can resolve them manually then drop it.',fl:['stash@{N} (pop a specific stash by index)','--index (also restore the staged state)'],ex:'git stash pop\ngit stash pop stash@{2}  # apply specific stash'},
+{c:'git stash apply',f:'lo',t:'wd',d:'Apply a stash to the working directory WITHOUT removing it from the stack. Useful when you want to apply the same saved changes to multiple branches.',fl:['stash@{N} (apply a specific stash)','--index (restore staged state as well)'],ex:'git stash apply           # apply latest stash\ngit stash apply stash@{1} # apply specific one\ngit stash drop stash@{1}  # then manually clean up'},
+{c:'git stash drop',f:null,t:null,dz:'lo',d:'Delete a specific stash entry from the stack. Use "git stash clear" to wipe the entire stash stack at once.',fl:['stash@{N} (delete a specific entry)','git stash clear (delete ALL stash entries)'],ex:'git stash drop stash@{1}\ngit stash clear  # nuclear option — wipe all stashes'},
+{c:'git stash branch',f:'lo',t:'wd',d:'Create a new branch from the commit where a stash was made, apply the stash on that branch, and drop the stash. Resolves stash-apply conflicts cleanly by giving the stash a fresh branch context.',fl:['<branch-name> stash@{N}','(applies most recent stash if no index given)'],ex:'git stash branch feature/wip-work stash@{0}\n# Creates branch at stash\'s commit, applies it, drops stash'},
+]},
+{g:'INSPECTION & HISTORY',items:[
+{c:'git status',f:null,t:null,dz:'wd',d:'Show the state of your working directory and staging area: which files are untracked, modified, or staged. The most frequently-used Git command. Run it constantly.',fl:['-s / --short (compact two-column output)','-b (include branch name and upstream tracking info)','--porcelain (stable machine-readable format for scripts)'],ex:'git status\ngit status -sb  # short format + branch info'},
+{c:'git log',f:null,t:null,dz:'lo',d:'Display commit history for the current branch. Highly customizable. Combine --oneline --graph --all for a full visual branch topology in the terminal.',fl:['--oneline (compact: SHA + message per line)','--graph (ASCII branch tree — use with --all)','--all (include all branches and tags)','--author="name"','--since="2 weeks ago" / --until=<date>','-p (show full diff for each commit)','-n 10 (limit to 10 commits)','--format="%h %an %s" (custom output)'],ex:'git log --oneline --graph --all --decorate\ngit log --author="Alice" --since="1 month ago"\ngit log -p -1  # full diff of the most recent commit'},
+{c:'git diff',f:'wd',t:'st',d:'Show unstaged changes: differences between working directory and staging area. With a branch or hash argument, compares against that point in history.',fl:['(no args: WD vs staging area)','--staged / --cached (staged vs last commit)','<hash> (changes since that commit)','<branch>..<branch> (between two branches)','--stat (summary: files changed, lines added/removed)','--word-diff (highlight word-level, not line-level, changes)'],ex:'git diff                      # WD vs staging\ngit diff main..feature/login  # between branches\ngit diff HEAD~3 -- src/app.js # file since 3 commits ago'},
+{c:'git diff --staged',f:'st',t:'lo',d:'Show staged changes: differences between the staging area and the last commit. This is EXACTLY what will be captured in your next git commit. Use this before committing to double-check.',fl:['--staged / --cached (synonyms)','<file> (specific file only)','--stat (summary only)','--word-diff'],ex:'git diff --staged\ngit diff --staged --stat  # just file names + line counts'},
+{c:'git blame',f:null,t:null,dz:'lo',d:'Show who last modified each line of a file, in which commit, and when. Essential for "who wrote this and why?" investigations. Use -L to zoom into a line range.',fl:['-L 10,30 (only show lines 10-30)','--follow (track through file renames/moves)','-w (ignore whitespace-only changes)','-C (detect lines copied from other files)','<commit> -- <file> (blame at a specific point in history)'],ex:'git blame src/app.js\ngit blame -L 20,40 README.md\ngit blame v1.0..HEAD -- src/utils.js'},
+{c:'git show',f:null,t:null,dz:'lo',d:'Show information about any git object: a commit (metadata + full diff), a tag, a tree, or a blob (file at a specific commit). Defaults to HEAD if no argument given.',fl:['<hash> (any commit hash)','HEAD (most recent commit)','<branch>:<file> (file contents at branch tip)','--stat (changed files only, no diff)','--name-only (just list changed file names)'],ex:'git show a1b2c3d\ngit show HEAD~2\ngit show main:src/config.js  # view file at branch tip'},
+{c:'git shortlog',f:null,t:null,dz:'lo',d:'Summarize commit history grouped by author — great for release notes and contributor summaries. The -s flag shows only counts per author.',fl:['-s (summary: count only, no messages)','-n (sort by commit count, not name)','--email (include email addresses)','<since>..<until> (limit date range)'],ex:'git shortlog -sn           # ranked contributor list\ngit shortlog -sn v1.0..HEAD  # since v1.0 tag'},
+]},
+{g:'ADVANCED & RECOVERY',items:[
+{c:'git reflog',f:null,t:null,dz:'lo',d:'Show a chronological log of all HEAD movements in the local repo — every commit, checkout, merge, rebase, and reset. Your ultimate recovery tool. Even "lost" commits survive here until garbage collection.',fl:['show (default)','--all (show reflogs for all branches, not just HEAD)','<branch> (reflog for a specific branch)','expire --expire=now --all (manually prune old entries)'],ex:'git reflog\n# Recover a commit "lost" after git reset --hard:\ngit reset --hard HEAD@{3}  # go back 3 HEAD moves\ngit checkout -b recovery HEAD@{5}  # or create a branch'},
+{c:'git bisect',f:'lo',t:'lo',d:'Binary-search through commit history to pinpoint the first commit that introduced a bug. Git automatically checks out midpoints — you mark each as good or bad. Finds the culprit in O(log N) steps.',fl:['start','bad (current HEAD is broken)','good <hash> (this commit was known-working)','run <script> (automate — script returns 0=good, 1=bad)','reset (end bisect, return HEAD to original)'],ex:'git bisect start\ngit bisect bad          # current code is broken\ngit bisect good v2.0.0  # v2.0.0 worked fine\n# Git checks out midpoint — test it, then:\ngit bisect good  # (or: git bisect bad)\n# Repeat until Git identifies the exact culprit\ngit bisect reset'},
+{c:'git worktree',f:'lo',t:'wd',d:'Check out multiple branches simultaneously into separate directories — all sharing the same .git object store. Work on a hotfix while keeping your feature branch mid-refactor, with zero stashing.',fl:['add <path> <branch> (create a new linked worktree)','list (show all worktrees and their branches)','remove <path> (remove a worktree)','prune (clean up stale worktree metadata)'],ex:'git worktree add ../hotfix hotfix/critical-bug\n# Fix, commit in ../hotfix, then:\ngit worktree list\ngit worktree remove ../hotfix'},
+{c:'git submodule',f:'re',t:'lo',d:'Embed one Git repository inside another at a pinned commit hash. The parent repo tracks the exact version of the dependency. Requires explicit initialization after cloning.',fl:['add <url> <path> (embed a repo)','update --init --recursive (initialize on fresh clone)','status (show state of all submodules)','foreach git pull origin main (update all submodules)','deinit <path> + git rm <path> (remove a submodule)'],ex:'git submodule add https://github.com/org/lib.git lib\n# After cloning a project with submodules:\ngit submodule update --init --recursive'},
+{c:'git cherry',f:null,t:null,dz:'lo',d:'Show which commits in your branch have NOT been applied upstream (i.e., commits not yet in origin/main). A + means the commit is unique to your branch. Useful before rebasing.',fl:['-v (show commit messages, not just SHAs)','<upstream> (compare against this branch)','<upstream> <head> (explicit range)'],ex:'git cherry -v origin/main\n# + a1b2c3d feat: my unique commit\n# - d4e5f6a already-merged commit'},
+{c:'git archive',f:null,t:null,dz:'lo',d:'Export a snapshot of the repository at a given commit or branch as a tar or zip archive — without the .git folder. Useful for creating release artifacts.',fl:['--format=tar / zip','--output=<file.zip>','<branch> or <tag> (what to export)','--prefix=my-app/ (add a directory prefix inside the archive)'],ex:'git archive --format=zip --output=release.zip v2.0.0\ngit archive HEAD | tar -x -C /tmp/snapshot'},
+]},
+];
+function gc(f,t,dz){
+if(!f&&!t){const z=ZI[dz||'lo'];return'grid-column:'+z+'/'+(z+1)}
+if(!f)return'grid-column:'+ZI[t]+'/'+(ZI[t]+1);
+if(!t||f===t)return'grid-column:'+ZI[f]+'/'+(ZI[f]+1);
+const s=Math.min(ZI[f],ZI[t]),en=Math.max(ZI[f],ZI[t])+1;
+return'grid-column:'+s+'/'+en;
+}
+function ar(f,t){
+if(!f||!t)return'';
+if(f===t)return'<span class="ar">↻</span>';
+return ZI[f]<ZI[t]?'<span class="ar">→</span>':'<span class="ar">←</span>';
+}
+let idx=0;
+function row(item){
+const{c:cmd,f,t,dz,d:desc,fl:flags,ex,w:warn}=item;
+const id='dp'+(idx++);
+const bc=BC[f]||BC[t]||'cb-na';
+const isRev=f&&t&&ZI[f]>ZI[t];
+const col=gc(f,t,dz);
+const arw=ar(f,t);
+const aL=isRev&&arw?arw+' ':'';
+const aR=!isRev&&arw?' '+arw:'';
+const fH=flags?(flags.map(fl=>`<span class="dp-f">${e(fl)}</span>`).join('')):'';
+return`<div class="gd-row" id="row-${id}" onclick="tog('${id}')"><div class="cb ${bc}" style="${col}">${aL}<code>${e(cmd)}</code>${aR}</div></div><div class="dp" id="${id}"><div class="dp-cmd">${e(cmd)}</div><div class="dp-d">${e(desc)}</div>${fH?`<div class="dp-fs">${fH}</div>`:''}<pre class="dp-ex">${e(ex)}</pre>${warn?`<div class="dp-w">${e(warn)}</div>`:''}</div>`;
+}
+function tog(id){
+const el=document.getElementById(id);
+const row=document.getElementById('row-'+id);
+el.classList.toggle('op');
+if(row)row.classList.toggle('op',el.classList.contains('op'));
+}
+document.getElementById('gd-body').innerHTML=D.map(g=>`<div class="gd-grp"><div class="gd-gh">${g.g}</div>${g.items.map(row).join('')}</div>`).join('');
+</script>
