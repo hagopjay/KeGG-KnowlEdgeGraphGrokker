@@ -18,8 +18,9 @@ Outputs in D3.js ThreeJS/ Unity,  Unreal engine, x3d.io
 
 
 __________________________________________________________________________
-<br>
 # Airline Policies Graph Generation
+════════════════════════════════════════════
+
 IntellAgent creates a weighted graph structure where:
 
 - Nodes represent individual policies
