@@ -16,6 +16,10 @@ Outputs in D3.js ThreeJS/ Unity,  Unreal engine, x3d.io
 <img width="1133" height="747" alt="image (9)" src="https://github.com/user-attachments/assets/c26f72c8-1f05-459e-8a07-80abd06b9f9c" />
 
 
+
+<br>
+![https://github.com/plurai-ai/intellagent/blob/main/docs/figures/policies_graph_generation.png]
+
 __________________________________________________________________________
 
 
