@@ -1,6 +1,3 @@
-supabase pw:
-9WNtoAzBaAiUwHIN
-
 ###
 Looking at your codebase, this appears to be a Supabase project with AI-powered features. Here's a comprehensive analysis and recommendations:
 

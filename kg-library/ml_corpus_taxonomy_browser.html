@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="stylesheet" href="../assets/widget-host.css"><!-- host styles the claude.ai chat used to supply -->
+<script>/* sendPrompt() exists only inside claude.ai. Elsewhere the buttons copy their prompt instead. */
+if (typeof window.sendPrompt !== "function") window.sendPrompt = function (p) {
+  var toast = function (msg) { var t = document.createElement("div"); t.textContent = msg; t.style.cssText = "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 14px;border-radius:8px;font:13px system-ui,sans-serif;z-index:99999"; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2200); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(p).then(function () { toast("Prompt copied. Paste it into Claude."); }, function () { toast(p); });
+  else toast(p);
+};
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ML Corpus Taxonomy Browser</title>
@@ -87,7 +95,7 @@ function render(){
   if(act!==null){
     const c=cats[act];
     d.className='detail open';
-    d.innerHTML=`<div class="dt">${c.n} — ${c.a.length} atomic notes</div><div class="pills">${c.a.map(a=>`<span class="pill" onclick="sendPrompt('Generate a complete tripartite atomic Obsidian note for ${a}')">${a}</span>`).join('')}</div><div class="hint">Click any algorithm to generate its atomic note →</div>`;
+    d.innerHTML=`<div class="dt">${c.n} — ${c.a.length} atomic notes</div><div class="pills">${c.a.map(a=>`<span class="pill" onclick="sendPrompt('Generate a complete tripartite atomic Obsidian note for ${a.replace(/'/g,"\\'")}')">${a}</span>`).join('')}</div><div class="hint">Click any algorithm to generate its atomic note →</div>`;
   }else{d.className='detail';d.innerHTML='';}
 }
 render();
