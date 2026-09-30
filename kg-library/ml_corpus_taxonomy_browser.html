@@ -95,7 +95,8 @@ function render(){
   if(act!==null){
     const c=cats[act];
     d.className='detail open';
-    d.innerHTML=`<div class="dt">${c.n} — ${c.a.length} atomic notes</div><div class="pills">${c.a.map(a=>`<span class="pill" onclick="sendPrompt('Generate a complete tripartite atomic Obsidian note for ${a.replace(/'/g,"\\'")}')">${a}</span>`).join('')}</div><div class="hint">Click any algorithm to generate its atomic note →</div>`;
+    d.innerHTML=`<div class="dt">${c.n} — ${c.a.length} atomic notes</div><div class="pills">${c.a.map((a,j)=>`<span class="pill" data-j="${j}">${a}</span>`).join('')}</div><div class="hint">Click any algorithm to generate its atomic note →</div>`;
+    d.querySelectorAll('.pill').forEach(el=>{el.onclick=()=>sendPrompt('Generate a complete tripartite atomic Obsidian note for '+c.a[+el.dataset.j]);});
   }else{d.className='detail';d.innerHTML='';}
 }
 render();
